@@ -9,10 +9,11 @@
 - 回退数据目录：`%LOCALAPPDATA%\MicaRomManager\`
 - 字体：`C:\Windows\Fonts\HarmonyOS_Sans_SC_Regular.ttf` / `_Bold.ttf`（系统已安装，直接引用）
 
-## 密钥 / Token
+## 凭据
 
-- 暂无。GitHub Release 检查使用公共 API，无需 Token。
-- GitHub 登录：`gh` CLI 已登录账号 `fushuqian`（凭据存于系统 keyring，不落盘）。
+- GitHub 推送走 Git Credential Manager，凭据存于 Windows 凭据管理器（target=`git:https://github.com`，user=`fushuqian`）。
+- `gh auth status` 返回未登录；API 调用需先 `git credential fill` 读 token（不落盘时 `Set-Content -Encoding UTF8 mica_cred.txt` 后再读）。
+- 命令 `cmdkey /list` 可列出所有凭据条目。
 
 ## GitHub 仓库
 
