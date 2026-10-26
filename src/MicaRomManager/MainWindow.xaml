@@ -1,4 +1,4 @@
-<Window x:Class="MicaRomManager.MainWindow"
+﻿<Window x:Class="MicaRomManager.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:controls="clr-namespace:MicaRomManager.Controls"
@@ -112,7 +112,7 @@
 
         <!-- 游戏列表 -->
         <DataGrid x:Name="GameGrid" Grid.Row="2" Margin="12,0,12,0"
-                  Style="{StaticResource AppDataGridStyle}" RowHeight="44" IsReadOnly="True"
+                  Style="{StaticResource AppDataGridStyle}" RowHeight="28" IsReadOnly="True"
                   Tag="{Binding IsChecked, ElementName=EditModeToggle}"
                   ItemsSource="{Binding GamesView}"
                   SelectionChanged="OnSelectionChanged"
@@ -142,7 +142,7 @@
             <DataGrid.Columns>
                 <DataGridTextColumn Header="★" Binding="{Binding FavoriteDisplay}" Width="36"
                                     ElementStyle="{StaticResource DataGridTextStyle}" />
-                <DataGridTemplateColumn Header="平台" Width="110">
+                <DataGridTemplateColumn Header="平台" Width="110" SortMemberPath="Platform">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBlock Text="{Binding Platform}" VerticalAlignment="Center" Margin="8,0"
@@ -151,7 +151,7 @@
                     </DataGridTemplateColumn.CellTemplate>
                     <DataGridTemplateColumn.CellEditingTemplate>
                         <DataTemplate>
-                            <ComboBox IsEditable="True" MinHeight="30" Padding="4,2"
+                            <ComboBox IsEditable="True" MinHeight="22" Padding="2,0"
                                       ItemsSource="{Binding DataContext.Platforms, RelativeSource={RelativeSource AncestorType=Window}}"
                                       Text="{Binding Platform, UpdateSourceTrigger=PropertyChanged}" />
                         </DataTemplate>
@@ -159,7 +159,7 @@
                 </DataGridTemplateColumn>
                 <DataGridTextColumn Header="标题" Binding="{Binding Title}" Width="220"
                                     ElementStyle="{StaticResource DataGridTextStyle}" />
-                <DataGridTemplateColumn Header="区域" Width="64">
+                <DataGridTemplateColumn Header="区域" Width="64" SortMemberPath="Region">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBlock Text="{Binding Region}" VerticalAlignment="Center" Margin="8,0"
@@ -168,16 +168,16 @@
                     </DataGridTemplateColumn.CellTemplate>
                     <DataGridTemplateColumn.CellEditingTemplate>
                         <DataTemplate>
-                            <ComboBox IsEditable="True" MinHeight="30" Padding="4,2"
+                            <ComboBox IsEditable="True" MinHeight="22" Padding="2,0"
                                       ItemsSource="{Binding DataContext.Regions, RelativeSource={RelativeSource AncestorType=Window}}"
                                       Text="{Binding Region, UpdateSourceTrigger=PropertyChanged}" />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellEditingTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTemplateColumn Header="语言" Width="86" IsReadOnly="True">
+                <DataGridTemplateColumn Header="语言" Width="86" IsReadOnly="True" SortMemberPath="Language">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <controls:MultiSelectComboBox MinHeight="26"
+                            <controls:MultiSelectComboBox MinHeight="22"
                                 ItemsSource="{Binding DataContext.Languages, RelativeSource={RelativeSource AncestorType=Window}}"
                                 CanEdit="{Binding Tag, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                 Value="{Binding Language, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
@@ -189,9 +189,9 @@
                                     ElementStyle="{StaticResource DataGridTextStyle}" />
                 <DataGridTextColumn Header="年份" Binding="{Binding ReleaseYear}" Width="64"
                                     ElementStyle="{StaticResource DataGridTextStyle}" />
-                <DataGridTextColumn Header="光碟数" Binding="{Binding DiscCountText}" Width="60"
+                <DataGridTextColumn Header="光碟数" Binding="{Binding DiscCountText}" Width="60" SortMemberPath="DiscCount"
                                     ElementStyle="{StaticResource DataGridTextStyle}" />
-                <DataGridTemplateColumn Header="状态" Width="76">
+                <DataGridTemplateColumn Header="状态" Width="76" SortMemberPath="Status">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBlock Text="{Binding Status}" VerticalAlignment="Center" Margin="8,0" />
@@ -199,7 +199,7 @@
                     </DataGridTemplateColumn.CellTemplate>
                     <DataGridTemplateColumn.CellEditingTemplate>
                         <DataTemplate>
-                            <ComboBox MinHeight="30" Padding="4,2"
+                            <ComboBox MinHeight="22" Padding="2,0"
                                       ItemsSource="{Binding DataContext.EditStatuses, RelativeSource={RelativeSource AncestorType=Window}}"
                                       SelectedItem="{Binding Status, Mode=TwoWay}" />
                         </DataTemplate>
@@ -207,11 +207,11 @@
                 </DataGridTemplateColumn>
                 <DataGridTextColumn Header="次数" Binding="{Binding PlayCount}" Width="56"
                                     ElementStyle="{StaticResource DataGridTextStyle}" />
-                <DataGridTextColumn Header="时长" Binding="{Binding PlaySecondsDisplay}" Width="72"
+                <DataGridTextColumn Header="时长" Binding="{Binding PlaySecondsDisplay}" Width="72" SortMemberPath="PlaySeconds"
                                     ElementStyle="{StaticResource DataGridTextStyle}" />
-                <DataGridTextColumn Header="最近游玩" Binding="{Binding LastPlayedDisplay}" Width="124"
+                <DataGridTextColumn Header="最近游玩" Binding="{Binding LastPlayedDisplay}" Width="124" SortMemberPath="LastPlayedAt"
                                     ElementStyle="{StaticResource DataGridTextStyle}" />
-                <DataGridTextColumn Header="大小" Binding="{Binding FileSizeDisplay}" Width="82"
+                <DataGridTextColumn Header="大小" Binding="{Binding FileSizeDisplay}" Width="82" SortMemberPath="FileSize"
                                     ElementStyle="{StaticResource DataGridTextStyle}" />
                 <DataGridTextColumn Header="标签" Binding="{Binding Tags}" Width="120"
                                     ElementStyle="{StaticResource DataGridTextStyle}" />
@@ -245,3 +245,4 @@
         </Border>
     </Grid>
 </Window>
+

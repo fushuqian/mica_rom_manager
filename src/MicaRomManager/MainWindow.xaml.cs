@@ -1,3 +1,5 @@
+using System.ComponentModel;
+using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -13,12 +15,99 @@ public partial class MainWindow : Window
 {
     private readonly MainViewModel _viewModel;
 
+    private const string ViewStateKey = "list_view_state";
+
     public MainWindow()
     {
         InitializeComponent();
         _viewModel = new MainViewModel();
         DataContext = _viewModel;
-        Loaded += (_, _) => SearchBox.Focus();
+        Loaded += OnLoaded;
+        Closing += (_, _) => SaveViewState();
+    }
+
+    private void OnLoaded(object sender, RoutedEventArgs e)
+    {
+        RestoreViewState();
+        SearchBox.Focus();
+    }
+
+    /// <summary>还原上次的列宽、排序与筛选条件。</summary>
+    private void RestoreViewState()
+    {
+        var json = AppServices.Settings.Get(ViewStateKey);
+        if (string.IsNullOrWhiteSpace(json)) return;
+
+        ListViewState? state;
+        try
+        {
+            state = JsonSerializer.Deserialize<ListViewState>(json);
+        }
+        catch
+        {
+            return;
+        }
+
+        if (state == null) return;
+
+        _viewModel.OnlyFavorites = state.OnlyFavorites;
+        _viewModel.OnlyMissing = state.OnlyMissing;
+        if (!string.IsNullOrEmpty(state.Platform) && _viewModel.Platforms.Contains(state.Platform))
+            _viewModel.SelectedPlatform = state.Platform;
+        if (!string.IsNullOrEmpty(state.Status) && _viewModel.Statuses.Contains(state.Status))
+            _viewModel.SelectedStatus = state.Status;
+        if (!string.IsNullOrEmpty(state.Tag) && _viewModel.Tags.Contains(state.Tag))
+            _viewModel.SelectedTag = state.Tag;
+        if (!string.IsNullOrEmpty(state.Search))
+            _viewModel.SearchText = state.Search;
+
+        foreach (var column in GameGrid.Columns)
+        {
+            if (column.Header is not string header) continue;
+            if (!state.ColumnWidths.TryGetValue(header, out var width)) continue;
+            if (width >= 24) column.Width = new DataGridLength(width);
+        }
+
+        RestoreSort(state);
+    }
+
+    private void RestoreSort(ListViewState state)
+    {
+        if (string.IsNullOrWhiteSpace(state.SortColumn)) return;
+        if (!Enum.TryParse<ListSortDirection>(state.SortDirection, out var direction)) return;
+
+        var column = GameGrid.Columns.FirstOrDefault(c =>
+            string.Equals(c.Header as string, state.SortColumn, StringComparison.Ordinal));
+        if (column == null || string.IsNullOrWhiteSpace(column.SortMemberPath)) return;
+
+        column.SortDirection = direction;
+        _viewModel.GamesView.SortDescriptions.Clear();
+        _viewModel.GamesView.SortDescriptions.Add(new SortDescription(column.SortMemberPath, direction));
+    }
+
+    private void SaveViewState()
+    {
+        var state = new ListViewState
+        {
+            Search = _viewModel.SearchText,
+            Platform = _viewModel.SelectedPlatform,
+            Status = _viewModel.SelectedStatus,
+            Tag = _viewModel.SelectedTag,
+            OnlyFavorites = _viewModel.OnlyFavorites,
+            OnlyMissing = _viewModel.OnlyMissing,
+            ColumnWidths = GameGrid.Columns
+                .Where(c => c.Header is string)
+                .ToDictionary(c => (string)c.Header, c => c.ActualWidth),
+        };
+
+        var sorted = GameGrid.Columns.FirstOrDefault(c => c.SortDirection != null);
+        if (sorted != null)
+        {
+            state.SortColumn = sorted.Header as string ?? "";
+            state.SortDirection = sorted.SortDirection!.Value.ToString();
+        }
+
+        AppServices.Settings.Set(ViewStateKey, JsonSerializer.Serialize(state));
     }
 
     private void OnSelectionChanged(object sender, SelectionChangedEventArgs e)
