@@ -113,6 +113,7 @@ public partial class Game : ObservableObject
         Favorite = other.Favorite;
         Status = other.Status;
         RomPath = other.RomPath;
+        DiscPaths = other.DiscPaths;
         FileSize = other.FileSize;
         CoverPath = other.CoverPath;
         Notes = other.Notes;
