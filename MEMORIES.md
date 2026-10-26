@@ -2,6 +2,9 @@
 
 ## 2026-10-27
 
+- 主界面筛选侧栏用 ListBox 绑定 `SelectedItem` 时，重建列表的 `Clear()` 会把选中值写成 null；在字段的 `OnXxxChanged` 里对 null 直接 return，才能保证筛选不被意外清空，重建后再按名字回填选中项。
+- 状态字段不能只靠用户手填：在 `AddPlayStats` 落库时用 `CASE WHEN status='未玩' THEN '在玩'` 同步，迁移里也要把 `play_count > 0` 的历史「未玩」修正，否则用户会觉得状态「没用」。
+- 评分星标放在 DataGrid 只读 CellTemplate 里点击时，要同时处理行双击启动：`OnRowDoubleClick` 中判断原始命中的 `DataGridCell.Column` 是否为评分列，避免连点星标误启动游戏。
 - 老板说的「文件路径改成 hash 值」只指列表展示与排序筛查，不改文件命名、不改库结构；提需求时容易字面误解，先问清楚。
 - `games.rom_path` 有 UNIQUE 约束；写测试造数据时多条记录不能共用同一路径，否则 Insert 抛 `SQLite Error 19: UNIQUE constraint failed`。
 - 指纹列可直接用于人工筛查：同内容不同文件名的重复条目排序后相邻，肉眼即可发现。

@@ -14,11 +14,28 @@ using Microsoft.Win32;
 
 namespace MicaRomManager.ViewModels;
 
+/// <summary>左侧平台列表项：Name 为筛选值，Display 为显示文本。</summary>
+public partial class PlatformFilterItem : ObservableObject
+{
+    public PlatformFilterItem(string name) => Name = name;
+
+    public string Name { get; }
+
+    public string Display => string.Equals(Name, MainViewModel.AllPlatforms, StringComparison.Ordinal)
+        ? "所有游戏"
+        : Name;
+
+    [ObservableProperty] private int count;
+}
+
 public partial class MainViewModel : ObservableObject
 {
     public const string AllPlatforms = "全部平台";
     public const string AllStatuses = "全部状态";
     public const string AllTags = "全部标签";
+    public const string AllRegions = "全部区域";
+    public const string AllLanguages = "全部语言";
+    public const string AllDevelopers = "全部开发商";
 
     public ObservableCollection<Game> Games { get; } = new();
     public ICollectionView GamesView { get; }
@@ -26,14 +43,22 @@ public partial class MainViewModel : ObservableObject
     public ObservableCollection<string> Tags { get; } = new();
     public ObservableCollection<string> Regions { get; } = new();
     public ObservableCollection<string> Languages { get; } = new();
+    public ObservableCollection<PlatformFilterItem> PlatformFilters { get; } = new();
+    public ObservableCollection<string> RegionFilters { get; } = new();
+    public ObservableCollection<string> LanguageFilters { get; } = new();
+    public ObservableCollection<string> DeveloperFilters { get; } = new();
     public ObservableCollection<Emulator> Emulators { get; } = new();
     public IReadOnlyList<string> Statuses { get; } = new[] { AllStatuses }.Concat(GameStatus.All).ToList();
     public IReadOnlyList<string> EditStatuses { get; } = GameStatus.All;
 
     [ObservableProperty] private string searchText = "";
     [ObservableProperty] private string selectedPlatform = AllPlatforms;
+    [ObservableProperty] private PlatformFilterItem? selectedPlatformFilter;
     [ObservableProperty] private string selectedStatus = AllStatuses;
     [ObservableProperty] private string selectedTag = AllTags;
+    [ObservableProperty] private string selectedRegion = AllRegions;
+    [ObservableProperty] private string selectedLanguage = AllLanguages;
+    [ObservableProperty] private string selectedDeveloper = AllDevelopers;
     [ObservableProperty] private bool onlyFavorites;
     [ObservableProperty] private bool onlyMissing;
     [ObservableProperty] private bool isBusy;
@@ -42,6 +67,8 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty] private int totalCount;
     [ObservableProperty] private int filteredCount;
     [ObservableProperty] private string lastRefreshText = "";
+
+    private bool _syncingPlatformFilter;
 
     public List<Game> SelectedGames { get; private set; } = new();
 
@@ -79,6 +106,8 @@ public partial class MainViewModel : ObservableObject
         foreach (var tag in SplitTags(game.Tags))
             if (!Tags.Contains(tag)) Tags.Add(tag);
 
+        RefreshPlatformFilters();
+
         // 编辑状态/平台/标签等参与筛选的字段后，按当前条件立即刷新
         ApplyFilter();
     }
@@ -115,6 +144,12 @@ public partial class MainViewModel : ObservableObject
             !string.Equals(game.Platform, SelectedPlatform, StringComparison.OrdinalIgnoreCase)) return false;
         if (SelectedStatus != AllStatuses &&
             !string.Equals(game.Status, SelectedStatus, StringComparison.OrdinalIgnoreCase)) return false;
+        if (SelectedRegion != AllRegions &&
+            !string.Equals(game.Region, SelectedRegion, StringComparison.OrdinalIgnoreCase)) return false;
+        if (SelectedLanguage != AllLanguages &&
+            !string.Equals(game.Language, SelectedLanguage, StringComparison.OrdinalIgnoreCase)) return false;
+        if (SelectedDeveloper != AllDevelopers &&
+            !string.Equals(game.Developer, SelectedDeveloper, StringComparison.OrdinalIgnoreCase)) return false;
         if (!string.IsNullOrEmpty(SelectedTag) && SelectedTag != AllTags &&
             !SplitTags(game.Tags).Contains(SelectedTag, StringComparer.OrdinalIgnoreCase)) return false;
 
@@ -125,7 +160,8 @@ public partial class MainViewModel : ObservableObject
                || Contains(game.RomPath, keyword)
                || Contains(game.Tags, keyword)
                || Contains(game.Platform, keyword)
-               || Contains(game.Genre, keyword);
+               || Contains(game.Genre, keyword)
+               || Contains(game.Developer, keyword);
 
         static bool Contains(string value, string keyword) =>
             value?.Contains(keyword, StringComparison.OrdinalIgnoreCase) == true;
@@ -143,16 +179,83 @@ public partial class MainViewModel : ObservableObject
         Rebuild(Tags, AllTags, Games.SelectMany(g => SplitTags(g.Tags)), SelectedTag, value => SelectedTag = value);
         if (!Statuses.Contains(SelectedStatus)) SelectedStatus = AllStatuses;
 
+        if (!Platforms.Contains(SelectedPlatform)) SelectedPlatform = AllPlatforms;
+        if (!Tags.Contains(SelectedTag)) SelectedTag = AllTags;
+
+        RefreshPlatformFilters();
+
+        RebuildFilter(RegionFilters, AllRegions, AppServices.Lookups.List(LookupRepository.Region),
+            Games.Select(g => g.Region));
+        RebuildFilter(LanguageFilters, AllLanguages, AppServices.Lookups.List(LookupRepository.Language),
+            Games.Select(g => g.Language));
+        RebuildFilter(DeveloperFilters, AllDevelopers, AppServices.Lookups.List(LookupRepository.Developer),
+            Games.Select(g => g.Developer));
+
+        if (!RegionFilters.Contains(SelectedRegion)) SelectedRegion = AllRegions;
+        if (!LanguageFilters.Contains(SelectedLanguage)) SelectedLanguage = AllLanguages;
+        if (!DeveloperFilters.Contains(SelectedDeveloper)) SelectedDeveloper = AllDevelopers;
+
+        // 行内编辑用的下拉：区域 / 语言。
         Regions.Clear();
         foreach (var region in AppServices.Lookups.List(LookupRepository.Region)) Regions.Add(region);
         Languages.Clear();
         foreach (var language in AppServices.Lookups.List(LookupRepository.Language)) Languages.Add(language);
+    }
 
-        // Rebuild 里 target.Clear() 会让 WPF 双向绑定把 SelectedXxx 临时置 null，
-        // 上面的 setSelected 兜底只检查旧参数值，当前字段若已被绑定写 null 就漏掉了。
-        // 这里再兜底一次，确保字段值在 ComboBox 选项里。
-        if (!Platforms.Contains(SelectedPlatform)) SelectedPlatform = AllPlatforms;
-        if (!Tags.Contains(SelectedTag)) SelectedTag = AllTags;
+    /// <summary>左侧平台列表：字典顺序优先，再补库里出现但字典没有的平台；只列有游戏的平台。</summary>
+    private void RefreshPlatformFilters()
+    {
+        var gamePlatforms = Games.Select(g => g.Platform)
+            .Where(name => !string.IsNullOrWhiteSpace(name))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        var ordered = AppServices.Lookups.List(LookupRepository.Platform)
+            .Where(name => gamePlatforms.Contains(name, StringComparer.OrdinalIgnoreCase))
+            .ToList();
+
+        foreach (var name in gamePlatforms.OrderBy(name => name, StringComparer.CurrentCultureIgnoreCase))
+            if (!ordered.Contains(name, StringComparer.OrdinalIgnoreCase)) ordered.Add(name);
+
+        var current = SelectedPlatform;
+        PlatformFilters.Clear();
+        PlatformFilters.Add(new PlatformFilterItem(AllPlatforms) { Count = Games.Count });
+        foreach (var name in ordered)
+        {
+            PlatformFilters.Add(new PlatformFilterItem(name)
+            {
+                Count = Games.Count(g => string.Equals(g.Platform, name, StringComparison.OrdinalIgnoreCase)),
+            });
+        }
+
+        _syncingPlatformFilter = true;
+        SelectedPlatformFilter = PlatformFilters
+            .FirstOrDefault(item => string.Equals(item.Name, current, StringComparison.OrdinalIgnoreCase))
+            ?? PlatformFilters[0];
+        _syncingPlatformFilter = false;
+
+        if (!string.Equals(SelectedPlatform, SelectedPlatformFilter.Name, StringComparison.OrdinalIgnoreCase))
+            SelectedPlatform = SelectedPlatformFilter.Name;
+    }
+
+    /// <summary>筛选下拉：全部值 + 字典值 + 游戏中实际出现的值，增量同步避免绑定被置空。</summary>
+    private static void RebuildFilter(ObservableCollection<string> target, string allValue,
+        IEnumerable<string> dictionaryValues, IEnumerable<string> gameValues)
+    {
+        var desired = new List<string> { allValue };
+        desired.AddRange(dictionaryValues.Where(v => !string.IsNullOrWhiteSpace(v)));
+        desired.AddRange(gameValues.Where(v => !string.IsNullOrWhiteSpace(v)));
+        desired = desired.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+
+        for (var index = target.Count - 1; index >= 0; index--)
+        {
+            if (!desired.Contains(target[index], StringComparer.OrdinalIgnoreCase)) target.RemoveAt(index);
+        }
+
+        foreach (var value in desired)
+        {
+            if (!target.Contains(value, StringComparer.OrdinalIgnoreCase)) target.Add(value);
+        }
     }
 
     /// <summary>增量同步下拉集合，避免 Clear 触发绑定把当前筛选值置空。</summary>
@@ -200,15 +303,38 @@ public partial class MainViewModel : ObservableObject
             target.PlayCount += 1;
             target.PlaySeconds += seconds;
             target.LastPlayedAt = DateTime.Now.ToString("O");
+            if (target.Status == GameStatus.NotPlayed) target.Status = GameStatus.Playing;
             StatusMessage = $"「{target.Title}」已退出，本次 {TimeSpan.FromSeconds(seconds):mm\\:ss}";
             GamesView.Refresh();
         });
     }
 
     partial void OnSearchTextChanged(string value) => ApplyFilter();
-    partial void OnSelectedPlatformChanged(string value) => ApplyFilter();
+    partial void OnSelectedPlatformChanged(string value)
+    {
+        ApplyFilter();
+
+        if (_syncingPlatformFilter) return;
+        var match = PlatformFilters
+            .FirstOrDefault(item => string.Equals(item.Name, value, StringComparison.OrdinalIgnoreCase));
+        if (match == null || ReferenceEquals(match, SelectedPlatformFilter)) return;
+
+        _syncingPlatformFilter = true;
+        SelectedPlatformFilter = match;
+        _syncingPlatformFilter = false;
+    }
+
+    partial void OnSelectedPlatformFilterChanged(PlatformFilterItem? value)
+    {
+        if (_syncingPlatformFilter || value == null) return;
+        SelectedPlatform = value.Name;
+    }
+
     partial void OnSelectedStatusChanged(string value) => ApplyFilter();
     partial void OnSelectedTagChanged(string value) => ApplyFilter();
+    partial void OnSelectedRegionChanged(string value) => ApplyFilter();
+    partial void OnSelectedLanguageChanged(string value) => ApplyFilter();
+    partial void OnSelectedDeveloperChanged(string value) => ApplyFilter();
     partial void OnOnlyFavoritesChanged(bool value) => ApplyFilter();
     partial void OnOnlyMissingChanged(bool value) => ApplyFilter();
     partial void OnTotalCountChanged(int value) => OnPropertyChanged(nameof(CountText));
@@ -638,6 +764,9 @@ public partial class MainViewModel : ObservableObject
         SelectedPlatform = AllPlatforms;
         SelectedStatus = AllStatuses;
         SelectedTag = AllTags;
+        SelectedRegion = AllRegions;
+        SelectedLanguage = AllLanguages;
+        SelectedDeveloper = AllDevelopers;
         OnlyFavorites = false;
         OnlyMissing = false;
     }

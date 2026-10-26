@@ -17,7 +17,6 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
@@ -84,34 +83,77 @@
             </DockPanel>
         </Border>
 
-        <!-- 筛选 -->
-        <Border Grid.Row="1" Padding="12,8">
-            <DockPanel>
-                <TextBlock DockPanel.Dock="Right" VerticalAlignment="Center" Text="{Binding CountText}"
-                           Foreground="{StaticResource TextSecondaryBrush}" Margin="12,0,0,0" />
-                <WrapPanel>
-                    <TextBox x:Name="SearchBox" Width="240" Margin="0,0,8,0"
-                             Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged, Delay=150}"
-                             ToolTip="搜索标题、文件名、路径、标签（Ctrl+F）" />
-                    <ComboBox Style="{StaticResource ToolbarComboBoxStyle}" Width="130"
-                              ItemsSource="{Binding Platforms}" SelectedItem="{Binding SelectedPlatform}" />
-                    <ComboBox Style="{StaticResource ToolbarComboBoxStyle}" Width="110"
-                              ItemsSource="{Binding Statuses}" SelectedItem="{Binding SelectedStatus}" />
-                    <ComboBox Style="{StaticResource ToolbarComboBoxStyle}" Width="120"
-                              ItemsSource="{Binding Tags}" SelectedItem="{Binding SelectedTag}" />
-                    <CheckBox x:Name="EditModeToggle" Content="编辑模式" IsChecked="False"
-                              Checked="OnEditModeChanged" Unchecked="OnEditModeChanged"
-                              ToolTip="开启后可直接在列表里修改单元格内容，回车或点击其他格即保存" />
-                    <CheckBox Content="仅收藏" IsChecked="{Binding OnlyFavorites}" />
-                    <CheckBox Content="仅缺失文件" IsChecked="{Binding OnlyMissing}" />
-                    <Button Content="清除筛选" Style="{StaticResource ToolButtonStyle}"
-                            Command="{Binding ClearFiltersCommand}" />
-                </WrapPanel>
-            </DockPanel>
-        </Border>
+        <!-- 左侧平台列表 + 右侧筛选与游戏列表 -->
+        <Grid Grid.Row="1" Margin="12,8,12,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="210" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Column="0" Background="{StaticResource SurfaceBrush}"
+                    BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
+                <DockPanel Margin="8">
+                    <TextBlock DockPanel.Dock="Top" Text="平台" Style="{StaticResource SectionTitleStyle}"
+                               Margin="4,2,0,8" />
+                    <ListBox x:Name="PlatformSidebar" BorderThickness="0" Background="Transparent"
+                             ItemsSource="{Binding PlatformFilters}"
+                             SelectedItem="{Binding SelectedPlatformFilter, Mode=TwoWay}">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <DockPanel MinWidth="150">
+                                    <TextBlock DockPanel.Dock="Right" Text="{Binding Count}" Margin="8,0,0,0"
+                                               VerticalAlignment="Center"
+                                               Foreground="{StaticResource TextSecondaryBrush}" />
+                                    <TextBlock Text="{Binding Display}" TextTrimming="CharacterEllipsis"
+                                               VerticalAlignment="Center" />
+                                </DockPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </DockPanel>
+            </Border>
+
+            <Grid Grid.Column="1" Margin="12,0,0,0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <!-- 细筛 -->
+                <Border Grid.Row="0" Padding="0,0,0,8">
+                    <DockPanel>
+                        <TextBlock DockPanel.Dock="Right" VerticalAlignment="Center" Text="{Binding CountText}"
+                                   Foreground="{StaticResource TextSecondaryBrush}" Margin="12,0,0,0" />
+                        <WrapPanel>
+                            <TextBox x:Name="SearchBox" Width="220" Margin="0,0,8,4"
+                                     Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged, Delay=150}"
+                                     ToolTip="搜索标题、文件名、路径、标签、开发商（Ctrl+F）" />
+                            <ComboBox Style="{StaticResource ToolbarComboBoxStyle}" Width="104"
+                                      ItemsSource="{Binding Statuses}" SelectedItem="{Binding SelectedStatus}" />
+                            <ComboBox Style="{StaticResource ToolbarComboBoxStyle}" Width="104"
+                                      ItemsSource="{Binding RegionFilters}" SelectedItem="{Binding SelectedRegion}"
+                                      ToolTip="区域" />
+                            <ComboBox Style="{StaticResource ToolbarComboBoxStyle}" Width="104"
+                                      ItemsSource="{Binding LanguageFilters}" SelectedItem="{Binding SelectedLanguage}"
+                                      ToolTip="语言" />
+                            <ComboBox Style="{StaticResource ToolbarComboBoxStyle}" Width="120"
+                                      ItemsSource="{Binding DeveloperFilters}" SelectedItem="{Binding SelectedDeveloper}"
+                                      ToolTip="开发商" />
+                            <ComboBox Style="{StaticResource ToolbarComboBoxStyle}" Width="110"
+                                      ItemsSource="{Binding Tags}" SelectedItem="{Binding SelectedTag}" />
+                            <CheckBox x:Name="EditModeToggle" Content="编辑模式" IsChecked="False"
+                                      Checked="OnEditModeChanged" Unchecked="OnEditModeChanged"
+                                      ToolTip="开启后可直接在列表里修改单元格内容，回车或点击其他格即保存" />
+                            <CheckBox Content="仅收藏" IsChecked="{Binding OnlyFavorites}" />
+                            <CheckBox Content="仅缺失文件" IsChecked="{Binding OnlyMissing}" />
+                            <Button Content="清除筛选" Style="{StaticResource ToolButtonStyle}"
+                                    Command="{Binding ClearFiltersCommand}" />
+                        </WrapPanel>
+                    </DockPanel>
+                </Border>
 
         <!-- 游戏列表 -->
-        <DataGrid x:Name="GameGrid" Grid.Row="2" Margin="12,0,12,0"
+        <DataGrid x:Name="GameGrid" Grid.Row="1"
                   Style="{StaticResource AppDataGridStyle}" RowHeight="28" IsReadOnly="True"
                   Tag="{Binding IsChecked, ElementName=EditModeToggle}"
                   ItemsSource="{Binding GamesView}"
@@ -160,6 +202,29 @@
                 </DataGridTemplateColumn>
                 <DataGridTextColumn Header="标题" Binding="{Binding Title}" Width="220"
                                     ElementStyle="{StaticResource DataGridTextStyle}" />
+                <DataGridTemplateColumn x:Name="RatingColumn" Header="评分" Width="104" SortMemberPath="Rating">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="6,0">
+                                <TextBlock FontSize="13" Cursor="Hand" Tag="1" MouseLeftButtonUp="RatingStar_Click"
+                                           Text="{Binding Rating, Converter={StaticResource StarGlyphConverter}, ConverterParameter=1}"
+                                           Foreground="{Binding Rating, Converter={StaticResource StarBrushConverter}, ConverterParameter=1}" />
+                                <TextBlock FontSize="13" Cursor="Hand" Tag="2" MouseLeftButtonUp="RatingStar_Click"
+                                           Text="{Binding Rating, Converter={StaticResource StarGlyphConverter}, ConverterParameter=2}"
+                                           Foreground="{Binding Rating, Converter={StaticResource StarBrushConverter}, ConverterParameter=2}" />
+                                <TextBlock FontSize="13" Cursor="Hand" Tag="3" MouseLeftButtonUp="RatingStar_Click"
+                                           Text="{Binding Rating, Converter={StaticResource StarGlyphConverter}, ConverterParameter=3}"
+                                           Foreground="{Binding Rating, Converter={StaticResource StarBrushConverter}, ConverterParameter=3}" />
+                                <TextBlock FontSize="13" Cursor="Hand" Tag="4" MouseLeftButtonUp="RatingStar_Click"
+                                           Text="{Binding Rating, Converter={StaticResource StarGlyphConverter}, ConverterParameter=4}"
+                                           Foreground="{Binding Rating, Converter={StaticResource StarBrushConverter}, ConverterParameter=4}" />
+                                <TextBlock FontSize="13" Cursor="Hand" Tag="5" MouseLeftButtonUp="RatingStar_Click"
+                                           Text="{Binding Rating, Converter={StaticResource StarGlyphConverter}, ConverterParameter=5}"
+                                           Foreground="{Binding Rating, Converter={StaticResource StarBrushConverter}, ConverterParameter=5}" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
                 <DataGridTemplateColumn Header="区域" Width="64" SortMemberPath="Region">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
@@ -233,9 +298,11 @@
                 </DataGridTextColumn>
             </DataGrid.Columns>
         </DataGrid>
+            </Grid>
+        </Grid>
 
         <!-- 状态栏 -->
-        <Border Grid.Row="3" Margin="0,10,0,0" Padding="12,8"
+        <Border Grid.Row="2" Margin="0,10,0,0" Padding="12,8"
                 Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource BorderBrush}"
                 BorderThickness="0,1,0,0">
             <Grid>

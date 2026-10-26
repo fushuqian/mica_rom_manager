@@ -34,6 +34,10 @@ public partial class Game : ObservableObject
     [ObservableProperty] private string publisher = "";
     [ObservableProperty] private string developer = "";
     [ObservableProperty] private bool favorite;
+    /// <summary>评分：0 表示未评分，1–5 星。</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(RatingStars))]
+    private int rating;
     [ObservableProperty] private string status = GameStatus.NotPlayed;
     [ObservableProperty] private string romPath = "";
     [ObservableProperty] private long fileSize;
@@ -51,6 +55,10 @@ public partial class Game : ObservableObject
     public bool IsMissing => !string.IsNullOrWhiteSpace(RomPath) && !File.Exists(RomPath);
 
     public string FavoriteDisplay => Favorite ? "★" : "";
+
+    /// <summary>五颗星文本，未评分为全空心。</summary>
+    public string RatingStars => new string('★', Math.Clamp(Rating, 0, 5))
+        + new string('☆', 5 - Math.Clamp(Rating, 0, 5));
 
     /// <summary>全部碟片路径（第一碟 + 附加碟）。</summary>
     public IReadOnlyList<string> Discs
@@ -119,6 +127,7 @@ public partial class Game : ObservableObject
         Publisher = other.Publisher;
         Developer = other.Developer;
         Favorite = other.Favorite;
+        Rating = other.Rating;
         Status = other.Status;
         RomPath = other.RomPath;
         RomHash = other.RomHash;

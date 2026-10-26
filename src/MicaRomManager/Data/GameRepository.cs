@@ -9,7 +9,7 @@ public sealed class GameRepository
 {
     private const string Columns =
         "id,title,platform,genre,region,language,release_year,publisher,developer,favorite,status," +
-        "rom_path,file_size,cover_path,notes,tags,emulator_id,play_count,play_seconds,last_played_at,created_at,updated_at,disc_paths,rom_hash";
+        "rom_path,file_size,cover_path,notes,tags,emulator_id,play_count,play_seconds,last_played_at,created_at,updated_at,disc_paths,rom_hash,rating";
 
     private readonly Database _db;
 
@@ -35,10 +35,10 @@ public sealed class GameRepository
         cmd.CommandText = """
             INSERT INTO games
                 (title,platform,genre,region,language,release_year,publisher,developer,favorite,status,
-                 rom_path,file_size,cover_path,notes,tags,emulator_id,play_count,play_seconds,last_played_at,created_at,updated_at,disc_paths,rom_hash)
+                 rom_path,file_size,cover_path,notes,tags,emulator_id,play_count,play_seconds,last_played_at,created_at,updated_at,disc_paths,rom_hash,rating)
             VALUES
                 (@title,@platform,@genre,@region,@language,@release_year,@publisher,@developer,@favorite,@status,
-                 @rom_path,@file_size,@cover_path,@notes,@tags,@emulator_id,@play_count,@play_seconds,@last_played_at,@created_at,@updated_at,@disc_paths,@rom_hash);
+                 @rom_path,@file_size,@cover_path,@notes,@tags,@emulator_id,@play_count,@play_seconds,@last_played_at,@created_at,@updated_at,@disc_paths,@rom_hash,@rating);
             SELECT last_insert_rowid();
             """;
         AddParameters(cmd, game);
@@ -60,6 +60,7 @@ public sealed class GameRepository
                 play_count=@play_count, play_seconds=@play_seconds, last_played_at=@last_played_at,
                 disc_paths=@disc_paths,
                 rom_hash=@rom_hash,
+                rating=@rating,
                 updated_at=@updated_at
             WHERE id=@id;
             """;
@@ -209,7 +210,7 @@ public sealed class GameRepository
         return File.Exists(candidate) ? candidate : path;
     }
 
-    /// <summary>游戏退出后累加游玩次数与时长。</summary>
+    /// <summary>游戏退出后累加游玩次数与时长；首次游玩自动把状态从「未玩」改为「在玩」。</summary>
     public void AddPlayStats(long id, long seconds)
     {
         if (seconds < 0) seconds = 0;
@@ -220,6 +221,7 @@ public sealed class GameRepository
                 play_count = play_count + 1,
                 play_seconds = play_seconds + @seconds,
                 last_played_at = @now,
+                status = CASE WHEN status = '未玩' THEN '在玩' ELSE status END,
                 updated_at = @now
             WHERE id = @id;
             """;
@@ -252,6 +254,7 @@ public sealed class GameRepository
         cmd.Parameters.AddWithValue("@last_played_at", (object?)g.LastPlayedAt ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@disc_paths", PortablePath.ToStoredMultiLine(g.DiscPaths, PortablePath.Enabled));
         cmd.Parameters.AddWithValue("@rom_hash", g.RomHash);
+        cmd.Parameters.AddWithValue("@rating", Math.Clamp(g.Rating, 0, 5));
         cmd.Parameters.AddWithValue("@created_at", g.CreatedAt.ToString("O"));
         cmd.Parameters.AddWithValue("@updated_at", g.UpdatedAt.ToString("O"));
     }
@@ -284,6 +287,7 @@ public sealed class GameRepository
             UpdatedAt = ParseDate(r.GetString(21)),
             DiscPaths = PortablePath.ExpandMultiLine(r.GetString(22)),
             RomHash = r.GetString(23),
+            Rating = r.GetInt32(24),
         };
     }
 

@@ -119,6 +119,12 @@ public partial class MainWindow : Window
             _viewModel.SelectedStatus = state.Status;
         if (!string.IsNullOrEmpty(state.Tag) && _viewModel.Tags.Contains(state.Tag))
             _viewModel.SelectedTag = state.Tag;
+        if (!string.IsNullOrEmpty(state.Region) && _viewModel.RegionFilters.Contains(state.Region))
+            _viewModel.SelectedRegion = state.Region;
+        if (!string.IsNullOrEmpty(state.Language) && _viewModel.LanguageFilters.Contains(state.Language))
+            _viewModel.SelectedLanguage = state.Language;
+        if (!string.IsNullOrEmpty(state.Developer) && _viewModel.DeveloperFilters.Contains(state.Developer))
+            _viewModel.SelectedDeveloper = state.Developer;
         if (!string.IsNullOrEmpty(state.Search))
             _viewModel.SearchText = state.Search;
 
@@ -154,6 +160,9 @@ public partial class MainWindow : Window
             Platform = _viewModel.SelectedPlatform,
             Status = _viewModel.SelectedStatus,
             Tag = _viewModel.SelectedTag,
+            Region = _viewModel.SelectedRegion,
+            Language = _viewModel.SelectedLanguage,
+            Developer = _viewModel.SelectedDeveloper,
             OnlyFavorites = _viewModel.OnlyFavorites,
             OnlyMissing = _viewModel.OnlyMissing,
             ColumnWidths = GameGrid.Columns
@@ -183,10 +192,23 @@ public partial class MainWindow : Window
     {
         if (e.ChangedButton != MouseButton.Left) return;
         if (EditModeToggle.IsChecked == true) return;
+        var cell = FindAncestor<DataGridCell>(e.OriginalSource as DependencyObject);
+        if (cell?.Column == RatingColumn) return;
         if (FindAncestor<DataGridRow>(e.OriginalSource as DependencyObject) == null) return;
         if (_viewModel.SelectedGame == null) return;
 
         _viewModel.LaunchSelectedCommand.Execute(null);
+    }
+
+    /// <summary>点击星标直接评分；再次点击同一颗星清空评分。</summary>
+    private void RatingStar_Click(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is not FrameworkElement element || element.DataContext is not Game game) return;
+        if (!int.TryParse(element.Tag as string, out var star)) return;
+
+        game.Rating = game.Rating == star ? 0 : star;
+        e.Handled = true;
+        _viewModel.SaveInline(game);
     }
 
     private void OnEditModeChanged(object sender, RoutedEventArgs e)

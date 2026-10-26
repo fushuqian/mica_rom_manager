@@ -10,6 +10,8 @@ using Microsoft.Win32;
 
 namespace MicaRomManager.ViewModels;
 
+public sealed record RatingOption(int Value, string Text);
+
 public partial class GameEditViewModel : ObservableObject
 {
     public Game Model { get; }
@@ -20,6 +22,9 @@ public partial class GameEditViewModel : ObservableObject
     public ObservableCollection<Emulator> Emulators { get; } = new();
     public IReadOnlyList<string> Statuses { get; } = GameStatus.All;
     public ObservableCollection<string> DiscItems { get; } = new();
+    public IReadOnlyList<RatingOption> RatingOptions { get; } = Enumerable.Range(0, 6)
+        .Select(value => new RatingOption(value, value == 0 ? "未评分" : new string('★', value)))
+        .ToList();
 
     [ObservableProperty] private Emulator? selectedEmulator;
     [ObservableProperty] private int selectedDiscIndex;

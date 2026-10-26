@@ -153,6 +153,13 @@ public sealed class Database
 
             SeedTags(connection);
         }
+
+        if (version < 10)
+        {
+            using var cmd = connection.CreateCommand();
+            cmd.CommandText = SchemaV10;
+            cmd.ExecuteNonQuery();
+        }
     }
 
     /// <summary>把库里已有的标签拆成独立词条写入字典。</summary>
@@ -182,6 +189,12 @@ public sealed class Database
             insert.ExecuteNonQuery();
         }
     }
+
+    private const string SchemaV10 = """
+        ALTER TABLE games ADD COLUMN rating INTEGER NOT NULL DEFAULT 0;
+        UPDATE games SET status = '在玩' WHERE play_count > 0 AND status = '未玩';
+        PRAGMA user_version = 10;
+        """;
 
     private const string SchemaV9 = """
         ALTER TABLE platforms ADD COLUMN args_template TEXT DEFAULT '';

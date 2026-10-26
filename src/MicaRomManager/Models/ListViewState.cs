@@ -7,6 +7,9 @@ public sealed class ListViewState
     public string Platform { get; set; } = "";
     public string Status { get; set; } = "";
     public string Tag { get; set; } = "";
+    public string Region { get; set; } = "";
+    public string Language { get; set; } = "";
+    public string Developer { get; set; } = "";
     public bool OnlyFavorites { get; set; }
     public bool OnlyMissing { get; set; }
     public string SortColumn { get; set; } = "";

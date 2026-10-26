@@ -7,6 +7,8 @@
     <FontFamily x:Key="MonoFontFamily">Consolas, HarmonyOS Sans SC</FontFamily>
 
     <helpers:CoverThumbnailConverter x:Key="CoverThumbnailConverter" />
+    <helpers:StarGlyphConverter x:Key="StarGlyphConverter" />
+    <helpers:StarBrushConverter x:Key="StarBrushConverter" />
     <BooleanToVisibilityConverter x:Key="BoolToVis" />
 
     <SolidColorBrush x:Key="WindowBackgroundBrush" Color="#F5F6F8" />
