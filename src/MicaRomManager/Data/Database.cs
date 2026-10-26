@@ -1,4 +1,5 @@
 using System.IO;
+using MicaRomManager.Helpers;
 using Microsoft.Data.Sqlite;
 
 namespace MicaRomManager.Data;
@@ -66,7 +67,37 @@ public sealed class Database
             cmd.CommandText = SchemaV4;
             cmd.ExecuteNonQuery();
         }
+
+        if (version < 5)
+        {
+            using (var cmd = connection.CreateCommand())
+            {
+                cmd.CommandText = SchemaV5;
+                cmd.ExecuteNonQuery();
+            }
+
+            foreach (var platform in PlatformCatalog.Common)
+            {
+                using var seed = connection.CreateCommand();
+                seed.CommandText = "INSERT OR IGNORE INTO platforms(name, folder) VALUES (@name, @name);";
+                seed.Parameters.AddWithValue("@name", platform);
+                seed.ExecuteNonQuery();
+            }
+
+            using var versionCmd = connection.CreateCommand();
+            versionCmd.CommandText = "PRAGMA user_version = 5;";
+            versionCmd.ExecuteNonQuery();
+        }
     }
+
+    private const string SchemaV5 = """
+        CREATE TABLE IF NOT EXISTS platforms (
+            name TEXT PRIMARY KEY,
+            emulator_id INTEGER,
+            folder TEXT NOT NULL DEFAULT '',
+            updated_at TEXT NOT NULL DEFAULT ''
+        );
+        """;
 
     private const string SchemaV4 = """
         ALTER TABLE games ADD COLUMN disc_paths TEXT DEFAULT '';

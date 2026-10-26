@@ -90,10 +90,12 @@ public static class RomImporter
         }
     }
 
-    /// <summary>计算库内目标路径（同名自动追加序号）。</summary>
-    public static string ResolveTargetPath(string sourceFile, string libraryRoot, string platform)
+    /// <summary>计算库内目标路径（同名自动追加序号）。folder 为空时按平台名归档。</summary>
+    public static string ResolveTargetPath(string sourceFile, string libraryRoot, string platform, string? folder = null)
     {
-        var folderName = string.IsNullOrWhiteSpace(platform) ? "未分类" : platform;
+        var folderName = !string.IsNullOrWhiteSpace(folder)
+            ? folder
+            : string.IsNullOrWhiteSpace(platform) ? "未分类" : platform;
         var directory = Path.Combine(libraryRoot, SanitizeFolderName(folderName));
         Directory.CreateDirectory(directory);
 
@@ -114,17 +116,17 @@ public static class RomImporter
     }
 
     /// <summary>复制到库目录并返回新路径。</summary>
-    public static string CopyToLibrary(string sourceFile, string libraryRoot, string platform)
+    public static string CopyToLibrary(string sourceFile, string libraryRoot, string platform, string? folder = null)
     {
-        var target = ResolveTargetPath(sourceFile, libraryRoot, platform);
+        var target = ResolveTargetPath(sourceFile, libraryRoot, platform, folder);
         File.Copy(sourceFile, target, false);
         return target;
     }
 
     /// <summary>移动到库目录并返回新路径；跨盘时退化为复制后删除源文件。</summary>
-    public static string MoveToLibrary(string sourceFile, string libraryRoot, string platform)
+    public static string MoveToLibrary(string sourceFile, string libraryRoot, string platform, string? folder = null)
     {
-        var target = ResolveTargetPath(sourceFile, libraryRoot, platform);
+        var target = ResolveTargetPath(sourceFile, libraryRoot, platform, folder);
         try
         {
             File.Move(sourceFile, target);

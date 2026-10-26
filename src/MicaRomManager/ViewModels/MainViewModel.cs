@@ -251,10 +251,14 @@ public partial class MainViewModel : ObservableObject
                     try
                     {
                         var romPath = candidate.FilePath;
+                        var platformSetting = AppServices.Platforms.Get(candidate.Platform);
+                        if (platformSetting == null) AppServices.Platforms.EnsureExists(candidate.Platform);
+
+                        var folder = platformSetting?.Folder;
                         romPath = result.Mode switch
                         {
-                            ImportMode.Copy => RomImporter.CopyToLibrary(romPath, libraryRoot, candidate.Platform),
-                            ImportMode.Move => RomImporter.MoveToLibrary(romPath, libraryRoot, candidate.Platform),
+                            ImportMode.Copy => RomImporter.CopyToLibrary(romPath, libraryRoot, candidate.Platform, folder),
+                            ImportMode.Move => RomImporter.MoveToLibrary(romPath, libraryRoot, candidate.Platform, folder),
                             _ => romPath,
                         };
 

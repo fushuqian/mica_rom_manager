@@ -3,6 +3,7 @@ using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MicaRomManager.Models;
+using MicaRomManager.Services;
 using Microsoft.Win32;
 
 namespace MicaRomManager.ViewModels;
@@ -54,7 +55,7 @@ public partial class EmulatorEditViewModel : ObservableObject
     private void BrowseInstallDir()
     {
         var dialog = new OpenFolderDialog { Title = "选择模拟器安装目录" };
-        if (dialog.ShowDialog() == true) Model.InstallDir = dialog.FolderName;
+        if (dialog.ShowDialog() == true) Model.InstallDir = LocalPath.ToStored(dialog.FolderName);
     }
 
     [RelayCommand]
@@ -71,10 +72,13 @@ public partial class EmulatorEditViewModel : ObservableObject
 
     private string ToRelative(string absolutePath)
     {
+        var stored = LocalPath.ToStored(absolutePath);
+        if (stored != absolutePath) return stored;
         if (string.IsNullOrWhiteSpace(Model.InstallDir)) return absolutePath;
         try
         {
-            var relative = Path.GetRelativePath(Model.InstallDir, absolutePath);
+            var installDir = LocalPath.Expand(Model.InstallDir);
+            var relative = Path.GetRelativePath(installDir, absolutePath);
             return relative.StartsWith("..", StringComparison.Ordinal) ? absolutePath : relative;
         }
         catch

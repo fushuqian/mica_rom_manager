@@ -145,7 +145,7 @@ public partial class EmulatorManagerViewModel : ObservableObject
 
     private void FinishInstall(Emulator emulator, EmulatorInstaller.InstallResult result)
     {
-        emulator.InstallDir = result.InstallDir;
+        emulator.InstallDir = LocalPath.ToStored(result.InstallDir);
         if (result.ExeCandidates.Count == 0)
         {
             MessageBox.Show("已复制文件，但没有找到 .exe。请手动编辑可执行文件路径。", "安装模拟器",

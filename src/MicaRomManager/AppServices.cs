@@ -12,6 +12,7 @@ public static class AppServices
     public static EmulatorRepository EmulatorRepo { get; private set; } = null!;
     public static SettingsRepository Settings { get; private set; } = null!;
     public static LookupRepository Lookups { get; private set; } = null!;
+    public static PlatformRepository Platforms { get; private set; } = null!;
     public static NetworkClientProvider Network { get; private set; } = null!;
     public static CoverStore Covers { get; private set; } = null!;
     public static RomLauncher Launcher { get; private set; } = null!;
@@ -26,11 +27,22 @@ public static class AppServices
         EmulatorRepo = new EmulatorRepository(Db);
         Settings = new SettingsRepository(Db);
         Lookups = new LookupRepository(Db);
+        Platforms = new PlatformRepository(Db);
         Network = new NetworkClientProvider(Settings);
         Covers = new CoverStore(Paths);
         Launcher = new RomLauncher(GameRepo);
         Installer = new EmulatorInstaller(Paths);
         Updater = new EmulatorUpdater(Network);
+
+        // 旧库里的绝对路径统一规范化为 %DATA% 相对形式（幂等）
+        try
+        {
+            EmulatorRepo.NormalizePaths();
+        }
+        catch
+        {
+            // 规范化失败不影响启动
+        }
     }
 
     /// <summary>代理设置变更后重建 HTTP 客户端。</summary>

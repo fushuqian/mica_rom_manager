@@ -18,9 +18,11 @@ public static class EmulatorPaths
 
         try
         {
-            var combined = Path.IsPathRooted(value)
-                ? value
-                : Path.Combine(installDir ?? "", value);
+            var expanded = LocalPath.Expand(value);
+            var baseDir = string.IsNullOrWhiteSpace(installDir) ? "" : LocalPath.Expand(installDir);
+            var combined = Path.IsPathRooted(expanded)
+                ? expanded
+                : Path.Combine(baseDir, expanded);
             var full = Path.GetFullPath(combined);
             if (!mustExist) return full;
             return File.Exists(full) ? full : null;
@@ -40,6 +42,14 @@ public static class EmulatorResolver
         {
             var bound = all.FirstOrDefault(e => e.Id == id && e.Enabled);
             if (bound != null) return bound;
+        }
+
+        // 平台管理里配置的默认模拟器优先
+        var platformEmulatorId = AppServices.Platforms.Get(game.Platform)?.EmulatorId;
+        if (platformEmulatorId is long defaultId)
+        {
+            var platformDefault = all.FirstOrDefault(e => e.Id == defaultId && e.Enabled);
+            if (platformDefault != null) return platformDefault;
         }
 
         return repository.GetDefaultForPlatform(game.Platform)

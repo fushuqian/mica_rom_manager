@@ -17,6 +17,7 @@ public partial class SettingsWindow : Window
         InitializeComponent();
         LoadGeneral();
         LoadLookups();
+        LoadPlatforms();
         DataDirText.Text = AppServices.Paths.DataDir;
 
         var version = Assembly.GetExecutingAssembly().GetName().Version;
@@ -88,6 +89,75 @@ public partial class SettingsWindow : Window
         if (list.SelectedItem is not string value) return;
         AppServices.Lookups.Remove(kind, value);
         LoadLookups();
+    }
+
+    private void LoadPlatforms(string? selectName = null)
+    {
+        var selected = selectName ?? (PlatformList.SelectedItem as PlatformSetting)?.Name;
+        PlatformList.ItemsSource = AppServices.Platforms.ListAll();
+
+        PlatformEmulatorCombo.Items.Clear();
+        PlatformEmulatorCombo.Items.Add(new ComboBoxItem { Content = "（不指定）", Tag = null });
+        foreach (var emulator in AppServices.EmulatorRepo.ListAll().Where(e => e.Enabled))
+            PlatformEmulatorCombo.Items.Add(new ComboBoxItem { Content = emulator.Name, Tag = emulator.Id });
+
+        if (PlatformList.ItemsSource is List<PlatformSetting> platforms && !string.IsNullOrEmpty(selected))
+        {
+            var match = platforms.FirstOrDefault(p => string.Equals(p.Name, selected, StringComparison.OrdinalIgnoreCase));
+            if (match != null) PlatformList.SelectedItem = match;
+        }
+    }
+
+    private void PlatformList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (PlatformList.SelectedItem is not PlatformSetting setting)
+        {
+            PlatformNameText.Text = "（未选择平台）";
+            PlatformFolderBox.Text = "";
+            return;
+        }
+
+        PlatformNameText.Text = setting.Name;
+        PlatformFolderBox.Text = setting.Folder;
+        PlatformEmulatorCombo.SelectedItem = PlatformEmulatorCombo.Items
+            .OfType<ComboBoxItem>()
+            .FirstOrDefault(item => Equals(item.Tag, setting.EmulatorId));
+    }
+
+    private void AddPlatform_Click(object sender, RoutedEventArgs e)
+    {
+        var name = NewPlatformBox.Text.Trim();
+        if (name.Length == 0) return;
+
+        AppServices.Platforms.Save(new PlatformSetting { Name = name, Folder = name });
+        NewPlatformBox.Text = "";
+        LoadPlatforms(name);
+    }
+
+    private void RemovePlatform_Click(object sender, RoutedEventArgs e)
+    {
+        if (PlatformList.SelectedItem is not PlatformSetting setting) return;
+
+        var result = MessageBox.Show($"删除平台「{setting.Name}」的配置？\n（不影响已入库的游戏）", "删除平台",
+            MessageBoxButton.YesNo, MessageBoxImage.Question);
+        if (result != MessageBoxResult.Yes) return;
+
+        AppServices.Platforms.Delete(setting.Name);
+        LoadPlatforms();
+    }
+
+    private void SavePlatform_Click(object sender, RoutedEventArgs e)
+    {
+        if (PlatformList.SelectedItem is not PlatformSetting setting)
+        {
+            MessageBox.Show("请先在左侧选择一个平台。", "平台设置", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        setting.EmulatorId = (PlatformEmulatorCombo.SelectedItem as ComboBoxItem)?.Tag as long?;
+        setting.Folder = PlatformFolderBox.Text.Trim();
+        AppServices.Platforms.Save(setting);
+        MessageBox.Show($"平台「{setting.Name}」已保存。", "平台设置", MessageBoxButton.OK, MessageBoxImage.Information);
     }
 
     private void SaveGeneral_Click(object sender, RoutedEventArgs e)

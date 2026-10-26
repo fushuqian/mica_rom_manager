@@ -1,5 +1,6 @@
 using Microsoft.Data.Sqlite;
 using MicaRomManager.Models;
+using MicaRomManager.Services;
 
 namespace MicaRomManager.Data;
 
@@ -158,6 +159,55 @@ public sealed class EmulatorRepository
         }
 
         transaction.Commit();
+    }
+
+    /// <summary>把数据目录下的绝对路径改写为 %DATA% 相对形式（幂等）。</summary>
+    public int NormalizePaths()
+    {
+        var changed = 0;
+        using var connection = _db.Open();
+
+        var rows = new List<(long Id, string Exe, string Core, string Config, string Install)>();
+        using (var cmd = connection.CreateCommand())
+        {
+            cmd.CommandText = "SELECT id, exe_path, core_path, config_path, install_dir FROM emulators;";
+            using var reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                rows.Add((reader.GetInt64(0),
+                    reader.IsDBNull(1) ? "" : reader.GetString(1),
+                    reader.IsDBNull(2) ? "" : reader.GetString(2),
+                    reader.IsDBNull(3) ? "" : reader.GetString(3),
+                    reader.IsDBNull(4) ? "" : reader.GetString(4)));
+            }
+        }
+
+        foreach (var row in rows)
+        {
+            var exe = LocalPath.ToStored(row.Exe);
+            var core = LocalPath.ToStored(row.Core);
+            var config = LocalPath.ToStored(row.Config);
+            var install = LocalPath.ToStored(row.Install);
+
+            if (exe == row.Exe && core == row.Core && config == row.Config && install == row.Install)
+                continue;
+
+            using var update = connection.CreateCommand();
+            update.CommandText = """
+                UPDATE emulators SET
+                    exe_path=@exe, core_path=@core, config_path=@config, install_dir=@install
+                WHERE id=@id;
+                """;
+            update.Parameters.AddWithValue("@exe", exe);
+            update.Parameters.AddWithValue("@core", core);
+            update.Parameters.AddWithValue("@config", config);
+            update.Parameters.AddWithValue("@install", install);
+            update.Parameters.AddWithValue("@id", row.Id);
+            update.ExecuteNonQuery();
+            changed++;
+        }
+
+        return changed;
     }
 
     public void Delete(long emulatorId)
