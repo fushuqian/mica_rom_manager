@@ -185,6 +185,8 @@
                                     ElementStyle="{StaticResource DataGridTextStyle}" />
                 <DataGridTextColumn Header="光碟数" Binding="{Binding DiscCountText}" Width="60" SortMemberPath="DiscCount"
                                     ElementStyle="{StaticResource DataGridTextStyle}" />
+                <DataGridTextColumn Header="格式" Binding="{Binding Format}" Width="60" SortMemberPath="Format"
+                                    ElementStyle="{StaticResource DataGridTextStyle}" />
                 <DataGridTemplateColumn Header="状态" Width="76" SortMemberPath="Status">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>

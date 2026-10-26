@@ -83,6 +83,11 @@ public partial class Game : ObservableObject
 
     public string FileName => string.IsNullOrWhiteSpace(RomPath) ? "" : Path.GetFileName(RomPath);
 
+    /// <summary>ROM 文件扩展名（不含点，大写）。</summary>
+    public string Format => string.IsNullOrWhiteSpace(RomPath)
+        ? ""
+        : Path.GetExtension(RomPath).TrimStart('.').ToUpperInvariant();
+
     partial void OnPlaySecondsChanged(long value) => OnPropertyChanged(nameof(PlaySecondsDisplay));
 
     partial void OnLastPlayedAtChanged(string? value) => OnPropertyChanged(nameof(LastPlayedDisplay));
@@ -95,6 +100,7 @@ public partial class Game : ObservableObject
     {
         OnPropertyChanged(nameof(IsMissing));
         OnPropertyChanged(nameof(FileName));
+        OnPropertyChanged(nameof(Format));
     }
 
     public void RefreshFileState() => OnPropertyChanged(nameof(IsMissing));
