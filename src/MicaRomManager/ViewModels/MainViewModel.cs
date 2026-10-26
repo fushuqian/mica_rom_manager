@@ -93,11 +93,11 @@ public partial class MainViewModel : ObservableObject
         if (item is not Game game) return false;
         if (OnlyFavorites && !game.Favorite) return false;
         if (OnlyMissing && !game.IsMissing) return false;
-        if (SelectedPlatform != AllPlatforms &&
+        if (!string.IsNullOrEmpty(SelectedPlatform) && SelectedPlatform != AllPlatforms &&
             !string.Equals(game.Platform, SelectedPlatform, StringComparison.OrdinalIgnoreCase)) return false;
         if (SelectedStatus != AllStatuses &&
             !string.Equals(game.Status, SelectedStatus, StringComparison.OrdinalIgnoreCase)) return false;
-        if (SelectedTag != AllTags &&
+        if (!string.IsNullOrEmpty(SelectedTag) && SelectedTag != AllTags &&
             !SplitTags(game.Tags).Contains(SelectedTag, StringComparer.OrdinalIgnoreCase)) return false;
 
         var keyword = SearchText.Trim();
@@ -124,6 +124,12 @@ public partial class MainViewModel : ObservableObject
         Rebuild(Platforms, AllPlatforms, Games.Select(g => g.Platform), SelectedPlatform, value => SelectedPlatform = value);
         Rebuild(Tags, AllTags, Games.SelectMany(g => SplitTags(g.Tags)), SelectedTag, value => SelectedTag = value);
         if (!Statuses.Contains(SelectedStatus)) SelectedStatus = AllStatuses;
+
+        // Rebuild 里 target.Clear() 会让 WPF 双向绑定把 SelectedXxx 临时置 null，
+        // 上面的 setSelected 兜底只检查旧参数值，当前字段若已被绑定写 null 就漏掉了。
+        // 这里再兜底一次，确保字段值在 ComboBox 选项里。
+        if (!Platforms.Contains(SelectedPlatform)) SelectedPlatform = AllPlatforms;
+        if (!Tags.Contains(SelectedTag)) SelectedTag = AllTags;
     }
 
     private static void Rebuild(ObservableCollection<string> target, string allValue, IEnumerable<string> values,
