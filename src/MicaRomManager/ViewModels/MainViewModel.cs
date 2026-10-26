@@ -6,6 +6,7 @@ using System.Windows;
 using System.Windows.Data;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using MicaRomManager.Data;
 using MicaRomManager.Models;
 using MicaRomManager.Services;
 using MicaRomManager.Views;
@@ -23,8 +24,11 @@ public partial class MainViewModel : ObservableObject
     public ICollectionView GamesView { get; }
     public ObservableCollection<string> Platforms { get; } = new();
     public ObservableCollection<string> Tags { get; } = new();
+    public ObservableCollection<string> Regions { get; } = new();
+    public ObservableCollection<string> Languages { get; } = new();
     public ObservableCollection<Emulator> Emulators { get; } = new();
     public IReadOnlyList<string> Statuses { get; } = new[] { AllStatuses }.Concat(GameStatus.All).ToList();
+    public IReadOnlyList<string> EditStatuses { get; } = GameStatus.All;
 
     [ObservableProperty] private string searchText = "";
     [ObservableProperty] private string selectedPlatform = AllPlatforms;
@@ -63,6 +67,17 @@ public partial class MainViewModel : ObservableObject
         TotalCount = Games.Count;
         LastRefreshText = $"上次刷新：{DateTime.Now:HH:mm:ss}";
         ApplyFilter();
+    }
+
+    /// <summary>主界面行内编辑后落库；只追加新选项，避免清空下拉导致绑定被置空。</summary>
+    public void SaveInline(Game game)
+    {
+        AppServices.GameRepo.Update(game);
+
+        if (!string.IsNullOrWhiteSpace(game.Platform) && !Platforms.Contains(game.Platform))
+            Platforms.Add(game.Platform);
+        foreach (var tag in SplitTags(game.Tags))
+            if (!Tags.Contains(tag)) Tags.Add(tag);
     }
 
     public void LoadEmulators()
@@ -124,6 +139,11 @@ public partial class MainViewModel : ObservableObject
         Rebuild(Platforms, AllPlatforms, Games.Select(g => g.Platform), SelectedPlatform, value => SelectedPlatform = value);
         Rebuild(Tags, AllTags, Games.SelectMany(g => SplitTags(g.Tags)), SelectedTag, value => SelectedTag = value);
         if (!Statuses.Contains(SelectedStatus)) SelectedStatus = AllStatuses;
+
+        Regions.Clear();
+        foreach (var region in AppServices.Lookups.List(LookupRepository.Region)) Regions.Add(region);
+        Languages.Clear();
+        foreach (var language in AppServices.Lookups.List(LookupRepository.Language)) Languages.Add(language);
 
         // Rebuild 里 target.Clear() 会让 WPF 双向绑定把 SelectedXxx 临时置 null，
         // 上面的 setSelected 兜底只检查旧参数值，当前字段若已被绑定写 null 就漏掉了。

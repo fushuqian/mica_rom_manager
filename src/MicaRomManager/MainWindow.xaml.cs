@@ -3,6 +3,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
+using System.Windows.Threading;
 using MicaRomManager.Models;
 using MicaRomManager.ViewModels;
 
@@ -28,10 +29,24 @@ public partial class MainWindow : Window
     private void OnRowDoubleClick(object sender, MouseButtonEventArgs e)
     {
         if (e.ChangedButton != MouseButton.Left) return;
+        if (EditModeToggle.IsChecked == true) return;
         if (FindAncestor<DataGridRow>(e.OriginalSource as DependencyObject) == null) return;
         if (_viewModel.SelectedGame == null) return;
 
         _viewModel.EditSelectedCommand.Execute(null);
+    }
+
+    private void OnEditModeChanged(object sender, RoutedEventArgs e)
+    {
+        GameGrid.IsReadOnly = EditModeToggle.IsChecked != true;
+    }
+
+    private void OnCellEditEnding(object sender, DataGridCellEditEndingEventArgs e)
+    {
+        if (e.EditAction != DataGridEditAction.Commit) return;
+        if (e.Row.Item is not Game game) return;
+
+        Dispatcher.BeginInvoke(() => _viewModel.SaveInline(game), DispatcherPriority.Background);
     }
 
     private void OnPreviewKeyDown(object sender, KeyEventArgs e)
@@ -45,6 +60,7 @@ public partial class MainWindow : Window
         }
 
         if (e.OriginalSource is TextBox || e.OriginalSource is ComboBox) return;
+        if (EditModeToggle.IsChecked == true) return;
 
         switch (e.Key)
         {

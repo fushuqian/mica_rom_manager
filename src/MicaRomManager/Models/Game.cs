@@ -21,7 +21,9 @@ public partial class Game : ObservableObject
     [ObservableProperty] private string platform = "";
     [ObservableProperty] private string genre = "";
     [ObservableProperty] private string region = "";
-    [ObservableProperty] private string language = "";
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(LanguageDisplay))]
+    private string language = "";
     [ObservableProperty] private int? releaseYear;
     [ObservableProperty] private string publisher = "";
     [ObservableProperty] private string developer = "";
@@ -43,6 +45,8 @@ public partial class Game : ObservableObject
     public bool IsMissing => !string.IsNullOrWhiteSpace(RomPath) && !File.Exists(RomPath);
 
     public string FavoriteDisplay => Favorite ? "★" : "";
+
+    public string LanguageDisplay => Language.Replace(",", "、");
 
     public string PlaySecondsDisplay => PlaySeconds <= 0
         ? ""
