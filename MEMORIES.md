@@ -3,6 +3,7 @@
 ## 2026-10-26
 
 - 本机原无 .NET SDK（仅运行时），`dotnet build` 报 "No .NET SDKs were found"；`winget install Microsoft.DotNet.SDK.9` 装 9.0.320 解决。构建用全路径 `C:\Program Files\dotnet\dotnet.exe` 更稳。
+- 唯一运行/数据目录：`d:\Trae\MICA_ROM_MANAGER\publish`（exe 与 data 同级，便携模式）。每次交付都执行 `dotnet publish src\MicaRomManager\MicaRomManager.csproj -c Release -r win-x64 --self-contained true -o publish`，并从 publish 启动验证；禁止再从 bin\Release 或其它位置启动，否则数据会分叉。
 - `.gitignore` 写 `data/` 会匹配任意层级的 data 目录，本项目因此漏提交了 `src/MicaRomManager/Data/` 整个数据层。忽略目录一律加前导 `/` 锚定仓库根。
 - 便携发布目录 `publish/` 是 self-contained 产物；只拷贝 bin 的 exe 进 publish 会让程序因缺运行时崩溃（apphost 变框架依赖）。要更新就用 `dotnet publish -o publish`。
 - 数据库迁移验证：SQLite 主文件头 offset 60 的 4 字节大端即 user_version；表结构 SQL 明文存在文件里，可直接搜字段名确认。
