@@ -52,7 +52,33 @@ public sealed class Database
             cmd.CommandText = SchemaV2;
             cmd.ExecuteNonQuery();
         }
+
+        if (version < 3)
+        {
+            using var cmd = connection.CreateCommand();
+            cmd.CommandText = SchemaV3;
+            cmd.ExecuteNonQuery();
+        }
     }
+
+    private const string SchemaV3 = """
+        CREATE TABLE IF NOT EXISTS lookup_items (
+            kind TEXT NOT NULL,
+            value TEXT NOT NULL,
+            PRIMARY KEY (kind, value)
+        );
+
+        INSERT OR IGNORE INTO lookup_items(kind, value) VALUES
+            ('region', '日版'), ('region', '美版'), ('region', '欧版'), ('region', '国行'),
+            ('region', '港版'), ('region', '台版'), ('region', '韩版'), ('region', '汉化'),
+            ('region', '世界版'),
+            ('language', '简体中文'), ('language', '繁体中文'), ('language', '英语'),
+            ('language', '日语'), ('language', '韩语'), ('language', '法语'),
+            ('language', '德语'), ('language', '西班牙语'), ('language', '意大利语'),
+            ('language', '俄语'), ('language', '葡萄牙语'), ('language', '多语言');
+
+        PRAGMA user_version = 3;
+        """;
 
     private const string SchemaV2 = """
         ALTER TABLE games ADD COLUMN language TEXT DEFAULT '';

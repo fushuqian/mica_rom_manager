@@ -11,6 +11,7 @@ public static class AppServices
     public static GameRepository GameRepo { get; private set; } = null!;
     public static EmulatorRepository EmulatorRepo { get; private set; } = null!;
     public static SettingsRepository Settings { get; private set; } = null!;
+    public static LookupRepository Lookups { get; private set; } = null!;
     public static NetworkClientProvider Network { get; private set; } = null!;
     public static CoverStore Covers { get; private set; } = null!;
     public static RomLauncher Launcher { get; private set; } = null!;
@@ -24,6 +25,7 @@ public static class AppServices
         GameRepo = new GameRepository(Db);
         EmulatorRepo = new EmulatorRepository(Db);
         Settings = new SettingsRepository(Db);
+        Lookups = new LookupRepository(Db);
         Network = new NetworkClientProvider(Settings);
         Covers = new CoverStore(Paths);
         Launcher = new RomLauncher(GameRepo);

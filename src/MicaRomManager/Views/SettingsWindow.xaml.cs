@@ -3,6 +3,7 @@ using System.Reflection;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
+using MicaRomManager.Data;
 using MicaRomManager.Models;
 using MicaRomManager.Services;
 using Microsoft.Win32;
@@ -15,6 +16,7 @@ public partial class SettingsWindow : Window
     {
         InitializeComponent();
         LoadGeneral();
+        LoadLookups();
         DataDirText.Text = AppServices.Paths.DataDir;
 
         var version = Assembly.GetExecutingAssembly().GetName().Version;
@@ -39,6 +41,48 @@ public partial class SettingsWindow : Window
         2 => "manual",
         _ => "system",
     };
+
+    private void LoadLookups()
+    {
+        FillList(RegionList, AppServices.Lookups.List(LookupRepository.Region));
+        FillList(LanguageList, AppServices.Lookups.List(LookupRepository.Language));
+
+        static void FillList(ListBox list, IReadOnlyList<string> values)
+        {
+            list.Items.Clear();
+            foreach (var value in values) list.Items.Add(value);
+        }
+    }
+
+    private void AddRegion_Click(object sender, RoutedEventArgs e) =>
+        AddLookup(LookupRepository.Region, NewRegionBox, RegionList);
+
+    private void AddLanguage_Click(object sender, RoutedEventArgs e) =>
+        AddLookup(LookupRepository.Language, NewLanguageBox, LanguageList);
+
+    private void RemoveRegion_Click(object sender, RoutedEventArgs e) =>
+        RemoveLookup(LookupRepository.Region, RegionList);
+
+    private void RemoveLanguage_Click(object sender, RoutedEventArgs e) =>
+        RemoveLookup(LookupRepository.Language, LanguageList);
+
+    private void AddLookup(string kind, TextBox input, ListBox list)
+    {
+        var value = input.Text.Trim();
+        if (value.Length == 0) return;
+
+        AppServices.Lookups.Add(kind, value);
+        input.Text = "";
+        LoadLookups();
+        list.SelectedItem = value;
+    }
+
+    private void RemoveLookup(string kind, ListBox list)
+    {
+        if (list.SelectedItem is not string value) return;
+        AppServices.Lookups.Remove(kind, value);
+        LoadLookups();
+    }
 
     private void SaveGeneral_Click(object sender, RoutedEventArgs e)
     {

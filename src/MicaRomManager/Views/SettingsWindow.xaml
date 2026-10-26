@@ -85,6 +85,42 @@
                 <views:EmulatorManagerView />
             </TabItem>
 
+            <TabItem Header="区域 / 语言">
+                <Grid Margin="16">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="24" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Row="0" Grid.Column="0" Style="{StaticResource SectionTitleStyle}" Text="区域" />
+                    <TextBlock Grid.Row="0" Grid.Column="2" Style="{StaticResource SectionTitleStyle}" Text="语言" />
+
+                    <ListBox x:Name="RegionList" Grid.Row="1" Grid.Column="0" />
+                    <ListBox x:Name="LanguageList" Grid.Row="1" Grid.Column="2" />
+
+                    <StackPanel Grid.Row="2" Grid.Column="0" Orientation="Horizontal" Margin="0,12,0,0">
+                        <TextBox x:Name="NewRegionBox" Width="150" Margin="0,0,8,0"
+                                 ToolTip="输入新的区域名称，例如「日版」" />
+                        <Button Content="添加" Style="{StaticResource SecondaryButtonStyle}" Click="AddRegion_Click" />
+                        <Button Content="删除选中" Style="{StaticResource SecondaryButtonStyle}" Margin="8,0,0,0"
+                                Click="RemoveRegion_Click" />
+                    </StackPanel>
+                    <StackPanel Grid.Row="2" Grid.Column="2" Orientation="Horizontal" Margin="0,12,0,0">
+                        <TextBox x:Name="NewLanguageBox" Width="150" Margin="0,0,8,0"
+                                 ToolTip="输入新的语言名称，例如「简体中文」" />
+                        <Button Content="添加" Style="{StaticResource SecondaryButtonStyle}" Click="AddLanguage_Click" />
+                        <Button Content="删除选中" Style="{StaticResource SecondaryButtonStyle}" Margin="8,0,0,0"
+                                Click="RemoveLanguage_Click" />
+                    </StackPanel>
+                </Grid>
+            </TabItem>
+
             <TabItem Header="数据维护">
                 <StackPanel Margin="16">
                     <TextBlock Style="{StaticResource SectionTitleStyle}" Text="数据库与数据" />

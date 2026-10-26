@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using MicaRomManager.Data;
 using MicaRomManager.Helpers;
 using MicaRomManager.Models;
 using MicaRomManager.Services;
@@ -14,6 +15,8 @@ public partial class GameEditViewModel : ObservableObject
     public Game Model { get; }
     public bool IsNew { get; }
     public ObservableCollection<string> Platforms { get; } = new();
+    public ObservableCollection<string> Regions { get; } = new();
+    public ObservableCollection<string> Languages { get; } = new();
     public ObservableCollection<Emulator> Emulators { get; } = new();
     public IReadOnlyList<string> Statuses { get; } = GameStatus.All;
 
@@ -36,6 +39,9 @@ public partial class GameEditViewModel : ObservableObject
         {
             if (!Platforms.Contains(platform, StringComparer.OrdinalIgnoreCase)) Platforms.Add(platform);
         }
+
+        foreach (var region in AppServices.Lookups.List(LookupRepository.Region)) Regions.Add(region);
+        foreach (var language in AppServices.Lookups.List(LookupRepository.Language)) Languages.Add(language);
 
         foreach (var emulator in AppServices.EmulatorRepo.ListAll()) Emulators.Add(emulator);
         SelectedEmulator = Emulators.FirstOrDefault(e => e.Id == game.EmulatorId);
