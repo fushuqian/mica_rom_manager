@@ -157,21 +157,6 @@
                         </DataTemplate>
                     </DataGridTemplateColumn.CellEditingTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTemplateColumn Header="封面" Width="62">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <Border Width="36" Height="36" CornerRadius="3" Background="#F0F2F5"
-                                    HorizontalAlignment="Center" VerticalAlignment="Center">
-                                <Grid>
-                                    <TextBlock Text="无" FontSize="10" Foreground="#A8B0B8"
-                                               HorizontalAlignment="Center" VerticalAlignment="Center" />
-                                    <Image Stretch="UniformToFill"
-                                           Source="{Binding CoverPath, Converter={StaticResource CoverThumbnailConverter}}" />
-                                </Grid>
-                            </Border>
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
                 <DataGridTextColumn Header="标题" Binding="{Binding Title}" Width="220"
                                     ElementStyle="{StaticResource DataGridTextStyle}" />
                 <DataGridTemplateColumn Header="区域" Width="64">
