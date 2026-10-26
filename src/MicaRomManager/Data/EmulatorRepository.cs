@@ -7,7 +7,7 @@ namespace MicaRomManager.Data;
 public sealed class EmulatorRepository
 {
     private const string Columns =
-        "id,name,exe_path,args_template,core_path,supported_ext,version,install_dir,config_path,github_repo,notes,enabled";
+        "id,name,exe_path,args_template,core_path,supported_ext,version,install_dir,config_path,github_repo,notes,enabled,website_url";
 
     private readonly Database _db;
 
@@ -71,9 +71,9 @@ public sealed class EmulatorRepository
         {
             cmd.CommandText = """
                 INSERT INTO emulators
-                    (name,exe_path,args_template,core_path,supported_ext,version,install_dir,config_path,github_repo,notes,enabled,created_at,updated_at)
+                    (name,exe_path,args_template,core_path,supported_ext,version,install_dir,config_path,github_repo,website_url,notes,enabled,created_at,updated_at)
                 VALUES
-                    (@name,@exe_path,@args_template,@core_path,@supported_ext,@version,@install_dir,@config_path,@github_repo,@notes,@enabled,@created_at,@updated_at);
+                    (@name,@exe_path,@args_template,@core_path,@supported_ext,@version,@install_dir,@config_path,@github_repo,@website_url,@notes,@enabled,@created_at,@updated_at);
                 SELECT last_insert_rowid();
                 """;
             AddParameters(cmd, emulator);
@@ -85,8 +85,8 @@ public sealed class EmulatorRepository
                 UPDATE emulators SET
                     name=@name, exe_path=@exe_path, args_template=@args_template, core_path=@core_path,
                     supported_ext=@supported_ext, version=@version, install_dir=@install_dir,
-                    config_path=@config_path, github_repo=@github_repo, notes=@notes, enabled=@enabled,
-                    updated_at=@updated_at
+                    config_path=@config_path, github_repo=@github_repo, website_url=@website_url,
+                    notes=@notes, enabled=@enabled, updated_at=@updated_at
                 WHERE id=@id;
                 """;
             AddParameters(cmd, emulator);
@@ -245,6 +245,7 @@ public sealed class EmulatorRepository
         cmd.Parameters.AddWithValue("@install_dir", e.InstallDir);
         cmd.Parameters.AddWithValue("@config_path", e.ConfigPath);
         cmd.Parameters.AddWithValue("@github_repo", e.GithubRepo);
+        cmd.Parameters.AddWithValue("@website_url", e.WebsiteUrl);
         cmd.Parameters.AddWithValue("@notes", e.Notes);
         cmd.Parameters.AddWithValue("@enabled", e.Enabled ? 1 : 0);
         cmd.Parameters.AddWithValue("@created_at", DateTime.Now.ToString("O"));
@@ -267,6 +268,7 @@ public sealed class EmulatorRepository
             GithubRepo = r.GetString(9),
             Notes = r.GetString(10),
             Enabled = r.GetInt64(11) != 0,
+            WebsiteUrl = r.GetString(12),
         };
     }
 }

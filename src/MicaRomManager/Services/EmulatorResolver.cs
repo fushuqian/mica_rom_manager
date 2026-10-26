@@ -59,7 +59,7 @@ public static class EmulatorResolver
             if (platformDefault != null) return platformDefault;
         }
 
-        return repository.GetDefaultForPlatform(game.Platform)
-               ?? repository.ListForPlatform(game.Platform).FirstOrDefault();
+        // 绑定平台已退役，未在平台设置里指定默认模拟器时由调用方提示
+        return null;
     }
 }

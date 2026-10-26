@@ -15,6 +15,8 @@ public partial class Emulator : ObservableObject
     [ObservableProperty] private string installDir = "";
     [ObservableProperty] private string configPath = "";
     [ObservableProperty] private string githubRepo = "";
+    /// <summary>官网或发布页地址，用于「版本更新」跳转。</summary>
+    [ObservableProperty] private string websiteUrl = "";
     [ObservableProperty] private string notes = "";
     [ObservableProperty] private bool enabled = true;
 

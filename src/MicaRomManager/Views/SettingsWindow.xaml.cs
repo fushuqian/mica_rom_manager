@@ -18,7 +18,7 @@ public partial class SettingsWindow : Window
     {
         InitializeComponent();
         LoadGeneral();
-        LoadLookups();
+        LoadLookupKinds();
         LoadPlatforms();
         DataDirText.Text = AppServices.Paths.DataDir;
 
@@ -52,46 +52,84 @@ public partial class SettingsWindow : Window
         _ => "system",
     };
 
-    private void LoadLookups()
-    {
-        FillList(RegionList, AppServices.Lookups.List(LookupRepository.Region));
-        FillList(LanguageList, AppServices.Lookups.List(LookupRepository.Language));
+    private LookupKind? _currentLookupKind;
 
-        static void FillList(ListBox list, IReadOnlyList<string> values)
+    private void LoadLookupKinds()
+    {
+        LookupKindList.ItemsSource = LookupRepository.Kinds;
+        LookupKindList.DisplayMemberPath = "Title";
+        LookupKindList.SelectedIndex = 0;
+    }
+
+    private void LookupKindList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        _currentLookupKind = LookupKindList.SelectedItem as LookupKind;
+        NewLookupValueBox.Text = "";
+        LoadLookupValues();
+    }
+
+    private void LoadLookupValues()
+    {
+        LookupValueList.Items.Clear();
+        if (_currentLookupKind == null) return;
+
+        foreach (var value in AppServices.Lookups.List(_currentLookupKind.Key))
+            LookupValueList.Items.Add(value);
+    }
+
+    private void AddLookupValue_Click(object sender, RoutedEventArgs e)
+    {
+        if (_currentLookupKind == null) return;
+
+        var result = AppServices.Lookups.Add(_currentLookupKind.Key, NewLookupValueBox.Text);
+        if (!result.Success)
         {
-            list.Items.Clear();
-            foreach (var value in values) list.Items.Add(value);
+            MessageBox.Show(result.Message, "字典库", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
         }
+
+        NewLookupValueBox.Text = "";
+        LoadLookupValues();
+        if (_currentLookupKind.Key == LookupRepository.Platform) LoadPlatforms();
     }
 
-    private void AddRegion_Click(object sender, RoutedEventArgs e) =>
-        AddLookup(LookupRepository.Region, NewRegionBox, RegionList);
-
-    private void AddLanguage_Click(object sender, RoutedEventArgs e) =>
-        AddLookup(LookupRepository.Language, NewLanguageBox, LanguageList);
-
-    private void RemoveRegion_Click(object sender, RoutedEventArgs e) =>
-        RemoveLookup(LookupRepository.Region, RegionList);
-
-    private void RemoveLanguage_Click(object sender, RoutedEventArgs e) =>
-        RemoveLookup(LookupRepository.Language, LanguageList);
-
-    private void AddLookup(string kind, TextBox input, ListBox list)
+    private void RenameLookupValue_Click(object sender, RoutedEventArgs e)
     {
-        var value = input.Text.Trim();
-        if (value.Length == 0) return;
+        if (_currentLookupKind == null) return;
+        if (LookupValueList.SelectedItem is not string oldValue)
+        {
+            MessageBox.Show("请先在右侧列表选中要重命名的值。", "字典库",
+                MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
 
-        AppServices.Lookups.Add(kind, value);
-        input.Text = "";
-        LoadLookups();
-        list.SelectedItem = value;
+        var result = AppServices.Lookups.Rename(_currentLookupKind.Key, oldValue, NewLookupValueBox.Text);
+        MessageBox.Show(result.Message, "字典库", MessageBoxButton.OK,
+            result.Success ? MessageBoxImage.Information : MessageBoxImage.Warning);
+        if (!result.Success) return;
+
+        NewLookupValueBox.Text = "";
+        LoadLookupValues();
+        if (_currentLookupKind.Key == LookupRepository.Platform) LoadPlatforms();
     }
 
-    private void RemoveLookup(string kind, ListBox list)
+    private void RemoveLookupValue_Click(object sender, RoutedEventArgs e)
     {
-        if (list.SelectedItem is not string value) return;
-        AppServices.Lookups.Remove(kind, value);
-        LoadLookups();
+        if (_currentLookupKind == null) return;
+        if (LookupValueList.SelectedItem is not string value)
+        {
+            MessageBox.Show("请先在右侧列表选中要删除的值。", "字典库",
+                MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        var result = AppServices.Lookups.Delete(_currentLookupKind.Key, value);
+        MessageBox.Show(result.Message, "字典库", MessageBoxButton.OK,
+            result.Success ? MessageBoxImage.Information : MessageBoxImage.Warning);
+        if (!result.Success) return;
+
+        LoadLookupValues();
+        if (_currentLookupKind.Key == LookupRepository.Platform) LoadPlatforms();
     }
 
     private void LoadPlatforms(string? selectName = null)
@@ -119,12 +157,14 @@ public partial class SettingsWindow : Window
             PlatformNameText.Text = "（未选择平台）";
             PlatformFolderBox.Text = "";
             PlatformFormatsBox.Text = "";
+            PlatformArgsBox.Text = "";
             return;
         }
 
         PlatformNameText.Text = setting.Name;
         PlatformFolderBox.Text = setting.Folder;
         PlatformFormatsBox.Text = setting.Formats;
+        PlatformArgsBox.Text = setting.ArgsTemplate;
         PlatformEmulatorCombo.SelectedItem = PlatformEmulatorCombo.Items
             .OfType<ComboBoxItem>()
             .FirstOrDefault(item => Equals(item.Tag, setting.EmulatorId));
@@ -168,28 +208,6 @@ public partial class SettingsWindow : Window
             ?? PlatformCoreCombo.Items[0];
     }
 
-    private void AddPlatform_Click(object sender, RoutedEventArgs e)
-    {
-        var name = NewPlatformBox.Text.Trim();
-        if (name.Length == 0) return;
-
-        AppServices.Platforms.Save(new PlatformSetting { Name = name, Folder = name });
-        NewPlatformBox.Text = "";
-        LoadPlatforms(name);
-    }
-
-    private void RemovePlatform_Click(object sender, RoutedEventArgs e)
-    {
-        if (PlatformList.SelectedItem is not PlatformSetting setting) return;
-
-        var result = MessageBox.Show($"删除平台「{setting.Name}」的配置？\n（不影响已入库的游戏）", "删除平台",
-            MessageBoxButton.YesNo, MessageBoxImage.Question);
-        if (result != MessageBoxResult.Yes) return;
-
-        AppServices.Platforms.Delete(setting.Name);
-        LoadPlatforms();
-    }
-
     private void SavePlatform_Click(object sender, RoutedEventArgs e)
     {
         if (PlatformList.SelectedItem is not PlatformSetting setting)
@@ -202,6 +220,7 @@ public partial class SettingsWindow : Window
         setting.Folder = PlatformFolderBox.Text.Trim();
         setting.Formats = PlatformFormats.Normalize(PlatformFormatsBox.Text);
         setting.CorePath = (PlatformCoreCombo.SelectedItem as ComboBoxItem)?.Tag as string ?? "";
+        setting.ArgsTemplate = PlatformArgsBox.Text.Trim();
         AppServices.Platforms.Save(setting);
         MessageBox.Show($"平台「{setting.Name}」已保存。", "平台设置", MessageBoxButton.OK, MessageBoxImage.Information);
     }

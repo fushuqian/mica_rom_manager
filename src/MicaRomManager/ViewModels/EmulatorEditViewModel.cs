@@ -1,4 +1,3 @@
-using System.Collections.ObjectModel;
 using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -13,8 +12,6 @@ public partial class EmulatorEditViewModel : ObservableObject
     public Emulator Model { get; }
     public bool IsNew { get; }
 
-    [ObservableProperty] private string platformsText = "";
-    [ObservableProperty] private bool makeDefaultForPlatforms;
     [ObservableProperty] private string error = "";
 
     public event Action<bool>? RequestClose;
@@ -23,8 +20,6 @@ public partial class EmulatorEditViewModel : ObservableObject
     {
         Model = emulator;
         IsNew = isNew;
-        PlatformsText = string.Join(", ", emulator.Platforms);
-        MakeDefaultForPlatforms = emulator.DefaultPlatforms.Count > 0;
     }
 
     [RelayCommand]
@@ -40,18 +35,6 @@ public partial class EmulatorEditViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void BrowseCore()
-    {
-        var dialog = new OpenFileDialog
-        {
-            Title = "选择模拟器核心文件",
-            Filter = "核心文件|*.dll;*.so;*.dylib|所有文件|*.*",
-        };
-        if (dialog.ShowDialog() != true) return;
-        Model.CorePath = ToRelative(dialog.FileName);
-    }
-
-    [RelayCommand]
     private void BrowseInstallDir()
     {
         var dialog = new OpenFolderDialog { Title = "选择模拟器安装目录" };
@@ -59,58 +42,26 @@ public partial class EmulatorEditViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void BrowseConfig()
-    {
-        var dialog = new OpenFileDialog
-        {
-            Title = "选择模拟器配置文件（目录可直接手工填写）",
-            Filter = "所有文件|*.*",
-        };
-        if (dialog.ShowDialog() != true) return;
-        Model.ConfigPath = ToRelative(dialog.FileName);
-    }
-
-    private string ToRelative(string absolutePath)
-    {
-        var stored = LocalPath.ToStored(absolutePath);
-        if (stored != absolutePath) return stored;
-        if (string.IsNullOrWhiteSpace(Model.InstallDir)) return absolutePath;
-        try
-        {
-            var installDir = LocalPath.Expand(Model.InstallDir);
-            var relative = Path.GetRelativePath(installDir, absolutePath);
-            return relative.StartsWith("..", StringComparison.Ordinal) ? absolutePath : relative;
-        }
-        catch
-        {
-            return absolutePath;
-        }
-    }
-
-    [RelayCommand]
     private void Save()
     {
         Error = "";
+
         if (string.IsNullOrWhiteSpace(Model.Name))
         {
             Error = "名称不能为空。";
             return;
         }
 
-        if (string.IsNullOrWhiteSpace(Model.ExePath))
+        if (!string.IsNullOrWhiteSpace(Model.WebsiteUrl))
         {
-            Error = "可执行文件路径不能为空（也可先保存，稍后安装后自动填入）。";
+            var url = Model.WebsiteUrl.Trim();
+            if (!Uri.TryCreate(url, UriKind.Absolute, out var uri) ||
+                (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps))
+            {
+                Error = "官网地址需要是 http:// 或 https:// 开头的完整网址。";
+                return;
+            }
         }
-
-        var platforms = PlatformsText
-            .Split(new[] { ',', '，', ';', '；' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .ToList();
-
-        Model.Platforms = platforms;
-        Model.DefaultPlatforms = MakeDefaultForPlatforms
-            ? new HashSet<string>(platforms, StringComparer.OrdinalIgnoreCase)
-            : new HashSet<string>(Model.DefaultPlatforms.Where(platforms.Contains), StringComparer.OrdinalIgnoreCase);
 
         try
         {
@@ -127,4 +78,22 @@ public partial class EmulatorEditViewModel : ObservableObject
 
     [RelayCommand]
     private void Cancel() => RequestClose?.Invoke(false);
+
+    private string ToRelative(string absolutePath)
+    {
+        var stored = LocalPath.ToStored(absolutePath);
+        if (stored != absolutePath) return stored;
+        if (string.IsNullOrWhiteSpace(Model.InstallDir)) return absolutePath;
+
+        try
+        {
+            var installDir = LocalPath.Expand(Model.InstallDir);
+            var relative = Path.GetRelativePath(installDir, absolutePath);
+            return relative.StartsWith("..", StringComparison.Ordinal) ? absolutePath : relative;
+        }
+        catch
+        {
+            return absolutePath;
+        }
+    }
 }

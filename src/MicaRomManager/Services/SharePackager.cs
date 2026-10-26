@@ -28,7 +28,7 @@ public sealed class SharePackager
     private static readonly UTF8Encoding Utf8NoBom = new(false);
     private static readonly string[] InvalidNameChars = { "\\", "/", ":", "*", "?", "\"", "<", ">", "|" };
 
-    private sealed record EmulatorLayout(string? ExeRelative, string? CoreRelative, string? ConfigRelative);
+    private sealed record EmulatorLayout(string? ExeRelative, string? CoreRelative);
 
     public long EstimateSize(IReadOnlyList<ShareItem> items, bool includeEmulators, string? saveDirectory)
     {
@@ -91,15 +91,18 @@ public sealed class SharePackager
         Directory.CreateDirectory(packageDir);
         result.PackageDir = packageDir;
 
-        var layouts = new Dictionary<long, EmulatorLayout>();
+        var layouts = new Dictionary<(long EmulatorId, string Platform), EmulatorLayout>();
         if (includeEmulators)
         {
-            foreach (var emulator in items.Select(i => i.Emulator).DistinctBy(e => e.Id))
+            var prepared = new HashSet<long>();
+            foreach (var item in items)
             {
+                var emulator = item.Emulator;
                 var sourceDirectory = GetEmulatorSourceDirectory(emulator);
                 if (string.IsNullOrEmpty(sourceDirectory) || !Directory.Exists(sourceDirectory))
                 {
-                    result.Warnings.Add($"模拟器「{emulator.Name}」找不到安装目录，未打包；启动器将使用原路径。");
+                    if (prepared.Add(emulator.Id))
+                        result.Warnings.Add($"模拟器「{emulator.Name}」找不到安装目录，未打包；启动器将使用原路径。");
                     continue;
                 }
 
@@ -107,24 +110,27 @@ public sealed class SharePackager
                 if (string.IsNullOrWhiteSpace(emulatorFolder)) emulatorFolder = "emulator";
                 var packageEmulatorDir = Path.Combine(packageDir, "emulators", emulatorFolder);
 
-                try
+                if (prepared.Add(emulator.Id))
                 {
-                    CopyDirectory(sourceDirectory, packageEmulatorDir);
-                }
-                catch (Exception ex)
-                {
-                    result.Warnings.Add($"复制模拟器「{emulator.Name}」失败：{ex.Message}");
-                    continue;
+                    try
+                    {
+                        CopyDirectory(sourceDirectory, packageEmulatorDir);
+                    }
+                    catch (Exception ex)
+                    {
+                        result.Warnings.Add($"复制模拟器「{emulator.Name}」失败：{ex.Message}");
+                        continue;
+                    }
                 }
 
                 var exeAbsolute = EmulatorPaths.ResolveExe(emulator);
-                var coreAbsolute = EmulatorPaths.ResolveCore(emulator);
-                var configRelative = CopyConfig(emulator, packageDir, emulatorFolder, result.Warnings);
+                var platformCore = AppServices.Platforms?.Get(item.Game.Platform)?.CorePath;
+                var coreAbsolute = EmulatorPaths.ResolvePlatformCore(emulator, platformCore)
+                                   ?? EmulatorPaths.ResolveCore(emulator);
 
-                layouts[emulator.Id] = new EmulatorLayout(
+                layouts[(emulator.Id, item.Game.Platform)] = new EmulatorLayout(
                     RelativeIfInside(exeAbsolute, sourceDirectory, "emulators", emulatorFolder),
-                    RelativeIfInside(coreAbsolute, sourceDirectory, "emulators", emulatorFolder),
-                    configRelative);
+                    RelativeIfInside(coreAbsolute, sourceDirectory, "emulators", emulatorFolder));
             }
         }
 
@@ -151,20 +157,23 @@ public sealed class SharePackager
                     continue;
                 }
 
-                layouts.TryGetValue(item.Emulator.Id, out var layout);
+                layouts.TryGetValue((item.Emulator.Id, item.Game.Platform), out var layout);
+                var platformSetting = AppServices.Platforms?.Get(item.Game.Platform);
+                var argsTemplate = string.IsNullOrWhiteSpace(platformSetting?.ArgsTemplate)
+                    ? "\"{rom}\""
+                    : platformSetting.ArgsTemplate;
+
                 var exeExpression = layout?.ExeRelative
                                     ?? EmulatorPaths.ResolveExe(item.Emulator)
                                     ?? item.Emulator.ExePath;
                 var coreExpression = layout?.CoreRelative
+                                     ?? EmulatorPaths.ResolvePlatformCore(item.Emulator, platformSetting?.CorePath)
                                      ?? EmulatorPaths.ResolveCore(item.Emulator)
                                      ?? item.Emulator.CorePath;
-                var configExpression = layout?.ConfigRelative
-                                       ?? EmulatorPaths.ResolveConfig(item.Emulator)
-                                       ?? item.Emulator.ConfigPath;
 
-                if (ArgsBuilder.RequiresCore(item.Emulator.ArgsTemplate) && string.IsNullOrWhiteSpace(coreExpression))
+                if (ArgsBuilder.RequiresCore(argsTemplate) && string.IsNullOrWhiteSpace(coreExpression))
                 {
-                    result.Warnings.Add($"游戏「{item.Game.Title}」的模拟器「{item.Emulator.Name}」缺少核心文件，未生成启动器。");
+                    result.Warnings.Add($"游戏「{item.Game.Title}」的平台「{item.Game.Platform}」缺少核心文件，未生成启动器。");
                     continue;
                 }
 
@@ -175,7 +184,7 @@ public sealed class SharePackager
                 Directory.CreateDirectory(Path.GetDirectoryName(romTarget)!);
                 File.Copy(item.RomPath, romTarget, true);
 
-                var arguments = ArgsBuilder.Build(item.Emulator.ArgsTemplate, romRelative, coreExpression, configExpression);
+                var arguments = ArgsBuilder.Build(argsTemplate, romRelative, coreExpression, null);
                 var launcherName = UniqueName($"Play-{titleFolder}", usedNames) + ".bat";
                 var launcherPath = Path.Combine(packageDir, launcherName);
                 File.WriteAllText(launcherPath, BuildLauncherScript(exeExpression, arguments), Utf8NoBom);

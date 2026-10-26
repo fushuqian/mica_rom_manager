@@ -40,17 +40,22 @@ public sealed class RomLauncher
             return false;
         }
 
-        var corePath = EmulatorPaths.ResolvePlatformCore(emulator, AppServices.Platforms.Get(game.Platform)?.CorePath)
+        var platformSetting = AppServices.Platforms.Get(game.Platform);
+        var argsTemplate = string.IsNullOrWhiteSpace(platformSetting?.ArgsTemplate)
+            ? "\"{rom}\""
+            : platformSetting.ArgsTemplate;
+
+        var corePath = EmulatorPaths.ResolvePlatformCore(emulator, platformSetting?.CorePath)
                        ?? EmulatorPaths.ResolveCore(emulator);
-        if (ArgsBuilder.RequiresCore(emulator.ArgsTemplate) && string.IsNullOrWhiteSpace(corePath))
+        if (ArgsBuilder.RequiresCore(argsTemplate) && string.IsNullOrWhiteSpace(corePath))
         {
-            message = $"模拟器「{emulator.Name}」的启动参数需要核心文件，但核心路径未配置。";
+            message = $"平台「{game.Platform}」的启动参数需要核心文件，请到设置 → 平台里选择 RetroArch 核心。";
             return false;
         }
 
         try
         {
-            var arguments = ArgsBuilder.Build(emulator.ArgsTemplate, romPath, corePath, EmulatorPaths.ResolveConfig(emulator));
+            var arguments = ArgsBuilder.Build(argsTemplate, romPath, corePath, null);
             var startInfo = new ProcessStartInfo(exePath)
             {
                 Arguments = arguments,

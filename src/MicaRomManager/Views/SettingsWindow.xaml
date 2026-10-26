@@ -95,11 +95,11 @@
                 <views:EmulatorManagerView />
             </TabItem>
 
-            <TabItem Header="区域 / 语言">
+            <TabItem Header="字典库">
                 <Grid Margin="16">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="24" />
+                        <ColumnDefinition Width="160" />
+                        <ColumnDefinition Width="16" />
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
                     <Grid.RowDefinitions>
@@ -108,25 +108,26 @@
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
-                    <TextBlock Grid.Row="0" Grid.Column="0" Style="{StaticResource SectionTitleStyle}" Text="区域" />
-                    <TextBlock Grid.Row="0" Grid.Column="2" Style="{StaticResource SectionTitleStyle}" Text="语言" />
+                    <TextBlock Grid.Row="0" Grid.Column="0" Style="{StaticResource SectionTitleStyle}" Text="字段" />
+                    <TextBlock Grid.Row="0" Grid.Column="2" Style="{StaticResource SectionTitleStyle}" Text="值" />
 
-                    <ListBox x:Name="RegionList" Grid.Row="1" Grid.Column="0" />
-                    <ListBox x:Name="LanguageList" Grid.Row="1" Grid.Column="2" />
+                    <ListBox x:Name="LookupKindList" Grid.Row="1" Grid.Column="0"
+                             SelectionChanged="LookupKindList_SelectionChanged" />
+                    <ListBox x:Name="LookupValueList" Grid.Row="1" Grid.Column="2" />
 
-                    <StackPanel Grid.Row="2" Grid.Column="0" Orientation="Horizontal" Margin="0,12,0,0">
-                        <TextBox x:Name="NewRegionBox" Width="150" Margin="0,0,8,0"
-                                 ToolTip="输入新的区域名称，例如「日版」" />
-                        <Button Content="添加" Style="{StaticResource SecondaryButtonStyle}" Click="AddRegion_Click" />
-                        <Button Content="删除选中" Style="{StaticResource SecondaryButtonStyle}" Margin="8,0,0,0"
-                                Click="RemoveRegion_Click" />
-                    </StackPanel>
-                    <StackPanel Grid.Row="2" Grid.Column="2" Orientation="Horizontal" Margin="0,12,0,0">
-                        <TextBox x:Name="NewLanguageBox" Width="150" Margin="0,0,8,0"
-                                 ToolTip="输入新的语言名称，例如「简体中文」" />
-                        <Button Content="添加" Style="{StaticResource SecondaryButtonStyle}" Click="AddLanguage_Click" />
-                        <Button Content="删除选中" Style="{StaticResource SecondaryButtonStyle}" Margin="8,0,0,0"
-                                Click="RemoveLanguage_Click" />
+                    <StackPanel Grid.Row="2" Grid.Column="2" Margin="0,12,0,0">
+                        <TextBox x:Name="NewLookupValueBox" ToolTip="输入新的值" />
+                        <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                            <Button Content="添加" Style="{StaticResource SecondaryButtonStyle}"
+                                    Click="AddLookupValue_Click" />
+                            <Button Content="重命名选中" Margin="8,0,0,0" Style="{StaticResource SecondaryButtonStyle}"
+                                    Click="RenameLookupValue_Click" />
+                            <Button Content="删除选中" Margin="8,0,0,0" Style="{StaticResource SecondaryButtonStyle}"
+                                    Click="RemoveLookupValue_Click" />
+                        </StackPanel>
+                        <TextBlock Margin="0,8,0,0" Foreground="{StaticResource TextSecondaryBrush}"
+                                   TextWrapping="Wrap"
+                                   Text="改名会同步更新已有游戏记录；仍有记录使用的值不能删除。平台名称也只在这里维护。" />
                     </StackPanel>
                 </Grid>
             </TabItem>
@@ -157,15 +158,9 @@
                         </ListBox.ItemTemplate>
                     </ListBox>
 
-                    <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,10,0,0">
-                        <TextBox x:Name="NewPlatformBox" ToolTip="输入新的平台名称，回车或点添加" />
-                        <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
-                            <Button Content="添加" Width="76" Style="{StaticResource SecondaryButtonStyle}"
-                                    Click="AddPlatform_Click" />
-                            <Button Content="删除该平台" Margin="8,0,0,0" Style="{StaticResource SecondaryButtonStyle}"
-                                    Click="RemovePlatform_Click" />
-                        </StackPanel>
-                    </StackPanel>
+                    <TextBlock Grid.Row="1" Grid.Column="0" Margin="0,10,0,0" TextWrapping="Wrap"
+                               Foreground="{StaticResource TextSecondaryBrush}"
+                               Text="平台名称请在「字典库 → 平台」里维护；这里只配置该平台的模拟器、目录、格式、核心与启动参数。" />
 
                     <StackPanel Grid.Row="0" Grid.RowSpan="2" Grid.Column="2">
                         <TextBlock x:Name="PlatformNameText" Style="{StaticResource SectionTitleStyle}"
@@ -192,9 +187,15 @@
                         <TextBlock Margin="0,6,0,0" Foreground="{StaticResource TextSecondaryBrush}"
                                    TextWrapping="Wrap" MaxWidth="380"
                                    Text="扫描该平台子库时只识别这些扩展名；导入时用于自动识别平台。留空表示不限制。" />
+                        <TextBlock Text="启动参数" Style="{StaticResource FieldLabelStyle}" Margin="0,12,0,4" />
+                        <TextBox x:Name="PlatformArgsBox" Width="420" HorizontalAlignment="Left"
+                                 ToolTip="占位符：{rom} {romdir} {romname} {core}；留空使用 &quot;{rom}&quot;" />
+                        <TextBlock Margin="0,6,0,0" Foreground="{StaticResource TextSecondaryBrush}"
+                                   TextWrapping="Wrap" MaxWidth="420"
+                                   Text="程序会自动给占位符加引号。需要 {core} 时请在上方选择 RetroArch 核心；{config} 已不再使用。" />
                         <TextBlock Margin="0,6,0,0" Foreground="{StaticResource TextSecondaryBrush}"
                                    TextWrapping="Wrap" MaxWidth="360"
-                                   Text="说明：游戏自身绑定的模拟器优先；未绑定时用这里的平台默认模拟器。" />
+                                   Text="说明：启动游戏时会使用这里配置的默认模拟器、核心与启动参数。" />
                         <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
                             <Button Content="保存平台设置" Width="120"
                                     Style="{StaticResource PrimaryButtonStyle}" Click="SavePlatform_Click" />

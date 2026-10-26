@@ -42,19 +42,27 @@ public sealed class EmulatorInstaller
         }
     }
 
-    /// <summary>按扩展名分发：zip 用内置解压，7z 用 SharpCompress。</summary>
+    /// <summary>按扩展名分发：zip 用内置解压，7z / rar / tar.gz 用 SharpCompress。</summary>
     public InstallResult InstallFromArchive(string archivePath, string emulatorName)
     {
+        var fileName = Path.GetFileName(archivePath);
+        if (fileName.EndsWith(".tar.gz", StringComparison.OrdinalIgnoreCase) ||
+            fileName.EndsWith(".tgz", StringComparison.OrdinalIgnoreCase))
+        {
+            return InstallFromSharpCompress(archivePath, emulatorName);
+        }
+
         var extension = Path.GetExtension(archivePath).ToLowerInvariant();
         return extension switch
         {
             ".zip" => InstallFromZip(archivePath, emulatorName),
-            ".7z" => InstallFrom7z(archivePath, emulatorName),
-            _ => throw new NotSupportedException("仅支持 zip / 7z 压缩包。"),
+            ".7z" => InstallFromSharpCompress(archivePath, emulatorName),
+            ".rar" => InstallFromSharpCompress(archivePath, emulatorName),
+            _ => throw new NotSupportedException("仅支持 zip / 7z / rar / tar.gz 压缩包。"),
         };
     }
 
-    private InstallResult InstallFrom7z(string archivePath, string emulatorName)
+    private InstallResult InstallFromSharpCompress(string archivePath, string emulatorName)
     {
         var temp = Path.Combine(Path.GetTempPath(), "MicaRomManager-" + Guid.NewGuid().ToString("N"));
         try

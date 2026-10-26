@@ -14,11 +14,9 @@ namespace MicaRomManager.ViewModels;
 public partial class EmulatorManagerViewModel : ObservableObject
 {
     public ObservableCollection<Emulator> Emulators { get; } = new();
-    public ObservableCollection<EmulatorTemplate> Templates { get; } = new();
 
-    [ObservableProperty] private EmulatorTemplate? selectedTemplate;
     [ObservableProperty] private Emulator? selectedEmulator;
-    [ObservableProperty] private string statusMessage = "选择模拟器后可安装、配置或检查更新。";
+    [ObservableProperty] private string statusMessage = "选择模拟器后可导入、调试或更新。";
     [ObservableProperty] private bool isBusy;
     [ObservableProperty] private double downloadProgress;
 
@@ -29,53 +27,25 @@ public partial class EmulatorManagerViewModel : ObservableObject
 
     public void Reload()
     {
-        var selectedId = SelectedEmulator?.Id;
-        var previousId = selectedId ?? 0;
-
-        foreach (var template in EmulatorTemplateStore.Load(AppServices.Paths))
-        {
-            if (Templates.All(t => !string.Equals(t.Name, template.Name, StringComparison.OrdinalIgnoreCase)))
-            {
-                Templates.Add(template);
-            }
-        }
+        var previousId = SelectedEmulator?.Id ?? 0;
 
         Emulators.Clear();
         foreach (var emulator in AppServices.EmulatorRepo.ListAll()) Emulators.Add(emulator);
 
         SelectedEmulator = Emulators.FirstOrDefault(e => e.Id == previousId) ?? Emulators.FirstOrDefault();
-        SelectedTemplate ??= Templates.FirstOrDefault();
     }
 
     [RelayCommand]
-    private void AddFromTemplate()
+    private void AddEmulator()
     {
-        if (SelectedTemplate == null)
-        {
-            MessageBox.Show("请先在下拉框里选择一个模拟器模板。", "新增模拟器",
-                MessageBoxButton.OK, MessageBoxImage.Information);
-            return;
-        }
-
-        var template = SelectedTemplate;
-        var name = template.Name;
+        var name = "新模拟器";
         var index = 2;
         while (Emulators.Any(e => string.Equals(e.Name, name, StringComparison.OrdinalIgnoreCase)))
         {
-            name = $"{template.Name} {index++}";
+            name = $"新模拟器 {index++}";
         }
 
-        var emulator = new Emulator
-        {
-            Name = name,
-            ArgsTemplate = template.ArgsTemplate,
-            CorePath = template.CorePath,
-            SupportedExt = string.Join(",", template.Extensions),
-            GithubRepo = template.GithubRepo,
-            Notes = template.Notes,
-            Platforms = template.Platforms.ToList(),
-        };
-
+        var emulator = new Emulator { Name = name, Enabled = true };
         try
         {
             AppServices.EmulatorRepo.Save(emulator);
@@ -88,7 +58,7 @@ public partial class EmulatorManagerViewModel : ObservableObject
 
         Reload();
         SelectedEmulator = Emulators.FirstOrDefault(e => e.Id == emulator.Id);
-        StatusMessage = $"已新增「{name}」，请点「安装（文件夹/zip）」导入程序文件。";
+        StatusMessage = $"已新增「{name}」，可用「编辑配置」改名称/官网，或直接导入程序文件。";
     }
 
     [RelayCommand]
@@ -97,7 +67,7 @@ public partial class EmulatorManagerViewModel : ObservableObject
         var emulator = SelectedEmulator;
         if (emulator == null)
         {
-            MessageBox.Show("请先选择或新增一个模拟器。", "安装模拟器", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show("请先在左侧选择或新增一个模拟器。", "导入模拟器", MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
 
@@ -111,35 +81,35 @@ public partial class EmulatorManagerViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"安装失败：{ex.Message}", "安装模拟器", MessageBoxButton.OK, MessageBoxImage.Error);
+            MessageBox.Show($"导入失败：{ex.Message}", "导入模拟器", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 
     [RelayCommand]
-    private void InstallFromZip()
+    private void InstallFromArchive()
     {
         var emulator = SelectedEmulator;
         if (emulator == null)
         {
-            MessageBox.Show("请先选择或新增一个模拟器。", "安装模拟器", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show("请先在左侧选择或新增一个模拟器。", "导入模拟器", MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
 
         var dialog = new OpenFileDialog
         {
             Title = $"选择 {emulator.Name} 的压缩包",
-            Filter = "压缩包|*.zip|所有文件|*.*",
+            Filter = "压缩包|*.zip;*.7z;*.rar;*.tar.gz;*.tgz|所有文件|*.*",
         };
         if (dialog.ShowDialog() != true) return;
 
         try
         {
-            var result = AppServices.Installer.InstallFromZip(dialog.FileName, emulator.Name);
+            var result = AppServices.Installer.InstallFromArchive(dialog.FileName, emulator.Name);
             FinishInstall(emulator, result);
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"安装失败：{ex.Message}", "安装模拟器", MessageBoxButton.OK, MessageBoxImage.Error);
+            MessageBox.Show($"导入失败：{ex.Message}", "导入模拟器", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 
@@ -148,7 +118,7 @@ public partial class EmulatorManagerViewModel : ObservableObject
         emulator.InstallDir = PortablePath.ToStored(result.InstallDir);
         if (result.ExeCandidates.Count == 0)
         {
-            MessageBox.Show("已复制文件，但没有找到 .exe。请手动编辑可执行文件路径。", "安装模拟器",
+            MessageBox.Show("已复制文件，但没有找到 .exe。请用「编辑配置」手动指定可执行文件。", "导入模拟器",
                 MessageBoxButton.OK, MessageBoxImage.Warning);
         }
         else
@@ -164,7 +134,7 @@ public partial class EmulatorManagerViewModel : ObservableObject
 
         AppServices.EmulatorRepo.Save(emulator);
         Reload();
-        StatusMessage = $"「{emulator.Name}」已安装到 {result.InstallDir}";
+        StatusMessage = $"「{emulator.Name}」已导入到 {result.InstallDir}";
     }
 
     [RelayCommand]
@@ -178,17 +148,11 @@ public partial class EmulatorManagerViewModel : ObservableObject
             Id = emulator.Id,
             Name = emulator.Name,
             ExePath = emulator.ExePath,
-            ArgsTemplate = emulator.ArgsTemplate,
-            CorePath = emulator.CorePath,
-            SupportedExt = emulator.SupportedExt,
             Version = emulator.Version,
             InstallDir = emulator.InstallDir,
-            ConfigPath = emulator.ConfigPath,
-            GithubRepo = emulator.GithubRepo,
+            WebsiteUrl = emulator.WebsiteUrl,
             Notes = emulator.Notes,
             Enabled = emulator.Enabled,
-            Platforms = emulator.Platforms.ToList(),
-            DefaultPlatforms = new HashSet<string>(emulator.DefaultPlatforms, StringComparer.OrdinalIgnoreCase),
         };
 
         var window = new EmulatorEditWindow(working, false) { Owner = Application.Current?.MainWindow };
@@ -200,131 +164,63 @@ public partial class EmulatorManagerViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void SetDefault()
+    private void OpenWebsite()
     {
         var emulator = SelectedEmulator;
         if (emulator == null) return;
-        if (emulator.Platforms.Count == 0)
+        if (string.IsNullOrWhiteSpace(emulator.WebsiteUrl))
         {
-            MessageBox.Show("该模拟器还没有绑定平台，请先在「编辑配置」里填写平台。", "设默认模拟器",
+            MessageBox.Show("该模拟器还没有配置官网地址，请先在「编辑配置」里填写。", "版本更新",
                 MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
 
-        var platforms = string.Join(", ", emulator.Platforms);
-        var answer = MessageBox.Show($"把「{emulator.Name}」设为以下平台的默认模拟器？\n\n{platforms}",
-            "设默认模拟器", MessageBoxButton.YesNo, MessageBoxImage.Question);
-        if (answer != MessageBoxResult.Yes) return;
-
-        AppServices.EmulatorRepo.SetAsDefaultForBoundPlatforms(emulator.Id);
-        Reload();
-        StatusMessage = $"「{emulator.Name}」已设为默认模拟器";
-    }
-
-    [RelayCommand]
-    private async Task CheckUpdateAsync()
-    {
-        var emulator = SelectedEmulator;
-        if (emulator == null) return;
-        if (string.IsNullOrWhiteSpace(emulator.GithubRepo))
-        {
-            MessageBox.Show("该模拟器没有配置 GitHub 仓库（owner/repo），无法在线检查更新。",
-                "检查更新", MessageBoxButton.OK, MessageBoxImage.Information);
-            return;
-        }
-
-        if (IsBusy) return;
-
-        IsBusy = true;
         try
         {
-            StatusMessage = "正在请求 GitHub…";
-            var result = await AppServices.Updater.CheckAsync(emulator.GithubRepo, emulator.Version);
-            StatusMessage = result.Message;
-
-            if (!result.Success)
-            {
-                MessageBox.Show(result.Message, "检查更新", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            if (IsInstallableAsset(result.AssetName) && !string.IsNullOrWhiteSpace(result.AssetUrl))
-            {
-                var answer = MessageBox.Show(
-                    $"{result.Message}\n\n是否下载「{result.AssetName}」并安装到本程序？",
-                    "检查更新", MessageBoxButton.YesNo, MessageBoxImage.Question);
-                if (answer == MessageBoxResult.Yes)
-                {
-                    await DownloadAndInstallAsync(emulator, result);
-                }
-
-                return;
-            }
-
-            var target = result.ReleaseUrl ?? result.AssetUrl;
-            var open = MessageBox.Show(
-                $"{result.Message}\n\n没有可自动安装的 zip / 7z 资产。{ (target != null ? "\n\n是否打开 Release 页面手动下载？" : "") }",
-                "检查更新", target != null ? MessageBoxButton.YesNo : MessageBoxButton.OK,
-                MessageBoxImage.Information);
-            if (open == MessageBoxResult.Yes && !string.IsNullOrWhiteSpace(target))
-            {
-                Process.Start(new ProcessStartInfo(target) { UseShellExecute = true });
-            }
-        }
-        finally
-        {
-            IsBusy = false;
-            DownloadProgress = 0;
-        }
-    }
-
-    private static bool IsInstallableAsset(string? assetName) =>
-        assetName?.EndsWith(".zip", StringComparison.OrdinalIgnoreCase) == true ||
-        assetName?.EndsWith(".7z", StringComparison.OrdinalIgnoreCase) == true;
-
-    private async Task DownloadAndInstallAsync(Emulator emulator, UpdateCheckResult result)
-    {
-        var assetName = result.AssetName!;
-        var extension = Path.GetExtension(assetName).ToLowerInvariant();
-        var fileName = $"{RomImporter.SanitizeFolderName(emulator.GithubRepo.Replace('/', '-'))}-{result.LatestTag ?? "latest"}{extension}";
-        var targetFile = Path.Combine(AppServices.Paths.DownloadsDir, fileName);
-
-        DownloadProgress = 0;
-        var progress = new Progress<double>(value =>
-        {
-            DownloadProgress = value < 0 ? 0 : value;
-            StatusMessage = value < 0 ? "正在下载…" : $"下载中 {value:0}%";
-        });
-
-        var download = await AppServices.Updater.DownloadAsync(result.AssetUrl!, targetFile, progress, CancellationToken.None);
-        StatusMessage = download.Message;
-        if (!download.Success)
-        {
-            MessageBox.Show(download.Message, "下载安装包", MessageBoxButton.OK, MessageBoxImage.Warning);
-            return;
-        }
-
-        StatusMessage = "正在解压并安装…";
-        try
-        {
-            var install = AppServices.Installer.InstallFromArchive(targetFile, emulator.Name);
-            FinishInstall(emulator, install);
+            Process.Start(new ProcessStartInfo(emulator.WebsiteUrl) { UseShellExecute = true });
+            StatusMessage = $"已打开「{emulator.Name}」的官网 / 发布页";
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"安装失败：{ex.Message}", "下载安装", MessageBoxButton.OK, MessageBoxImage.Error);
+            MessageBox.Show($"打开网页失败：{ex.Message}", "版本更新", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
+    [RelayCommand]
+    private void TestLaunch()
+    {
+        var emulator = SelectedEmulator;
+        if (emulator == null) return;
+
+        var exePath = EmulatorPaths.ResolveExe(emulator);
+        if (string.IsNullOrWhiteSpace(exePath))
+        {
+            MessageBox.Show("可执行文件不存在，请先导入或编辑配置。", "运行调试",
+                MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
-        var version = result.LatestTag?.TrimStart('v', 'V');
-        if (!string.IsNullOrWhiteSpace(version))
+        try
         {
-            emulator.Version = version;
-            AppServices.EmulatorRepo.Save(emulator);
-            Reload();
+            Process.Start(new ProcessStartInfo(exePath)
+            {
+                WorkingDirectory = Path.GetDirectoryName(exePath) ?? "",
+                UseShellExecute = true,
+            });
+            StatusMessage = $"已启动 {Path.GetFileName(exePath)}";
         }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"启动失败：{ex.Message}", "运行调试", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
 
-        StatusMessage = $"「{emulator.Name}」已更新到 {version ?? "最新版本"}，安装包：{targetFile}";
+    [RelayCommand]
+    private void OpenInstallDir()
+    {
+        var directory = SelectedEmulator?.InstallDir;
+        if (string.IsNullOrWhiteSpace(directory) || !Directory.Exists(directory)) return;
+        Process.Start(new ProcessStartInfo("explorer.exe", $"\"{directory}\"") { UseShellExecute = true });
     }
 
     [RelayCommand]
@@ -354,43 +250,6 @@ public partial class EmulatorManagerViewModel : ObservableObject
 
         Reload();
         StatusMessage = $"已移除「{emulator.Name}」";
-    }
-
-    [RelayCommand]
-    private void TestLaunch()
-    {
-        var emulator = SelectedEmulator;
-        if (emulator == null) return;
-
-        var exePath = EmulatorPaths.ResolveExe(emulator);
-        if (string.IsNullOrWhiteSpace(exePath))
-        {
-            MessageBox.Show("可执行文件不存在，请先安装或编辑配置。", "测试启动",
-                MessageBoxButton.OK, MessageBoxImage.Warning);
-            return;
-        }
-
-        try
-        {
-            Process.Start(new ProcessStartInfo(exePath)
-            {
-                WorkingDirectory = Path.GetDirectoryName(exePath) ?? "",
-                UseShellExecute = true,
-            });
-            StatusMessage = $"已启动 {Path.GetFileName(exePath)}";
-        }
-        catch (Exception ex)
-        {
-            MessageBox.Show($"启动失败：{ex.Message}", "测试启动", MessageBoxButton.OK, MessageBoxImage.Error);
-        }
-    }
-
-    [RelayCommand]
-    private void OpenInstallDir()
-    {
-        var directory = SelectedEmulator?.InstallDir;
-        if (string.IsNullOrWhiteSpace(directory) || !Directory.Exists(directory)) return;
-        Process.Start(new ProcessStartInfo("explorer.exe", $"\"{directory}\"") { UseShellExecute = true });
     }
 
     [RelayCommand]

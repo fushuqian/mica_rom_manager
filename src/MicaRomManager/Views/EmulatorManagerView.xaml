@@ -4,63 +4,108 @@
              FontFamily="{StaticResource AppFontFamily}"
              FontSize="13">
     <Grid Margin="12">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="220" />
+            <ColumnDefinition Width="16" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <WrapPanel Grid.Row="0" Margin="0,0,0,8">
-            <TextBlock Text="模板：" Style="{StaticResource FieldLabelStyle}" />
-            <ComboBox Width="230" MinHeight="28" Margin="0,0,8,6"
-                      ItemsSource="{Binding Templates}" DisplayMemberPath="DisplayName"
-                      SelectedItem="{Binding SelectedTemplate, Mode=TwoWay}" />
-            <Button Content="从模板新增" Style="{StaticResource SecondaryButtonStyle}"
-                    Command="{Binding AddFromTemplateCommand}" />
-            <Button Content="安装（文件夹）" Style="{StaticResource SecondaryButtonStyle}"
-                    Command="{Binding InstallFromFolderCommand}" />
-            <Button Content="安装（zip）" Style="{StaticResource SecondaryButtonStyle}"
-                    Command="{Binding InstallFromZipCommand}" />
-            <Button Content="编辑配置" Style="{StaticResource SecondaryButtonStyle}"
-                    Command="{Binding EditSelectedCommand}" />
-            <Button Content="设默认" Style="{StaticResource SecondaryButtonStyle}"
-                    Command="{Binding SetDefaultCommand}" />
-            <Button Content="刷新" Style="{StaticResource SecondaryButtonStyle}"
-                    Command="{Binding RefreshListCommand}" />
-        </WrapPanel>
+        <Grid Grid.Row="0" Grid.Column="0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
 
-        <WrapPanel Grid.Row="1" Margin="0,0,0,8">
-            <Button Content="检查更新 / 下载安装" Style="{StaticResource SecondaryButtonStyle}"
-                    Command="{Binding CheckUpdateCommand}" />
-            <Button Content="测试启动" Style="{StaticResource SecondaryButtonStyle}"
-                    Command="{Binding TestLaunchCommand}" />
-            <Button Content="打开安装目录" Style="{StaticResource SecondaryButtonStyle}"
-                    Command="{Binding OpenInstallDirCommand}" />
-            <Button Content="删除" Style="{StaticResource SecondaryButtonStyle}"
-                    Command="{Binding DeleteSelectedCommand}" />
-        </WrapPanel>
+            <ListBox Grid.Row="0" ItemsSource="{Binding Emulators}"
+                     SelectedItem="{Binding SelectedEmulator, Mode=TwoWay}">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Margin="2,4">
+                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
+                            <TextBlock Text="{Binding Version}" FontSize="11"
+                                       Foreground="{StaticResource TextSecondaryBrush}" />
+                        </StackPanel>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
 
-        <DataGrid Grid.Row="2" Style="{StaticResource AppDataGridStyle}"
-                  ItemsSource="{Binding Emulators}"
-                  SelectedItem="{Binding SelectedEmulator, Mode=TwoWay}">
-            <DataGrid.Columns>
-                <DataGridTextColumn Header="名称" Binding="{Binding Name}" Width="140"
-                                    ElementStyle="{StaticResource DataGridTextStyle}" />
-                <DataGridTextColumn Header="平台" Binding="{Binding PlatformDisplay}" Width="220"
-                                    ElementStyle="{StaticResource DataGridTextStyle}" />
-                <DataGridTextColumn Header="默认平台" Binding="{Binding DefaultPlatformDisplay}" Width="150"
-                                    ElementStyle="{StaticResource DataGridTextStyle}" />
-                <DataGridTextColumn Header="版本" Binding="{Binding Version}" Width="100"
-                                    ElementStyle="{StaticResource DataGridTextStyle}" />
-                <DataGridTextColumn Header="可执行文件" Binding="{Binding ResolvedExeDisplay}" Width="*"
-                                    ElementStyle="{StaticResource DataGridTextStyle}" />
-                <DataGridTextColumn Header="状态" Binding="{Binding EnabledDisplay}" Width="70"
-                                    ElementStyle="{StaticResource DataGridTextStyle}" />
-            </DataGrid.Columns>
-        </DataGrid>
+            <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,8,0,0">
+                <Button Content="新增" Width="76" Style="{StaticResource SecondaryButtonStyle}"
+                        Command="{Binding AddEmulatorCommand}" />
+                <Button Content="刷新" Margin="8,0,0,0" Style="{StaticResource SecondaryButtonStyle}"
+                        Command="{Binding RefreshListCommand}" />
+            </StackPanel>
+        </Grid>
 
-        <Grid Grid.Row="3" Margin="0,8,0,0">
+        <StackPanel Grid.Row="0" Grid.Column="2">
+            <TextBlock Style="{StaticResource SectionTitleStyle}"
+                       Text="{Binding SelectedEmulator.Name, FallbackValue=（未选择模拟器）, TargetNullValue=（未选择模拟器）}" />
+
+            <Grid Margin="0,8,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="90" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="安装目录" Style="{StaticResource FieldLabelStyle}" />
+                <TextBlock Grid.Row="0" Grid.Column="1" Margin="0,0,0,6" TextTrimming="CharacterEllipsis"
+                           Text="{Binding SelectedEmulator.InstallDir}" />
+
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="可执行文件" Style="{StaticResource FieldLabelStyle}" />
+                <TextBlock Grid.Row="1" Grid.Column="1" Margin="0,0,0,6" TextTrimming="CharacterEllipsis"
+                           Text="{Binding SelectedEmulator.ResolvedExeDisplay}" />
+
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="版本" Style="{StaticResource FieldLabelStyle}" />
+                <TextBlock Grid.Row="2" Grid.Column="1" Margin="0,0,0,6"
+                           Text="{Binding SelectedEmulator.Version}" />
+
+                <TextBlock Grid.Row="3" Grid.Column="0" Text="官网 / 发布页" Style="{StaticResource FieldLabelStyle}" />
+                <TextBlock Grid.Row="3" Grid.Column="1" Margin="0,0,0,6" TextTrimming="CharacterEllipsis"
+                           Text="{Binding SelectedEmulator.WebsiteUrl}" />
+
+                <TextBlock Grid.Row="4" Grid.Column="0" Text="状态" Style="{StaticResource FieldLabelStyle}" />
+                <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding SelectedEmulator.EnabledDisplay}" />
+            </Grid>
+
+            <WrapPanel Margin="0,16,0,0">
+                <Button Content="导入（文件夹）" Style="{StaticResource SecondaryButtonStyle}"
+                        Command="{Binding InstallFromFolderCommand}" />
+                <Button Content="导入（压缩包）" Style="{StaticResource SecondaryButtonStyle}"
+                        Command="{Binding InstallFromArchiveCommand}" />
+            </WrapPanel>
+
+            <WrapPanel Margin="0,8,0,0">
+                <Button Content="运行调试" Style="{StaticResource SecondaryButtonStyle}"
+                        Command="{Binding TestLaunchCommand}" />
+                <Button Content="打开安装目录" Style="{StaticResource SecondaryButtonStyle}"
+                        Command="{Binding OpenInstallDirCommand}" />
+                <Button Content="编辑配置" Style="{StaticResource SecondaryButtonStyle}"
+                        Command="{Binding EditSelectedCommand}" />
+            </WrapPanel>
+
+            <WrapPanel Margin="0,8,0,0">
+                <Button Content="版本更新" Style="{StaticResource SecondaryButtonStyle}"
+                        Command="{Binding OpenWebsiteCommand}" />
+                <Button Content="删除" Style="{StaticResource SecondaryButtonStyle}"
+                        Command="{Binding DeleteSelectedCommand}" />
+            </WrapPanel>
+
+            <TextBlock Margin="0,16,0,0" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap"
+                       Text="启动参数在「设置 → 平台」里按平台配置；这里只负责程序文件与官网地址。导入支持文件夹、zip、7z、rar、tar.gz / tgz。" />
+        </StackPanel>
+
+        <Grid Grid.Row="1" Grid.ColumnSpan="3" Margin="0,8,0,0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />

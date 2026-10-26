@@ -124,7 +124,70 @@ public sealed class Database
             cmd.CommandText = SchemaV8;
             cmd.ExecuteNonQuery();
         }
+
+        if (version < 9)
+        {
+            using (var cmd = connection.CreateCommand())
+            {
+                cmd.CommandText = SchemaV9;
+                cmd.ExecuteNonQuery();
+            }
+
+            using (var cmd = connection.CreateCommand())
+            {
+                cmd.CommandText = """
+                    UPDATE platforms SET args_template=(
+                        SELECT e.args_template FROM emulators e WHERE e.id=platforms.emulator_id
+                    ) WHERE args_template='' AND emulator_id IS NOT NULL;
+
+                    UPDATE emulators SET website_url='https://github.com/'||github_repo||'/releases'
+                    WHERE website_url='' AND github_repo<>'';
+
+                    INSERT OR IGNORE INTO lookup_items(kind, value) SELECT 'platform', name FROM platforms;
+                    INSERT OR IGNORE INTO lookup_items(kind, value) SELECT 'genre', genre FROM games WHERE genre<>'';
+                    INSERT OR IGNORE INTO lookup_items(kind, value) SELECT 'publisher', publisher FROM games WHERE publisher<>'';
+                    INSERT OR IGNORE INTO lookup_items(kind, value) SELECT 'developer', developer FROM games WHERE developer<>'';
+                    """;
+                cmd.ExecuteNonQuery();
+            }
+
+            SeedTags(connection);
+        }
     }
+
+    /// <summary>把库里已有的标签拆成独立词条写入字典。</summary>
+    private static void SeedTags(SqliteConnection connection)
+    {
+        var tags = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        using (var read = connection.CreateCommand())
+        {
+            read.CommandText = "SELECT tags FROM games WHERE tags<>'';";
+            using var reader = read.ExecuteReader();
+            while (reader.Read())
+            {
+                foreach (var tag in reader.GetString(0).Split(
+                             new[] { ',', '，', ';', '；' },
+                             StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                {
+                    tags.Add(tag);
+                }
+            }
+        }
+
+        foreach (var tag in tags)
+        {
+            using var insert = connection.CreateCommand();
+            insert.CommandText = "INSERT OR IGNORE INTO lookup_items(kind, value) VALUES ('tag', @value);";
+            insert.Parameters.AddWithValue("@value", tag);
+            insert.ExecuteNonQuery();
+        }
+    }
+
+    private const string SchemaV9 = """
+        ALTER TABLE platforms ADD COLUMN args_template TEXT DEFAULT '';
+        ALTER TABLE emulators ADD COLUMN website_url TEXT DEFAULT '';
+        PRAGMA user_version = 9;
+        """;
 
     private const string SchemaV8 = """
         ALTER TABLE platforms ADD COLUMN core_path TEXT DEFAULT '';

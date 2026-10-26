@@ -78,6 +78,9 @@ public partial class MainViewModel : ObservableObject
             Platforms.Add(game.Platform);
         foreach (var tag in SplitTags(game.Tags))
             if (!Tags.Contains(tag)) Tags.Add(tag);
+
+        // 编辑状态/平台/标签等参与筛选的字段后，按当前条件立即刷新
+        ApplyFilter();
     }
 
     public void LoadEmulators()
@@ -152,14 +155,29 @@ public partial class MainViewModel : ObservableObject
         if (!Tags.Contains(SelectedTag)) SelectedTag = AllTags;
     }
 
+    /// <summary>增量同步下拉集合，避免 Clear 触发绑定把当前筛选值置空。</summary>
     private static void Rebuild(ObservableCollection<string> target, string allValue, IEnumerable<string> values,
         string current, Action<string> setSelected)
     {
-        target.Clear();
-        target.Add(allValue);
-        foreach (var value in values.Where(v => !string.IsNullOrWhiteSpace(v)).Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(v => v))
+        var desired = values
+            .Where(value => !string.IsNullOrWhiteSpace(value))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(value => value)
+            .ToList();
+
+        if (target.Count == 0) target.Add(allValue);
+        else if (!string.Equals(target[0], allValue, StringComparison.Ordinal)) target.Insert(0, allValue);
+
+        for (var index = target.Count - 1; index >= 1; index--)
         {
-            target.Add(value);
+            if (!desired.Contains(target[index], StringComparer.OrdinalIgnoreCase))
+                target.RemoveAt(index);
+        }
+
+        foreach (var value in desired)
+        {
+            if (!target.Contains(value, StringComparer.OrdinalIgnoreCase))
+                target.Add(value);
         }
 
         if (!target.Contains(current)) setSelected(allValue);
