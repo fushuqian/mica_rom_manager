@@ -189,7 +189,7 @@
                                     ElementStyle="{StaticResource DataGridTextStyle}" />
                 <DataGridTextColumn Header="年份" Binding="{Binding ReleaseYear}" Width="64"
                                     ElementStyle="{StaticResource DataGridTextStyle}" />
-                <DataGridTextColumn Header="碟" Binding="{Binding DiscCountText}" Width="52"
+                <DataGridTextColumn Header="光碟数" Binding="{Binding DiscCountText}" Width="60"
                                     ElementStyle="{StaticResource DataGridTextStyle}" />
                 <DataGridTemplateColumn Header="状态" Width="76">
                     <DataGridTemplateColumn.CellTemplate>

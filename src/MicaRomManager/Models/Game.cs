@@ -67,7 +67,7 @@ public partial class Game : ObservableObject
 
     public int DiscCount => Discs.Count;
 
-    public string DiscCountText => IsMultiDisc ? $"碟{DiscCount}" : "";
+    public string DiscCountText => DiscCount.ToString();
 
     public string PlaySecondsDisplay => PlaySeconds <= 0
         ? ""
