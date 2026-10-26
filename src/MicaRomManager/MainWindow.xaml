@@ -50,6 +50,12 @@
                             <TextBlock Text="新建条目" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
+                    <Button Command="{Binding BatchEditCommand}" Style="{StaticResource ToolButtonStyle}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE70F;" FontFamily="Segoe MDL2 Assets" FontSize="14" Margin="0,0,6,0" VerticalAlignment="Center" />
+                            <TextBlock Text="批量编辑" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
                     <Button Command="{Binding LaunchSelectedCommand}" Style="{StaticResource ToolButtonStyle}">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="&#xE768;" FontFamily="Segoe MDL2 Assets" FontSize="14" Margin="0,0,6,0" VerticalAlignment="Center" />
@@ -118,6 +124,7 @@
                     <MenuItem Header="启动游戏" Command="{Binding LaunchSelectedCommand}" InputGestureText="Enter" />
                     <MenuItem Header="用指定模拟器启动" />
                     <MenuItem Header="编辑信息…" Command="{Binding EditSelectedCommand}" InputGestureText="F2" />
+                    <MenuItem Header="批量编辑…" Command="{Binding BatchEditCommand}" />
                     <MenuItem Header="合并为多碟游戏（选中多行，首行为主条目）" Command="{Binding MergeSelectedCommand}" />
                     <MenuItem Header="拆分多碟…" Command="{Binding SplitMultiDiscCommand}" />
                     <Separator />

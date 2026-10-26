@@ -341,6 +341,31 @@ public partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private void BatchEdit()
+    {
+        var games = SelectedGames.ToList();
+        if (games.Count == 0)
+        {
+            MessageBox.Show("请先在列表中选中要批量编辑的游戏（可按住 Ctrl / Shift 多选）。",
+                "批量编辑", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        var window = new BatchEditWindow(games.Count) { Owner = Application.Current?.MainWindow };
+        if (window.ShowDialog() != true || window.Changes == null) return;
+
+        foreach (var game in games)
+        {
+            window.Changes.ApplyTo(game);
+            AppServices.GameRepo.Update(game);
+        }
+
+        RefreshLookups();
+        ApplyFilter();
+        StatusMessage = $"已批量更新 {games.Count} 条";
+    }
+
+    [RelayCommand]
     private void LaunchSelected()
     {
         var game = SelectedGame;
