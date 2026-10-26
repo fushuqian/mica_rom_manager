@@ -117,7 +117,19 @@ public sealed class Database
                 seed.ExecuteNonQuery();
             }
         }
+
+        if (version < 8)
+        {
+            using var cmd = connection.CreateCommand();
+            cmd.CommandText = SchemaV8;
+            cmd.ExecuteNonQuery();
+        }
     }
+
+    private const string SchemaV8 = """
+        ALTER TABLE platforms ADD COLUMN core_path TEXT DEFAULT '';
+        PRAGMA user_version = 8;
+        """;
 
     private const string SchemaV7 = """
         ALTER TABLE platforms ADD COLUMN formats TEXT DEFAULT '';

@@ -16,7 +16,7 @@ public sealed class PlatformRepository
         var list = new List<PlatformSetting>();
         using var connection = _db.Open();
         using var cmd = connection.CreateCommand();
-        cmd.CommandText = "SELECT name, emulator_id, folder, formats FROM platforms ORDER BY name COLLATE NOCASE;";
+        cmd.CommandText = "SELECT name, emulator_id, folder, formats, core_path FROM platforms ORDER BY name COLLATE NOCASE;";
         using var reader = cmd.ExecuteReader();
         while (reader.Read())
         {
@@ -27,6 +27,7 @@ public sealed class PlatformRepository
                 EmulatorId = reader.IsDBNull(1) ? null : reader.GetInt64(1),
                 Folder = reader.IsDBNull(2) ? "" : reader.GetString(2),
                 Formats = reader.IsDBNull(3) ? "" : reader.GetString(3),
+                CorePath = reader.IsDBNull(4) ? "" : reader.GetString(4),
                 IsCustom = !PlatformCatalog.Common.Contains(name, StringComparer.OrdinalIgnoreCase),
             });
         }
@@ -40,7 +41,7 @@ public sealed class PlatformRepository
 
         using var connection = _db.Open();
         using var cmd = connection.CreateCommand();
-        cmd.CommandText = "SELECT name, emulator_id, folder, formats FROM platforms WHERE name = @name;";
+        cmd.CommandText = "SELECT name, emulator_id, folder, formats, core_path FROM platforms WHERE name = @name;";
         cmd.Parameters.AddWithValue("@name", platform);
         using var reader = cmd.ExecuteReader();
         if (!reader.Read()) return null;
@@ -51,6 +52,7 @@ public sealed class PlatformRepository
             EmulatorId = reader.IsDBNull(1) ? null : reader.GetInt64(1),
             Folder = reader.IsDBNull(2) ? "" : reader.GetString(2),
             Formats = reader.IsDBNull(3) ? "" : reader.GetString(3),
+            CorePath = reader.IsDBNull(4) ? "" : reader.GetString(4),
             IsCustom = !PlatformCatalog.Common.Contains(reader.GetString(0), StringComparer.OrdinalIgnoreCase),
         };
     }
@@ -62,18 +64,20 @@ public sealed class PlatformRepository
         using var connection = _db.Open();
         using var cmd = connection.CreateCommand();
         cmd.CommandText = """
-            INSERT INTO platforms (name, emulator_id, folder, formats, updated_at)
-            VALUES (@name, @emulator_id, @folder, @formats, @updated_at)
+            INSERT INTO platforms (name, emulator_id, folder, formats, core_path, updated_at)
+            VALUES (@name, @emulator_id, @folder, @formats, @core_path, @updated_at)
             ON CONFLICT(name) DO UPDATE SET
                 emulator_id=@emulator_id,
                 folder=@folder,
                 formats=@formats,
+                core_path=@core_path,
                 updated_at=@updated_at;
             """;
         cmd.Parameters.AddWithValue("@name", setting.Name.Trim());
         cmd.Parameters.AddWithValue("@emulator_id", (object?)setting.EmulatorId ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@folder", setting.Folder.Trim());
         cmd.Parameters.AddWithValue("@formats", PlatformFormats.Normalize(setting.Formats));
+        cmd.Parameters.AddWithValue("@core_path", setting.CorePath.Trim());
         cmd.Parameters.AddWithValue("@updated_at", DateTime.Now.ToString("O"));
         cmd.ExecuteNonQuery();
     }

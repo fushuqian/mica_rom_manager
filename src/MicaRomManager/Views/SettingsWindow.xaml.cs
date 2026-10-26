@@ -12,6 +12,8 @@ namespace MicaRomManager.Views;
 
 public partial class SettingsWindow : Window
 {
+    private List<Emulator> _emulators = new();
+
     public SettingsWindow()
     {
         InitializeComponent();
@@ -99,7 +101,8 @@ public partial class SettingsWindow : Window
 
         PlatformEmulatorCombo.Items.Clear();
         PlatformEmulatorCombo.Items.Add(new ComboBoxItem { Content = "（不指定）", Tag = null });
-        foreach (var emulator in AppServices.EmulatorRepo.ListAll().Where(e => e.Enabled))
+        _emulators = AppServices.EmulatorRepo.ListAll().Where(e => e.Enabled).ToList();
+        foreach (var emulator in _emulators)
             PlatformEmulatorCombo.Items.Add(new ComboBoxItem { Content = emulator.Name, Tag = emulator.Id });
 
         if (PlatformList.ItemsSource is List<PlatformSetting> platforms && !string.IsNullOrEmpty(selected))
@@ -125,6 +128,44 @@ public partial class SettingsWindow : Window
         PlatformEmulatorCombo.SelectedItem = PlatformEmulatorCombo.Items
             .OfType<ComboBoxItem>()
             .FirstOrDefault(item => Equals(item.Tag, setting.EmulatorId));
+
+        RefreshCorePanel(setting);
+    }
+
+    private void PlatformEmulator_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        if (PlatformList.SelectedItem is PlatformSetting setting) RefreshCorePanel(setting);
+    }
+
+    /// <summary>只有需要核心的模拟器（RetroArch 等）才显示核心下拉。</summary>
+    private void RefreshCorePanel(PlatformSetting? setting)
+    {
+        if (PlatformCorePanel == null || PlatformCoreCombo == null) return;
+
+        PlatformCoreCombo.Items.Clear();
+        PlatformCoreCombo.Items.Add(new ComboBoxItem { Content = "（使用模拟器自带核心）", Tag = "" });
+
+        var emulatorId = (PlatformEmulatorCombo.SelectedItem as ComboBoxItem)?.Tag as long?;
+        var emulator = emulatorId is long id ? _emulators.FirstOrDefault(e => e.Id == id) : null;
+        var supportsCore = emulator != null &&
+                           (emulator.Name.Contains("RetroArch", StringComparison.OrdinalIgnoreCase)
+                            || ArgsBuilder.RequiresCore(emulator.ArgsTemplate));
+
+        PlatformCorePanel.Visibility = supportsCore ? Visibility.Visible : Visibility.Collapsed;
+        if (!supportsCore) return;
+
+        var cores = EmulatorCores.List(emulator!);
+        foreach (var core in cores)
+            PlatformCoreCombo.Items.Add(new ComboBoxItem { Content = core, Tag = core });
+
+        var current = setting?.CorePath ?? "";
+        if (current.Length > 0 && !cores.Contains(current, StringComparer.OrdinalIgnoreCase))
+            PlatformCoreCombo.Items.Add(new ComboBoxItem { Content = $"{current}（当前配置）", Tag = current });
+
+        PlatformCoreCombo.SelectedItem = PlatformCoreCombo.Items
+            .OfType<ComboBoxItem>()
+            .FirstOrDefault(item => string.Equals(item.Tag as string, current, StringComparison.OrdinalIgnoreCase))
+            ?? PlatformCoreCombo.Items[0];
     }
 
     private void AddPlatform_Click(object sender, RoutedEventArgs e)
@@ -160,6 +201,7 @@ public partial class SettingsWindow : Window
         setting.EmulatorId = (PlatformEmulatorCombo.SelectedItem as ComboBoxItem)?.Tag as long?;
         setting.Folder = PlatformFolderBox.Text.Trim();
         setting.Formats = PlatformFormats.Normalize(PlatformFormatsBox.Text);
+        setting.CorePath = (PlatformCoreCombo.SelectedItem as ComboBoxItem)?.Tag as string ?? "";
         AppServices.Platforms.Save(setting);
         MessageBox.Show($"平台「{setting.Name}」已保存。", "平台设置", MessageBoxButton.OK, MessageBoxImage.Information);
     }

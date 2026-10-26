@@ -10,6 +10,13 @@ public static class EmulatorPaths
 
     public static string? ResolveCore(Emulator emulator) => Resolve(emulator.CorePath, emulator.InstallDir, true);
 
+    /// <summary>平台级核心（相对模拟器安装目录）；未配置返回 null，由调用方回退到模拟器自带核心。</summary>
+    public static string? ResolvePlatformCore(Emulator emulator, string? platformCore)
+    {
+        if (string.IsNullOrWhiteSpace(platformCore)) return null;
+        return Resolve(platformCore, emulator.InstallDir, true);
+    }
+
     public static string? ResolveConfig(Emulator emulator) => Resolve(emulator.ConfigPath, emulator.InstallDir, false);
 
     private static string? Resolve(string value, string installDir, bool mustExist)

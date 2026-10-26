@@ -40,7 +40,8 @@ public sealed class RomLauncher
             return false;
         }
 
-        var corePath = EmulatorPaths.ResolveCore(emulator);
+        var corePath = EmulatorPaths.ResolvePlatformCore(emulator, AppServices.Platforms.Get(game.Platform)?.CorePath)
+                       ?? EmulatorPaths.ResolveCore(emulator);
         if (ArgsBuilder.RequiresCore(emulator.ArgsTemplate) && string.IsNullOrWhiteSpace(corePath))
         {
             message = $"模拟器「{emulator.Name}」的启动参数需要核心文件，但核心路径未配置。";
