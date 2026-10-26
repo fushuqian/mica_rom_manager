@@ -172,7 +172,7 @@ public sealed class GameRepository
 
     private static string Relocate(string path, string oldRoot, string newRoot)
     {
-        if (string.IsNullOrWhiteSpace(path) || File.Exists(path)) return path;
+        if (string.IsNullOrWhiteSpace(path)) return path;
         if (!LibraryOrganizer.IsUnderDirectory(path, oldRoot)) return path;
 
         try

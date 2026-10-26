@@ -66,6 +66,47 @@ public class PortablePathTests
     }
 
     [Fact]
+    public void RelocateLibraryPaths_MovesEvenWhenOldFileStillExists()
+    {
+        var dir = Path.Combine(Path.GetTempPath(), "mica-relocate-" + Guid.NewGuid().ToString("N"));
+        var oldRoot = Path.Combine(dir, "old");
+        var newRoot = Path.Combine(dir, "new");
+        Directory.CreateDirectory(Path.Combine(oldRoot, "PS2"));
+        Directory.CreateDirectory(Path.Combine(newRoot, "PS2"));
+        var oldFile = Path.Combine(oldRoot, "PS2", "x.chd");
+        var newFile = Path.Combine(newRoot, "PS2", "x.chd");
+        File.WriteAllText(oldFile, "old");
+        File.WriteAllText(newFile, "new");
+
+        try
+        {
+            var repo = new GameRepository(new Database(Path.Combine(dir, "t.db")));
+            repo.Insert(new Game
+            {
+                Title = "x",
+                Platform = "PS2",
+                RomPath = oldFile,
+            });
+
+            var changed = repo.RelocateLibraryPaths(oldRoot, newRoot);
+
+            Assert.Equal(1, changed);
+            Assert.Equal(newFile, repo.ListAll().Single().RomPath);
+        }
+        finally
+        {
+            try
+            {
+                Directory.Delete(dir, true);
+            }
+            catch
+            {
+                // 临时目录清理失败不影响测试结果
+            }
+        }
+    }
+
+    [Fact]
     public void RelocateLibraryPaths_MovesRecordToNewRoot()
     {
         var dir = Path.Combine(Path.GetTempPath(), "mica-relocate-" + Guid.NewGuid().ToString("N"));
