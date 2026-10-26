@@ -7,7 +7,7 @@ public sealed class GameRepository
 {
     private const string Columns =
         "id,title,platform,genre,region,language,release_year,publisher,developer,favorite,status," +
-        "rom_path,file_size,cover_path,notes,tags,emulator_id,play_count,play_seconds,last_played_at,created_at,updated_at,disc_paths";
+        "rom_path,file_size,cover_path,notes,tags,emulator_id,play_count,play_seconds,last_played_at,created_at,updated_at,disc_paths,rom_hash";
 
     private readonly Database _db;
 
@@ -33,10 +33,10 @@ public sealed class GameRepository
         cmd.CommandText = """
             INSERT INTO games
                 (title,platform,genre,region,language,release_year,publisher,developer,favorite,status,
-                 rom_path,file_size,cover_path,notes,tags,emulator_id,play_count,play_seconds,last_played_at,created_at,updated_at,disc_paths)
+                 rom_path,file_size,cover_path,notes,tags,emulator_id,play_count,play_seconds,last_played_at,created_at,updated_at,disc_paths,rom_hash)
             VALUES
                 (@title,@platform,@genre,@region,@language,@release_year,@publisher,@developer,@favorite,@status,
-                 @rom_path,@file_size,@cover_path,@notes,@tags,@emulator_id,@play_count,@play_seconds,@last_played_at,@created_at,@updated_at,@disc_paths);
+                 @rom_path,@file_size,@cover_path,@notes,@tags,@emulator_id,@play_count,@play_seconds,@last_played_at,@created_at,@updated_at,@disc_paths,@rom_hash);
             SELECT last_insert_rowid();
             """;
         AddParameters(cmd, game);
@@ -57,11 +57,37 @@ public sealed class GameRepository
                 cover_path=@cover_path, notes=@notes, tags=@tags, emulator_id=@emulator_id,
                 play_count=@play_count, play_seconds=@play_seconds, last_played_at=@last_played_at,
                 disc_paths=@disc_paths,
+                rom_hash=@rom_hash,
                 updated_at=@updated_at
             WHERE id=@id;
             """;
         AddParameters(cmd, game);
         cmd.Parameters.AddWithValue("@id", game.Id);
+        cmd.ExecuteNonQuery();
+    }
+
+    /// <summary>库内已登记的非空指纹集合（导入/扫描去重用）。</summary>
+    public HashSet<string> ListHashes()
+    {
+        var hashes = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        using var connection = _db.Open();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = "SELECT rom_hash FROM games WHERE rom_hash <> '';";
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+            if (!reader.IsDBNull(0)) hashes.Add(reader.GetString(0));
+        return hashes;
+    }
+
+    /// <summary>补算存量条目的指纹。</summary>
+    public void SetHash(long id, string hash)
+    {
+        using var connection = _db.Open();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = "UPDATE games SET rom_hash=@hash, updated_at=@updated_at WHERE id=@id;";
+        cmd.Parameters.AddWithValue("@hash", hash);
+        cmd.Parameters.AddWithValue("@updated_at", DateTime.Now.ToString("O"));
+        cmd.Parameters.AddWithValue("@id", id);
         cmd.ExecuteNonQuery();
     }
 
@@ -116,6 +142,7 @@ public sealed class GameRepository
         cmd.Parameters.AddWithValue("@play_seconds", g.PlaySeconds);
         cmd.Parameters.AddWithValue("@last_played_at", (object?)g.LastPlayedAt ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@disc_paths", g.DiscPaths);
+        cmd.Parameters.AddWithValue("@rom_hash", g.RomHash);
         cmd.Parameters.AddWithValue("@created_at", g.CreatedAt.ToString("O"));
         cmd.Parameters.AddWithValue("@updated_at", g.UpdatedAt.ToString("O"));
     }
@@ -147,6 +174,7 @@ public sealed class GameRepository
             CreatedAt = ParseDate(r.GetString(20)),
             UpdatedAt = ParseDate(r.GetString(21)),
             DiscPaths = r.GetString(22),
+            RomHash = r.GetString(23),
         };
     }
 

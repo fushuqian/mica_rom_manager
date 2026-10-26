@@ -20,6 +20,7 @@ public partial class ImportWizardWindow : Window, INotifyPropertyChanged
     public ImportWizardResult? Result { get; private set; }
 
     private readonly List<string> _existingPaths;
+    private readonly HashSet<string> _existingHashes;
     private readonly string _libraryRoot;
     private int _duplicates;
     private int _excluded;
@@ -29,7 +30,7 @@ public partial class ImportWizardWindow : Window, INotifyPropertyChanged
         Candidates.Count == 0
             ? Sources.Count == 0 ? "拖放或添加 ROM 文件 / 文件夹" : "没有可导入的 ROM"
             : $"共 {Candidates.Count} 个文件，其中 {Candidates.Count(c => c.NeedsSpecify)} 个需要指定平台；"
-              + $"重复 {_duplicates} 个，忽略 {_excluded} 个";
+              + $"已存在 {_duplicates} 个，忽略 {_excluded} 个";
 
     public string LibraryHint =>
         string.IsNullOrWhiteSpace(_libraryRoot)
@@ -48,6 +49,7 @@ public partial class ImportWizardWindow : Window, INotifyPropertyChanged
         InitializeComponent();
 
         _existingPaths = existingPaths.ToList();
+        _existingHashes = AppServices.GameRepo.ListHashes();
         _libraryRoot = libraryRoot;
 
         var hasLibrary = !string.IsNullOrWhiteSpace(_libraryRoot);
@@ -82,7 +84,8 @@ public partial class ImportWizardWindow : Window, INotifyPropertyChanged
             {
                 var snapshot = Sources.ToList();
                 var recursive = RecursiveCheck.IsChecked == true;
-                var scan = await Task.Run(() => RomImporter.Scan(snapshot, recursive, _existingPaths));
+                BusyText.Text = "正在计算指纹…";
+                var scan = await Task.Run(() => RomImporter.Scan(snapshot, recursive, _existingPaths, _existingHashes));
 
                 if (!Sources.SequenceEqual(snapshot))
                 {
@@ -110,6 +113,7 @@ public partial class ImportWizardWindow : Window, INotifyPropertyChanged
         }
         finally
         {
+            BusyText.Text = "";
             _scanning = false;
         }
     }

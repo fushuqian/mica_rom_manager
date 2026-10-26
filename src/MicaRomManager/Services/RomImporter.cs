@@ -12,6 +12,8 @@ public partial class ImportCandidate : ObservableObject
 
     [ObservableProperty] private string title = "";
     [ObservableProperty] private string platform = "";
+    /// <summary>ROM 内容指纹（导入时算好，直接落库）。</summary>
+    [ObservableProperty] private string romHash = "";
 
     public string FileName => Path.GetFileName(FilePath);
     public string FileSizeDisplay => Game.FormatSize(FileSize);
@@ -21,10 +23,15 @@ public static class RomImporter
 {
     public sealed record ScanResult(List<ImportCandidate> Candidates, int DuplicateCount, int ExcludedCount);
 
-    public static ScanResult Scan(IEnumerable<string> inputs, bool recursive, IEnumerable<string> existingPaths)
+    public static ScanResult Scan(
+        IEnumerable<string> inputs,
+        bool recursive,
+        IEnumerable<string> existingPaths,
+        IReadOnlyCollection<string>? existingHashes = null)
     {
         var existing = new HashSet<string>(existingPaths, StringComparer.OrdinalIgnoreCase);
         var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var seenHashes = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var candidates = new List<ImportCandidate>();
         var duplicates = 0;
         var excluded = 0;
@@ -79,6 +86,17 @@ public static class RomImporter
                 // 读不到大小不影响导入
             }
 
+            var hash = RomHasher.Compute(fullPath);
+            if (hash.Length > 0)
+            {
+                // 库内已有同一内容，或本批里已出现过同一内容 → 视为重复
+                if ((existingHashes?.Contains(hash) ?? false) || !seenHashes.Add(hash))
+                {
+                    duplicates++;
+                    return;
+                }
+            }
+
             candidates.Add(new ImportCandidate
             {
                 FilePath = fullPath,
@@ -86,6 +104,7 @@ public static class RomImporter
                 NeedsSpecify = info.NeedsSpecify,
                 Title = Path.GetFileNameWithoutExtension(fullPath),
                 Platform = info.Platform ?? ExtensionMap.UnspecifiedPlatform,
+                RomHash = hash,
             });
         }
     }

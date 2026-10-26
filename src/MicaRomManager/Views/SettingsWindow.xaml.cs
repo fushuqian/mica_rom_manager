@@ -160,6 +160,142 @@ public partial class SettingsWindow : Window
         MessageBox.Show($"平台「{setting.Name}」已保存。", "平台设置", MessageBoxButton.OK, MessageBoxImage.Information);
     }
 
+    private async void ScanPlatformLibrary_Click(object sender, RoutedEventArgs e)
+    {
+        if (PlatformList.SelectedItem is not PlatformSetting setting)
+        {
+            MessageBox.Show("请先在左侧选择一个平台。", "扫描平台库",
+                MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        var libraryRoot = AppServices.Settings.Get("library.root") ?? "";
+        if (string.IsNullOrWhiteSpace(libraryRoot))
+        {
+            MessageBox.Show("尚未配置库目录，请先到「常规」里设置库目录。", "扫描平台库",
+                MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        var folderName = string.IsNullOrWhiteSpace(setting.Folder) ? setting.Name : setting.Folder;
+        var dir = Path.Combine(libraryRoot, RomImporter.SanitizeFolderName(folderName));
+        if (!Directory.Exists(dir))
+        {
+            MessageBox.Show($"该平台库目录不存在：\n{dir}", "扫描平台库",
+                MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        ScanPlatformButton.IsEnabled = false;
+        MaintenanceStatus.Text = "正在扫描并计算指纹…";
+
+        try
+        {
+            var existingPaths = AppServices.GameRepo.ListAll().Select(g => g.RomPath).ToList();
+            var existingHashes = AppServices.GameRepo.ListHashes();
+            var scan = await Task.Run(() => RomImporter.Scan(new[] { dir }, true, existingPaths, existingHashes));
+
+            if (scan.Candidates.Count == 0)
+            {
+                MaintenanceStatus.Text = "";
+                MessageBox.Show(
+                    $"该平台库里没有需要补充的 ROM。\n已存在 {scan.DuplicateCount} 个，忽略 {scan.ExcludedCount} 个。",
+                    "扫描平台库", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            foreach (var candidate in scan.Candidates) candidate.Platform = setting.Name;
+
+            var preview = new ImportPreviewWindow(scan.Candidates) { Owner = this };
+            if (preview.ShowDialog() != true)
+            {
+                MaintenanceStatus.Text = "";
+                return;
+            }
+
+            var added = 0;
+            var failed = 0;
+            foreach (var candidate in scan.Candidates)
+            {
+                try
+                {
+                    AppServices.GameRepo.Insert(new Game
+                    {
+                        Title = candidate.Title.Trim(),
+                        Platform = candidate.Platform,
+                        RomPath = candidate.FilePath,
+                        RomHash = candidate.RomHash,
+                        FileSize = candidate.FileSize,
+                        Status = GameStatus.NotPlayed,
+                    });
+                    added++;
+                }
+                catch
+                {
+                    failed++;
+                }
+            }
+
+            MaintenanceStatus.Text = "";
+            var message = $"已从该平台库补充 {added} 条" + (failed > 0 ? $"，失败 {failed} 条" : "") + "。";
+            MessageBox.Show(message, "扫描平台库", MessageBoxButton.OK, MessageBoxImage.Information);
+
+            (Owner as MainWindow)?.RefreshGames();
+        }
+        catch (Exception ex)
+        {
+            MaintenanceStatus.Text = "";
+            MessageBox.Show($"扫描失败：{ex.Message}", "扫描平台库", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+        finally
+        {
+            ScanPlatformButton.IsEnabled = true;
+        }
+    }
+
+    private async void HashMissing_Click(object sender, RoutedEventArgs e)
+    {
+        var games = AppServices.GameRepo.ListAll()
+            .Where(g => string.IsNullOrEmpty(g.RomHash)
+                        && !string.IsNullOrWhiteSpace(g.RomPath)
+                        && File.Exists(g.RomPath))
+            .ToList();
+
+        if (games.Count == 0)
+        {
+            MessageBox.Show("没有需要补算指纹的记录。", "补算指纹",
+                MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        MaintenanceStatus.Text = $"正在补算指纹（0/{games.Count}）…";
+        var computed = 0;
+        var skipped = 0;
+
+        await Task.Run(() =>
+        {
+            for (var i = 0; i < games.Count; i++)
+            {
+                var hash = RomHasher.Compute(games[i].RomPath);
+                if (hash.Length == 0)
+                {
+                    skipped++;
+                }
+                else
+                {
+                    AppServices.GameRepo.SetHash(games[i].Id, hash);
+                    computed++;
+                }
+
+                var progress = i + 1;
+                Dispatcher.BeginInvoke(() => MaintenanceStatus.Text = $"正在补算指纹（{progress}/{games.Count}）…");
+            }
+        });
+
+        MaintenanceStatus.Text = $"指纹补算完成：{computed} 条，跳过 {skipped} 条。";
+        MessageBox.Show(MaintenanceStatus.Text, "补算指纹", MessageBoxButton.OK, MessageBoxImage.Information);
+    }
+
     private void SaveGeneral_Click(object sender, RoutedEventArgs e)
     {
         var mode = CurrentProxyMode();

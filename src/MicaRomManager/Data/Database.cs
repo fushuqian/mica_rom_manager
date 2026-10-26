@@ -88,7 +88,19 @@ public sealed class Database
             versionCmd.CommandText = "PRAGMA user_version = 5;";
             versionCmd.ExecuteNonQuery();
         }
+
+        if (version < 6)
+        {
+            using var cmd = connection.CreateCommand();
+            cmd.CommandText = SchemaV6;
+            cmd.ExecuteNonQuery();
+        }
     }
+
+    private const string SchemaV6 = """
+        ALTER TABLE games ADD COLUMN rom_hash TEXT DEFAULT '';
+        PRAGMA user_version = 6;
+        """;
 
     private const string SchemaV5 = """
         CREATE TABLE IF NOT EXISTS platforms (

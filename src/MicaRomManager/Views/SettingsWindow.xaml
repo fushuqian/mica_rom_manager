@@ -170,8 +170,15 @@
                         <TextBlock Margin="0,6,0,0" Foreground="{StaticResource TextSecondaryBrush}"
                                    TextWrapping="Wrap" MaxWidth="360"
                                    Text="说明：游戏自身绑定的模拟器优先；未绑定时用这里的平台默认模拟器。" />
-                        <Button Content="保存平台设置" Width="120" Margin="0,12,0,0" HorizontalAlignment="Left"
-                                Style="{StaticResource PrimaryButtonStyle}" Click="SavePlatform_Click" />
+                        <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                            <Button Content="保存平台设置" Width="120"
+                                    Style="{StaticResource PrimaryButtonStyle}" Click="SavePlatform_Click" />
+                            <Button x:Name="ScanPlatformButton" Content="扫描该平台库目录…" Margin="8,0,0,0"
+                                    Style="{StaticResource SecondaryButtonStyle}" Click="ScanPlatformLibrary_Click" />
+                        </StackPanel>
+                        <TextBlock x:Name="PlatformScanHint" Margin="0,6,0,0" MaxWidth="380" TextWrapping="Wrap"
+                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                   Text="只扫描该平台在库目录下的子文件夹，把其中未入库的 ROM 补进库（按路径与指纹去重）。" />
                     </StackPanel>
                 </Grid>
             </TabItem>
@@ -186,6 +193,7 @@
                         <Button Content="从备份恢复…" Style="{StaticResource SecondaryButtonStyle}" Click="Restore_Click" />
                         <Button Content="导出 CSV…" Style="{StaticResource SecondaryButtonStyle}" Click="ExportCsv_Click" />
                         <Button Content="清理失效路径记录" Style="{StaticResource SecondaryButtonStyle}" Click="CleanMissing_Click" />
+                        <Button Content="补算缺失指纹" Style="{StaticResource SecondaryButtonStyle}" Click="HashMissing_Click" />
                     </WrapPanel>
                     <TextBlock x:Name="MaintenanceStatus" Margin="0,16,0,0" TextWrapping="Wrap"
                                Foreground="{StaticResource TextSecondaryBrush}" />

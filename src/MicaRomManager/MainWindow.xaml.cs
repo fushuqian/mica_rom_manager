@@ -115,6 +115,9 @@ public partial class MainWindow : Window
         _viewModel.SetSelectedGames(GameGrid.SelectedItems.Cast<Game>());
     }
 
+    /// <summary>供设置窗口在扫描补录后刷新列表。</summary>
+    public void RefreshGames() => _viewModel.LoadGames();
+
     private void OnRowDoubleClick(object sender, MouseButtonEventArgs e)
     {
         if (e.ChangedButton != MouseButton.Left) return;

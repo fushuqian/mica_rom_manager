@@ -22,6 +22,8 @@ public partial class Game : ObservableObject
     [ObservableProperty] private string genre = "";
     [ObservableProperty] private string region = "";
     [ObservableProperty] private string language = "";
+    /// <summary>ROM 内容指纹（SHA256；大文件为 fast: 采样指纹）。</summary>
+    [ObservableProperty] private string romHash = "";
     /// <summary>多碟游戏的附加碟片路径，换行分隔（第一碟仍是 RomPath）。</summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsMultiDisc))]
@@ -113,6 +115,7 @@ public partial class Game : ObservableObject
         Favorite = other.Favorite;
         Status = other.Status;
         RomPath = other.RomPath;
+        RomHash = other.RomHash;
         DiscPaths = other.DiscPaths;
         FileSize = other.FileSize;
         CoverPath = other.CoverPath;

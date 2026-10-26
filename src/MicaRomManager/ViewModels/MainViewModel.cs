@@ -267,6 +267,9 @@ public partial class MainViewModel : ObservableObject
                             Title = candidate.Title.Trim(),
                             Platform = candidate.Platform,
                             RomPath = romPath,
+                            RomHash = string.IsNullOrEmpty(candidate.RomHash)
+                                ? RomHasher.Compute(romPath)
+                                : candidate.RomHash,
                             FileSize = new FileInfo(romPath).Length,
                             Status = GameStatus.NotPlayed,
                         };
@@ -603,7 +606,7 @@ public partial class MainViewModel : ObservableObject
         window.ShowDialog();
 
         LoadEmulators();
-        ApplyFilter();
+        LoadGames();
     }
 
     public void FocusSearchRequested() { }
