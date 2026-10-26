@@ -237,7 +237,8 @@ public partial class SettingsWindow : Window
 
         try
         {
-            var allowed = PlatformFormats.Parse(setting.Formats);
+            // 用界面当前输入值，避免"填了格式但没保存就扫描"时仍按旧值过滤
+            var allowed = PlatformFormats.Parse(PlatformFormatsBox.Text);
             var (scan, removed) = await Task.Run(() =>
             {
                 var platformGames = AppServices.GameRepo.ListAll()
@@ -255,9 +256,13 @@ public partial class SettingsWindow : Window
             if (scan.Candidates.Count == 0)
             {
                 MaintenanceStatus.Text = "";
+                var formatsText = PlatformFormats.Normalize(PlatformFormatsBox.Text);
                 MessageBox.Show(
-                    $"该平台库里没有需要补充的 ROM。\n已存在 {scan.DuplicateCount} 个，忽略 {scan.ExcludedCount} 个，"
-                    + $"清理失效记录 {removed} 条。",
+                    $"该平台库（{dir}）里没有需要补充的 ROM。\n"
+                    + $"当前格式：{(formatsText.Length == 0 ? "不限制" : formatsText)}\n"
+                    + $"已存在 {scan.DuplicateCount} 个，忽略 {scan.ExcludedCount} 个，"
+                    + $"格式不匹配跳过 {scan.FormatSkippedCount} 个，清理失效记录 {removed} 条。\n\n"
+                    + "若刚修改过格式，请先点「保存平台设置」再扫描。",
                     "扫描平台库", MessageBoxButton.OK, MessageBoxImage.Information);
                 (Owner as MainWindow)?.RefreshGames();
                 return;
@@ -297,6 +302,7 @@ public partial class SettingsWindow : Window
 
             MaintenanceStatus.Text = "";
             var message = $"已从该平台库补充 {added} 条" + (failed > 0 ? $"，失败 {failed} 条" : "")
+                          + (scan.FormatSkippedCount > 0 ? $"，格式不匹配跳过 {scan.FormatSkippedCount} 个" : "")
                           + $"，清理失效记录 {removed} 条。";
             MessageBox.Show(message, "扫描平台库", MessageBoxButton.OK, MessageBoxImage.Information);
 

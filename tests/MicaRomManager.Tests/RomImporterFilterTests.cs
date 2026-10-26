@@ -39,6 +39,35 @@ public class RomImporterFilterTests : IDisposable
     }
 
     [Fact]
+    public void Scan_WithAllowedExtensions_AcceptsCustomExtension()
+    {
+        File.WriteAllText(Path.Combine(_dir, "game.gdi"), "gdi");
+
+        var result = RomImporter.Scan(new[] { _dir }, false, Array.Empty<string>(),
+            null, new[] { ".gdi" });
+
+        var candidate = Assert.Single(result.Candidates);
+        Assert.Equal("game.gdi", Path.GetFileName(candidate.FilePath));
+    }
+
+    [Fact]
+    public void Scan_WithPlatformFormats_AcceptsConfiguredCustomExtension()
+    {
+        File.WriteAllText(Path.Combine(_dir, "game.gdi"), "gdi");
+        var formats = new Dictionary<string, IReadOnlyCollection<string>>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["Dreamcast"] = new[] { ".gdi" },
+        };
+
+        var result = RomImporter.Scan(new[] { _dir }, false, Array.Empty<string>(),
+            null, null, formats);
+
+        var candidate = Assert.Single(result.Candidates);
+        Assert.Equal("Dreamcast", candidate.Platform);
+        Assert.False(candidate.NeedsSpecify);
+    }
+
+    [Fact]
     public void Scan_WithPlatformFormats_AutoDetectsUniquePlatform()
     {
         File.WriteAllText(Path.Combine(_dir, "game.pbp"), "pbp");

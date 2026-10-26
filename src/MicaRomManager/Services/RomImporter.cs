@@ -21,7 +21,11 @@ public partial class ImportCandidate : ObservableObject
 
 public static class RomImporter
 {
-    public sealed record ScanResult(List<ImportCandidate> Candidates, int DuplicateCount, int ExcludedCount);
+    public sealed record ScanResult(
+        List<ImportCandidate> Candidates,
+        int DuplicateCount,
+        int ExcludedCount,
+        int FormatSkippedCount = 0);
 
     public static ScanResult Scan(
         IEnumerable<string> inputs,
@@ -37,9 +41,19 @@ public static class RomImporter
         var allowed = allowedExtensions?
             .Select(extension => extension.StartsWith('.') ? extension : "." + extension)
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        // 导入时没有指定平台白名单，则把各平台配置过的格式也视为已知格式
+        if (allowed is not { Count: > 0 } && platformFormats is { Count: > 0 })
+        {
+            allowed = platformFormats.Values
+                .SelectMany(extensions => extensions)
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        }
+
         var candidates = new List<ImportCandidate>();
         var duplicates = 0;
         var excluded = 0;
+        var formatSkipped = 0;
 
         foreach (var input in inputs)
         {
@@ -57,24 +71,28 @@ public static class RomImporter
                 };
                 foreach (var file in Directory.EnumerateFiles(input, "*", options))
                 {
-                    if (ExtensionMap.IsKnownOrArchive(file)) AddFile(file, false);
+                    AddFile(file, false);
                 }
             }
         }
 
-        return new ScanResult(candidates, duplicates, excluded);
+        return new ScanResult(candidates, duplicates, excluded, formatSkipped);
 
         void AddFile(string file, bool explicitSelection)
         {
-            if (!ExtensionMap.IsKnownOrArchive(file))
-            {
-                if (!explicitSelection) return;
-                excluded++;
-                return;
-            }
+            var extension = Path.GetExtension(file);
 
-            // 平台子库扫描的格式白名单：目录内其它文件（封面、存档等）静默跳过
-            if (allowed is { Count: > 0 } && !allowed.Contains(Path.GetExtension(file)))
+            // 有格式白名单时以白名单为准，不再受内置扩展名限制（支持 gdi/pkg 等自定义格式）
+            if (allowed is { Count: > 0 })
+            {
+                if (!allowed.Contains(extension))
+                {
+                    if (explicitSelection) excluded++;
+                    else formatSkipped++;
+                    return;
+                }
+            }
+            else if (!ExtensionMap.IsKnownOrArchive(file))
             {
                 if (!explicitSelection) return;
                 excluded++;
