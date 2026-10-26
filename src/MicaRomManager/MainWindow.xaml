@@ -38,16 +38,10 @@
                 <StackPanel Orientation="Horizontal">
                     <TextBlock Text="MICA ROM MANAGER" FontWeight="SemiBold" FontSize="14" VerticalAlignment="Center"
                                Margin="0,0,18,0" Foreground="{StaticResource AccentBrush}" />
-                    <Button Command="{Binding ImportFilesCommand}" Style="{StaticResource ToolButtonStyle}">
+                    <Button Command="{Binding ImportCommand}" Style="{StaticResource ToolButtonStyle}">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="&#xE8E5;" FontFamily="Segoe MDL2 Assets" FontSize="14" Margin="0,0,6,0" VerticalAlignment="Center" />
-                            <TextBlock Text="导入文件" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Button>
-                    <Button Command="{Binding ImportFolderCommand}" Style="{StaticResource ToolButtonStyle}">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="&#xE838;" FontFamily="Segoe MDL2 Assets" FontSize="14" Margin="0,0,6,0" VerticalAlignment="Center" />
-                            <TextBlock Text="导入文件夹" VerticalAlignment="Center" />
+                            <TextBlock Text="导入…" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
                     <Button Command="{Binding NewGameCommand}" Style="{StaticResource ToolButtonStyle}">

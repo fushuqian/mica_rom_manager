@@ -42,8 +42,9 @@
                     <TextBlock Grid.Row="1" Grid.Column="0" Text="导入策略" Style="{StaticResource FieldLabelStyle}" />
                     <ComboBox x:Name="ImportModeCombo" Grid.Row="1" Grid.Column="1" Width="280"
                               HorizontalAlignment="Left" MinHeight="28" Margin="0,0,0,12">
-                        <ComboBoxItem Content="仅索引原文件（不移动、不复制）" />
+                        <ComboBoxItem Content="仅链接（只记录路径，不移动、不复制）" />
                         <ComboBoxItem Content="复制到库目录后入库" />
+                        <ComboBoxItem Content="移动到库目录后入库" />
                     </ComboBox>
 
                     <TextBlock Grid.Row="2" Grid.Column="0" Text="库目录" Style="{StaticResource FieldLabelStyle}" />

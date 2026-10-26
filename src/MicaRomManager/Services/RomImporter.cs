@@ -90,8 +90,8 @@ public static class RomImporter
         }
     }
 
-    /// <summary>复制到库目录并返回新路径；同名文件自动追加序号。</summary>
-    public static string CopyToLibrary(string sourceFile, string libraryRoot, string platform)
+    /// <summary>计算库内目标路径（同名自动追加序号）。</summary>
+    public static string ResolveTargetPath(string sourceFile, string libraryRoot, string platform)
     {
         var folderName = string.IsNullOrWhiteSpace(platform) ? "未分类" : platform;
         var directory = Path.Combine(libraryRoot, SanitizeFolderName(folderName));
@@ -110,7 +110,31 @@ public static class RomImporter
             } while (File.Exists(target));
         }
 
+        return target;
+    }
+
+    /// <summary>复制到库目录并返回新路径。</summary>
+    public static string CopyToLibrary(string sourceFile, string libraryRoot, string platform)
+    {
+        var target = ResolveTargetPath(sourceFile, libraryRoot, platform);
         File.Copy(sourceFile, target, false);
+        return target;
+    }
+
+    /// <summary>移动到库目录并返回新路径；跨盘时退化为复制后删除源文件。</summary>
+    public static string MoveToLibrary(string sourceFile, string libraryRoot, string platform)
+    {
+        var target = ResolveTargetPath(sourceFile, libraryRoot, platform);
+        try
+        {
+            File.Move(sourceFile, target);
+        }
+        catch (IOException)
+        {
+            File.Copy(sourceFile, target, false);
+            File.Delete(sourceFile);
+        }
+
         return target;
     }
 

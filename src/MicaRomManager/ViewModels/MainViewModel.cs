@@ -197,101 +197,108 @@ public partial class MainViewModel : ObservableObject
     partial void OnFilteredCountChanged(int value) => OnPropertyChanged(nameof(CountText));
 
     [RelayCommand]
-    private async Task ImportFilesAsync()
-    {
-        var dialog = new OpenFileDialog
-        {
-            Title = "选择 ROM 文件",
-            Filter = ExtensionMap.FileDialogFilter,
-            Multiselect = true,
-        };
-        if (dialog.ShowDialog() != true) return;
-        await ImportAsync(dialog.FileNames, false);
-    }
+    private Task ImportAsync() => ShowImportWizardAsync(Array.Empty<string>());
 
-    [RelayCommand]
-    private async Task ImportFolderAsync()
-    {
-        var dialog = new OpenFolderDialog { Title = "选择 ROM 文件夹" };
-        if (dialog.ShowDialog() != true) return;
-        await ImportAsync(new[] { dialog.FolderName }, true);
-    }
+    /// <summary>拖放等入口：带着初始来源打开向导。</summary>
+    public Task ImportAsync(IEnumerable<string> inputs, bool recursive) =>
+        ShowImportWizardAsync(inputs);
 
-    public async Task ImportAsync(IEnumerable<string> inputs, bool recursive)
+    private async Task ShowImportWizardAsync(IEnumerable<string> initialSources)
     {
         if (IsBusy) return;
+
+        var libraryRoot = AppServices.Settings.Get("library.root") ?? "";
+        var wizard = new ImportWizardWindow(
+            initialSources,
+            Games.Select(g => g.RomPath),
+            libraryRoot,
+            ReadDefaultImportMode())
+        {
+            Owner = Application.Current?.MainWindow,
+        };
+
+        if (wizard.ShowDialog() != true || wizard.Result == null)
+        {
+            StatusMessage = "已取消导入";
+            return;
+        }
+
+        await ApplyImportAsync(wizard.Result, libraryRoot);
+    }
+
+    private static ImportMode ReadDefaultImportMode()
+    {
+        var raw = AppServices.Settings.Get("library.import_mode");
+        if (Enum.TryParse<ImportMode>(raw, true, out var mode)) return mode;
+
+        return AppServices.Settings.GetBool("library.copy_on_import") ? ImportMode.Copy : ImportMode.Link;
+    }
+
+    private async Task ApplyImportAsync(ImportWizardResult result, string libraryRoot)
+    {
         IsBusy = true;
-        StatusMessage = "正在扫描 ROM…";
+        StatusMessage = "正在导入 ROM…";
+
+        var created = new List<Game>();
+        var failed = 0;
 
         try
         {
-            var inputList = inputs.ToList();
-            var existing = Games.Select(g => g.RomPath).ToList();
-            var scan = await Task.Run(() => RomImporter.Scan(inputList, recursive, existing));
-
-            if (scan.Candidates.Count == 0)
+            await Task.Run(() =>
             {
-                StatusMessage = $"没有可导入的 ROM（重复 {scan.DuplicateCount} 个，忽略 {scan.ExcludedCount} 个）";
-                MessageBox.Show(StatusMessage, "导入", MessageBoxButton.OK, MessageBoxImage.Information);
-                return;
-            }
-
-            var preview = new ImportPreviewWindow(scan.Candidates) { Owner = Application.Current?.MainWindow };
-            if (preview.ShowDialog() != true)
-            {
-                StatusMessage = "已取消导入";
-                return;
-            }
-
-            var copyOnImport = AppServices.Settings.GetBool("library.copy_on_import");
-            var libraryRoot = AppServices.Settings.Get("library.root") ?? "";
-            var added = 0;
-            var failed = 0;
-
-            foreach (var candidate in scan.Candidates)
-            {
-                try
+                foreach (var candidate in result.Candidates)
                 {
-                    var romPath = candidate.FilePath;
-                    if (copyOnImport && !string.IsNullOrWhiteSpace(libraryRoot))
+                    try
                     {
-                        romPath = RomImporter.CopyToLibrary(romPath, libraryRoot, candidate.Platform);
+                        var romPath = candidate.FilePath;
+                        romPath = result.Mode switch
+                        {
+                            ImportMode.Copy => RomImporter.CopyToLibrary(romPath, libraryRoot, candidate.Platform),
+                            ImportMode.Move => RomImporter.MoveToLibrary(romPath, libraryRoot, candidate.Platform),
+                            _ => romPath,
+                        };
+
+                        var game = new Game
+                        {
+                            Title = candidate.Title.Trim(),
+                            Platform = candidate.Platform,
+                            RomPath = romPath,
+                            FileSize = new FileInfo(romPath).Length,
+                            Status = GameStatus.NotPlayed,
+                        };
+                        AppServices.GameRepo.Insert(game);
+                        created.Add(game);
                     }
-
-                    var game = new Game
+                    catch
                     {
-                        Title = candidate.Title.Trim(),
-                        Platform = candidate.Platform,
-                        RomPath = romPath,
-                        FileSize = new FileInfo(romPath).Length,
-                        Status = GameStatus.NotPlayed,
-                    };
-                    AppServices.GameRepo.Insert(game);
-                    Games.Add(game);
-                    added++;
+                        failed++;
+                    }
                 }
-                catch
-                {
-                    failed++;
-                }
-            }
-
-            RefreshLookups();
-            TotalCount = Games.Count;
-            ApplyFilter();
-            LastRefreshText = $"上次刷新：{DateTime.Now:HH:mm:ss}";
-            StatusMessage = $"新增 {added} 条，跳过重复 {scan.DuplicateCount} 条"
-                            + (failed > 0 ? $"，失败 {failed} 条" : "");
+            });
         }
         catch (Exception ex)
         {
             StatusMessage = $"导入失败：{ex.Message}";
             MessageBox.Show(StatusMessage, "导入失败", MessageBoxButton.OK, MessageBoxImage.Error);
-        }
-        finally
-        {
             IsBusy = false;
+            return;
         }
+
+        foreach (var game in created) Games.Add(game);
+
+        RefreshLookups();
+        TotalCount = Games.Count;
+        ApplyFilter();
+        LastRefreshText = $"上次刷新：{DateTime.Now:HH:mm:ss}";
+        IsBusy = false;
+
+        var action = result.Mode switch
+        {
+            ImportMode.Copy => "已复制入库",
+            ImportMode.Move => "已移动入库",
+            _ => "已链接入库",
+        };
+        StatusMessage = $"{action} {created.Count} 条" + (failed > 0 ? $"，失败 {failed} 条" : "");
     }
 
     [RelayCommand]

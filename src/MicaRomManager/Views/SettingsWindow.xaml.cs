@@ -25,8 +25,14 @@ public partial class SettingsWindow : Window
 
     private void LoadGeneral()
     {
-        var copyOnImport = AppServices.Settings.GetBool("library.copy_on_import");
-        ImportModeCombo.SelectedIndex = copyOnImport ? 1 : 0;
+        var importMode = AppServices.Settings.Get("library.import_mode");
+        ImportModeCombo.SelectedIndex = importMode switch
+        {
+            "copy" => 1,
+            "move" => 2,
+            "link" => 0,
+            _ => AppServices.Settings.GetBool("library.copy_on_import") ? 1 : 0,
+        };
         LibraryRootBox.Text = AppServices.Settings.Get("library.root") ?? "";
 
         var mode = AppServices.Settings.Get(NetworkClientProvider.ModeKey);
@@ -94,6 +100,12 @@ public partial class SettingsWindow : Window
             return;
         }
 
+        AppServices.Settings.Set("library.import_mode", ImportModeCombo.SelectedIndex switch
+        {
+            1 => "copy",
+            2 => "move",
+            _ => "link",
+        });
         AppServices.Settings.Set("library.copy_on_import", (ImportModeCombo.SelectedIndex == 1).ToString());
         AppServices.Settings.Set("library.root", LibraryRootBox.Text.Trim());
         AppServices.Settings.Set(NetworkClientProvider.ModeKey, mode);
