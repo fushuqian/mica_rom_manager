@@ -50,13 +50,18 @@ public partial class MultiSelectComboBox : UserControl
         if (DropPopup.IsOpen) BuildOptions();
     }
 
-    private void Box_Click(object sender, MouseButtonEventArgs e)
+    private void Box_PreviewDown(object sender, MouseButtonEventArgs e)
     {
+        // 必须吞掉事件：否则 DataGrid 会把它当成"切换/提交单元格"，弹层随即被销毁。
         e.Handled = true;
+        if (DropPopup.IsOpen) return;
+
         BuildOptions();
         DropPopup.IsOpen = true;
         NewBox.Focus();
     }
+
+    private void Box_PreviewUp(object sender, MouseButtonEventArgs e) => e.Handled = true;
 
     private void BuildOptions()
     {

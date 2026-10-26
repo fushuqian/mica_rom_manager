@@ -33,7 +33,7 @@ public partial class MainWindow : Window
         if (FindAncestor<DataGridRow>(e.OriginalSource as DependencyObject) == null) return;
         if (_viewModel.SelectedGame == null) return;
 
-        _viewModel.EditSelectedCommand.Execute(null);
+        _viewModel.LaunchSelectedCommand.Execute(null);
     }
 
     private void OnEditModeChanged(object sender, RoutedEventArgs e)
