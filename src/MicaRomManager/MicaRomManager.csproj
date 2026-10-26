@@ -11,6 +11,9 @@
     <Version>0.2.0</Version>
     <ApplicationIcon>app.ico</ApplicationIcon>
     <Platforms>AnyCPU</Platforms>
+    <PublishSingleFile>true</PublishSingleFile>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
   </PropertyGroup>
 
   <ItemGroup>

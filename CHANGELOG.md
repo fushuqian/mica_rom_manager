@@ -1,5 +1,11 @@
 # 变更记录（CHANGELOG）
 
+## 2026-10-27 v0.9.1
+
+### 变更
+
+- 发布方式改为单文件自包含：`PublishSingleFile` + 原生库自解压 + 压缩，`publish` 根目录只剩 `MicaRomManager.exe`、`Resources\` 和 `data\`，不再散落 246 个 DLL / 配置文件。
+
 ## 2026-10-27 v0.9.0
 
 ### 新增
