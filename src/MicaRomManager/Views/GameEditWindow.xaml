@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:controls="clr-namespace:MicaRomManager.Controls"
         Title="游戏信息"
-        Width="620" Height="600"
+        Width="620" Height="720"
         WindowStartupLocation="CenterOwner"
         ResizeMode="CanResize"
         FontFamily="{StaticResource AppFontFamily}"
@@ -31,6 +31,8 @@
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
@@ -117,13 +119,29 @@
                            Source="{Binding Model.CoverPath, Converter={StaticResource CoverThumbnailConverter}}" />
                 </Border>
 
-                <TextBlock Grid.Row="9" Grid.Column="0" Text="备注" Style="{StaticResource FieldLabelStyle}" VerticalAlignment="Top" Margin="0,4,8,0" />
-                <TextBox Grid.Row="9" Grid.Column="1" Grid.ColumnSpan="3" Height="80" Margin="0,0,0,10"
+                <TextBlock Grid.Row="9" Grid.Column="0" Text="碟片" Style="{StaticResource FieldLabelStyle}" VerticalAlignment="Top" Margin="0,4,8,0" />
+                <StackPanel Grid.Row="9" Grid.Column="1" Grid.ColumnSpan="3" Orientation="Horizontal" Margin="0,0,0,8">
+                    <Button Content="添加碟片…" Style="{StaticResource SecondaryButtonStyle}"
+                            Command="{Binding AddDiscsCommand}" />
+                    <Button Content="移除" Style="{StaticResource SecondaryButtonStyle}" Margin="6,0,0,0"
+                            Command="{Binding RemoveDiscCommand}" />
+                    <Button Content="上移" Style="{StaticResource SecondaryButtonStyle}" Margin="6,0,0,0"
+                            Command="{Binding MoveDiscUpCommand}" />
+                    <Button Content="下移" Style="{StaticResource SecondaryButtonStyle}" Margin="6,0,0,0"
+                            Command="{Binding MoveDiscDownCommand}" />
+                </StackPanel>
+
+                <ListBox Grid.Row="10" Grid.Column="1" Grid.ColumnSpan="3" Height="100" Margin="0,0,0,10"
+                         ItemsSource="{Binding DiscItems}"
+                         SelectedIndex="{Binding SelectedDiscIndex, Mode=TwoWay}" />
+
+                <TextBlock Grid.Row="11" Grid.Column="0" Text="备注" Style="{StaticResource FieldLabelStyle}" VerticalAlignment="Top" Margin="0,4,8,0" />
+                <TextBox Grid.Row="11" Grid.Column="1" Grid.ColumnSpan="3" Height="70" Margin="0,0,0,10"
                          AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"
                          VerticalContentAlignment="Top"
                          Text="{Binding Model.Notes, UpdateSourceTrigger=PropertyChanged}" />
 
-                <TextBlock Grid.Row="10" Grid.Column="1" Grid.ColumnSpan="3" Text="{Binding Error}"
+                <TextBlock Grid.Row="12" Grid.Column="1" Grid.ColumnSpan="3" Text="{Binding Error}"
                            Foreground="{StaticResource DangerBrush}" TextWrapping="Wrap" />
             </Grid>
         </ScrollViewer>

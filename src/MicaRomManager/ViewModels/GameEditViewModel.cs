@@ -19,9 +19,13 @@ public partial class GameEditViewModel : ObservableObject
     public ObservableCollection<string> Languages { get; } = new();
     public ObservableCollection<Emulator> Emulators { get; } = new();
     public IReadOnlyList<string> Statuses { get; } = GameStatus.All;
+    public ObservableCollection<string> DiscItems { get; } = new();
 
     [ObservableProperty] private Emulator? selectedEmulator;
+    [ObservableProperty] private int selectedDiscIndex;
     [ObservableProperty] private string error = "";
+
+    private readonly List<string> _discs = new();
 
     public event Action<bool>? RequestClose;
 
@@ -45,6 +49,95 @@ public partial class GameEditViewModel : ObservableObject
 
         foreach (var emulator in AppServices.EmulatorRepo.ListAll()) Emulators.Add(emulator);
         SelectedEmulator = Emulators.FirstOrDefault(e => e.Id == game.EmulatorId);
+
+        _discs.AddRange(game.Discs);
+        if (_discs.Count == 0 && !string.IsNullOrWhiteSpace(game.RomPath)) _discs.Add(game.RomPath);
+        RefreshDiscItems();
+        SelectedDiscIndex = _discs.Count > 0 ? 0 : -1;
+    }
+
+    private void RefreshDiscItems()
+    {
+        DiscItems.Clear();
+        for (var i = 0; i < _discs.Count; i++)
+        {
+            var path = _discs[i];
+            var missing = File.Exists(path) ? "" : "（文件缺失）";
+            DiscItems.Add($"碟 {i + 1}：{Path.GetFileName(path)}{missing}");
+        }
+    }
+
+    /// <summary>把碟片列表写回 Model（第一碟即 RomPath）。</summary>
+    private void SyncDiscsToModel()
+    {
+        if (_discs.Count == 0)
+        {
+            Model.RomPath = "";
+            Model.DiscPaths = "";
+            return;
+        }
+
+        Model.RomPath = _discs[0];
+        Model.DiscPaths = string.Join("\n", _discs.Skip(1));
+        if (File.Exists(_discs[0])) Model.FileSize = new FileInfo(_discs[0]).Length;
+    }
+
+    [RelayCommand]
+    private void AddDiscs()
+    {
+        var dialog = new OpenFileDialog
+        {
+            Title = "添加碟片",
+            Filter = ExtensionMap.FileDialogFilter,
+            Multiselect = true,
+        };
+        if (dialog.ShowDialog() != true) return;
+
+        foreach (var file in dialog.FileNames)
+        {
+            if (_discs.Contains(file, StringComparer.OrdinalIgnoreCase)) continue;
+            _discs.Add(file);
+        }
+
+        RefreshDiscItems();
+        SyncDiscsToModel();
+    }
+
+    [RelayCommand]
+    private void RemoveDisc()
+    {
+        if (SelectedDiscIndex < 0 || SelectedDiscIndex >= _discs.Count) return;
+        if (_discs.Count <= 1) return;
+
+        var removed = SelectedDiscIndex;
+        _discs.RemoveAt(removed);
+        RefreshDiscItems();
+        SyncDiscsToModel();
+        SelectedDiscIndex = Math.Min(removed, _discs.Count - 1);
+    }
+
+    [RelayCommand]
+    private void MoveDiscUp()
+    {
+        if (SelectedDiscIndex <= 0) return;
+
+        var index = SelectedDiscIndex;
+        (_discs[index - 1], _discs[index]) = (_discs[index], _discs[index - 1]);
+        RefreshDiscItems();
+        SyncDiscsToModel();
+        SelectedDiscIndex = index - 1;
+    }
+
+    [RelayCommand]
+    private void MoveDiscDown()
+    {
+        if (SelectedDiscIndex < 0 || SelectedDiscIndex >= _discs.Count - 1) return;
+
+        var index = SelectedDiscIndex;
+        (_discs[index + 1], _discs[index]) = (_discs[index], _discs[index + 1]);
+        RefreshDiscItems();
+        SyncDiscsToModel();
+        SelectedDiscIndex = index + 1;
     }
 
     [RelayCommand]
@@ -62,6 +155,11 @@ public partial class GameEditViewModel : ObservableObject
         {
             Model.FileSize = new FileInfo(dialog.FileName).Length;
         }
+
+        if (_discs.Count == 0) _discs.Add(dialog.FileName);
+        else _discs[0] = dialog.FileName;
+        RefreshDiscItems();
+        SyncDiscsToModel();
 
         if (string.IsNullOrWhiteSpace(Model.Title) || Model.Title == "新建游戏")
         {
@@ -123,6 +221,7 @@ public partial class GameEditViewModel : ObservableObject
         Model.Title = Model.Title.Trim();
         Model.EmulatorId = SelectedEmulator?.Id;
         Model.UpdatedAt = DateTime.Now;
+        SyncDiscsToModel();
 
         try
         {
