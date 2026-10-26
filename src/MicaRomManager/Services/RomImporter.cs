@@ -27,11 +27,16 @@ public static class RomImporter
         IEnumerable<string> inputs,
         bool recursive,
         IEnumerable<string> existingPaths,
-        IReadOnlyCollection<string>? existingHashes = null)
+        IReadOnlyCollection<string>? existingHashes = null,
+        IReadOnlyCollection<string>? allowedExtensions = null,
+        IReadOnlyDictionary<string, IReadOnlyCollection<string>>? platformFormats = null)
     {
         var existing = new HashSet<string>(existingPaths, StringComparer.OrdinalIgnoreCase);
         var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var seenHashes = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var allowed = allowedExtensions?
+            .Select(extension => extension.StartsWith('.') ? extension : "." + extension)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
         var candidates = new List<ImportCandidate>();
         var duplicates = 0;
         var excluded = 0;
@@ -68,6 +73,14 @@ public static class RomImporter
                 return;
             }
 
+            // 平台子库扫描的格式白名单：目录内其它文件（封面、存档等）静默跳过
+            if (allowed is { Count: > 0 } && !allowed.Contains(Path.GetExtension(file)))
+            {
+                if (!explicitSelection) return;
+                excluded++;
+                return;
+            }
+
             var fullPath = Path.GetFullPath(file);
             if (existing.Contains(fullPath) || !seen.Add(fullPath))
             {
@@ -97,13 +110,15 @@ public static class RomImporter
                 }
             }
 
+            var (platform, needsSpecify) = PlatformFormats.Resolve(fullPath, info, platformFormats);
+
             candidates.Add(new ImportCandidate
             {
                 FilePath = fullPath,
                 FileSize = size,
-                NeedsSpecify = info.NeedsSpecify,
+                NeedsSpecify = needsSpecify,
                 Title = Path.GetFileNameWithoutExtension(fullPath),
-                Platform = info.Platform ?? ExtensionMap.UnspecifiedPlatform,
+                Platform = platform,
                 RomHash = hash,
             });
         }

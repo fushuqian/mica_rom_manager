@@ -21,6 +21,7 @@ public partial class ImportWizardWindow : Window, INotifyPropertyChanged
 
     private readonly List<string> _existingPaths;
     private readonly HashSet<string> _existingHashes;
+    private readonly IReadOnlyDictionary<string, IReadOnlyCollection<string>> _platformFormats;
     private readonly string _libraryRoot;
     private int _duplicates;
     private int _excluded;
@@ -50,6 +51,10 @@ public partial class ImportWizardWindow : Window, INotifyPropertyChanged
 
         _existingPaths = existingPaths.ToList();
         _existingHashes = AppServices.GameRepo.ListHashes();
+        _platformFormats = AppServices.Platforms.ListAll()
+            .Select(platform => new { platform.Name, Extensions = PlatformFormats.Parse(platform.Formats) })
+            .Where(item => item.Extensions.Count > 0)
+            .ToDictionary(item => item.Name, item => (IReadOnlyCollection<string>)item.Extensions);
         _libraryRoot = libraryRoot;
 
         var hasLibrary = !string.IsNullOrWhiteSpace(_libraryRoot);
@@ -85,7 +90,8 @@ public partial class ImportWizardWindow : Window, INotifyPropertyChanged
                 var snapshot = Sources.ToList();
                 var recursive = RecursiveCheck.IsChecked == true;
                 BusyText.Text = "正在计算指纹…";
-                var scan = await Task.Run(() => RomImporter.Scan(snapshot, recursive, _existingPaths, _existingHashes));
+                var scan = await Task.Run(() => RomImporter.Scan(snapshot, recursive, _existingPaths,
+                    _existingHashes, null, _platformFormats));
 
                 if (!Sources.SequenceEqual(snapshot))
                 {

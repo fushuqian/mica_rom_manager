@@ -1,5 +1,6 @@
 using System.IO;
 using MicaRomManager.Helpers;
+using MicaRomManager.Services;
 using Microsoft.Data.Sqlite;
 
 namespace MicaRomManager.Data;
@@ -95,7 +96,33 @@ public sealed class Database
             cmd.CommandText = SchemaV6;
             cmd.ExecuteNonQuery();
         }
+
+        if (version < 7)
+        {
+            using (var cmd = connection.CreateCommand())
+            {
+                cmd.CommandText = SchemaV7;
+                cmd.ExecuteNonQuery();
+            }
+
+            foreach (var pair in PlatformFormats.Defaults)
+            {
+                using var seed = connection.CreateCommand();
+                seed.CommandText = """
+                    UPDATE platforms SET formats=@formats
+                    WHERE name=@name AND (formats IS NULL OR formats='');
+                    """;
+                seed.Parameters.AddWithValue("@formats", string.Join(" ", pair.Value));
+                seed.Parameters.AddWithValue("@name", pair.Key);
+                seed.ExecuteNonQuery();
+            }
+        }
     }
+
+    private const string SchemaV7 = """
+        ALTER TABLE platforms ADD COLUMN formats TEXT DEFAULT '';
+        PRAGMA user_version = 7;
+        """;
 
     private const string SchemaV6 = """
         ALTER TABLE games ADD COLUMN rom_hash TEXT DEFAULT '';

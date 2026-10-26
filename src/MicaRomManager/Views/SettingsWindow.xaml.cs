@@ -115,11 +115,13 @@ public partial class SettingsWindow : Window
         {
             PlatformNameText.Text = "（未选择平台）";
             PlatformFolderBox.Text = "";
+            PlatformFormatsBox.Text = "";
             return;
         }
 
         PlatformNameText.Text = setting.Name;
         PlatformFolderBox.Text = setting.Folder;
+        PlatformFormatsBox.Text = setting.Formats;
         PlatformEmulatorCombo.SelectedItem = PlatformEmulatorCombo.Items
             .OfType<ComboBoxItem>()
             .FirstOrDefault(item => Equals(item.Tag, setting.EmulatorId));
@@ -157,6 +159,7 @@ public partial class SettingsWindow : Window
 
         setting.EmulatorId = (PlatformEmulatorCombo.SelectedItem as ComboBoxItem)?.Tag as long?;
         setting.Folder = PlatformFolderBox.Text.Trim();
+        setting.Formats = PlatformFormats.Normalize(PlatformFormatsBox.Text);
         AppServices.Platforms.Save(setting);
         MessageBox.Show($"平台「{setting.Name}」已保存。", "平台设置", MessageBoxButton.OK, MessageBoxImage.Information);
     }
@@ -192,6 +195,7 @@ public partial class SettingsWindow : Window
 
         try
         {
+            var allowed = PlatformFormats.Parse(setting.Formats);
             var (scan, removed) = await Task.Run(() =>
             {
                 var platformGames = AppServices.GameRepo.ListAll()
@@ -202,7 +206,8 @@ public partial class SettingsWindow : Window
                 // 清理后重新读取，避免被删记录的路径/指纹继续参与去重
                 var existingPaths = AppServices.GameRepo.ListAll().Select(g => g.RomPath).ToList();
                 var existingHashes = AppServices.GameRepo.ListHashes();
-                return (RomImporter.Scan(new[] { dir }, true, existingPaths, existingHashes), cleaned);
+                return (RomImporter.Scan(new[] { dir }, true, existingPaths, existingHashes,
+                    allowed.Count > 0 ? allowed : null), cleaned);
             });
 
             if (scan.Candidates.Count == 0)

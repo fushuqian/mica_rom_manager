@@ -176,6 +176,12 @@
                         <TextBlock Text="库内子文件夹" Style="{StaticResource FieldLabelStyle}" Margin="0,12,0,4" />
                         <TextBox x:Name="PlatformFolderBox" Width="260" HorizontalAlignment="Left"
                                  ToolTip="复制 / 移动入库时使用的子文件夹名，留空则用平台名" />
+                        <TextBlock Text="支持的 ROM 格式" Style="{StaticResource FieldLabelStyle}" Margin="0,12,0,4" />
+                        <TextBox x:Name="PlatformFormatsBox" Width="320" HorizontalAlignment="Left"
+                                 ToolTip="空格或逗号分隔，如 iso cue bin chd pbp；留空表示不限制" />
+                        <TextBlock Margin="0,6,0,0" Foreground="{StaticResource TextSecondaryBrush}"
+                                   TextWrapping="Wrap" MaxWidth="380"
+                                   Text="扫描该平台子库时只识别这些扩展名；导入时用于自动识别平台。留空表示不限制。" />
                         <TextBlock Margin="0,6,0,0" Foreground="{StaticResource TextSecondaryBrush}"
                                    TextWrapping="Wrap" MaxWidth="360"
                                    Text="说明：游戏自身绑定的模拟器优先；未绑定时用这里的平台默认模拟器。" />
