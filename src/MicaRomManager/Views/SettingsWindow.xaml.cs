@@ -168,11 +168,12 @@ public partial class SettingsWindow : Window
         try
         {
             var builder = new StringBuilder();
-            builder.AppendLine("标题,平台,类型,地区,年份,状态,收藏,游玩次数,游玩时长(秒),最近游玩,文件大小,标签,封面,ROM路径,备注");
+            builder.AppendLine("标题,平台,类型,区域,语言,年份,状态,收藏,游玩次数,游玩时长(秒),最近游玩,文件大小,标签,封面,ROM路径,备注");
             foreach (var game in AppServices.GameRepo.ListAll())
             {
                 builder.AppendLine(string.Join(",",
                     Quote(game.Title), Quote(game.Platform), Quote(game.Genre), Quote(game.Region),
+                    Quote(game.Language),
                     game.ReleaseYear?.ToString() ?? "", Quote(game.Status), game.Favorite ? "是" : "否",
                     game.PlayCount.ToString(), game.PlaySeconds.ToString(), Quote(game.LastPlayedDisplay),
                     game.FileSize.ToString(), Quote(game.Tags), Quote(game.CoverPath), Quote(game.RomPath),

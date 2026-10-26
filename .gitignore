@@ -1,8 +1,8 @@
 bin/
 obj/
-data/
-toberemoved/
-publish/
+/data/
+/toberemoved/
+/publish/
 .vs/
 *.user
 *.suo

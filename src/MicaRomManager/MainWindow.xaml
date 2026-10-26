@@ -134,6 +134,8 @@
             <DataGrid.Columns>
                 <DataGridTextColumn Header="★" Binding="{Binding FavoriteDisplay}" Width="36"
                                     ElementStyle="{StaticResource DataGridTextStyle}" />
+                <DataGridTextColumn Header="平台" Binding="{Binding Platform}" Width="110"
+                                    ElementStyle="{StaticResource DataGridTextStyle}" />
                 <DataGridTemplateColumn Header="封面" Width="62">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
@@ -151,7 +153,9 @@
                 </DataGridTemplateColumn>
                 <DataGridTextColumn Header="标题" Binding="{Binding Title}" Width="220"
                                     ElementStyle="{StaticResource DataGridTextStyle}" />
-                <DataGridTextColumn Header="平台" Binding="{Binding Platform}" Width="110"
+                <DataGridTextColumn Header="区域" Binding="{Binding Region}" Width="64"
+                                    ElementStyle="{StaticResource DataGridTextStyle}" />
+                <DataGridTextColumn Header="语言" Binding="{Binding Language}" Width="64"
                                     ElementStyle="{StaticResource DataGridTextStyle}" />
                 <DataGridTextColumn Header="类型" Binding="{Binding Genre}" Width="90"
                                     ElementStyle="{StaticResource DataGridTextStyle}" />

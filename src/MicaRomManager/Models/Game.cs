@@ -21,6 +21,7 @@ public partial class Game : ObservableObject
     [ObservableProperty] private string platform = "";
     [ObservableProperty] private string genre = "";
     [ObservableProperty] private string region = "";
+    [ObservableProperty] private string language = "";
     [ObservableProperty] private int? releaseYear;
     [ObservableProperty] private string publisher = "";
     [ObservableProperty] private string developer = "";
@@ -80,6 +81,7 @@ public partial class Game : ObservableObject
         Platform = other.Platform;
         Genre = other.Genre;
         Region = other.Region;
+        Language = other.Language;
         ReleaseYear = other.ReleaseYear;
         Publisher = other.Publisher;
         Developer = other.Developer;
