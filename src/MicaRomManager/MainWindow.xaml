@@ -209,8 +209,15 @@
                                     ElementStyle="{StaticResource DataGridTextStyle}" />
                 <DataGridTextColumn Header="标签" Binding="{Binding Tags}" Width="120"
                                     ElementStyle="{StaticResource DataGridTextStyle}" />
-                <DataGridTextColumn Header="文件路径" Binding="{Binding RomPath}" Width="300"
-                                    ElementStyle="{StaticResource DataGridTextStyle}" />
+                <DataGridTextColumn Header="指纹" Binding="{Binding RomHash}" Width="340"
+                                    SortMemberPath="RomHash"
+                                    ElementStyle="{StaticResource DataGridTextStyle}">
+                    <DataGridTextColumn.CellStyle>
+                        <Style TargetType="DataGridCell" BasedOn="{StaticResource GameCellStyle}">
+                            <Setter Property="ToolTip" Value="{Binding RomPath}" />
+                        </Style>
+                    </DataGridTextColumn.CellStyle>
+                </DataGridTextColumn>
             </DataGrid.Columns>
         </DataGrid>
 

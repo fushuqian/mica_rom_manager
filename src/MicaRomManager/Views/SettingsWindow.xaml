@@ -175,10 +175,12 @@
                                     Style="{StaticResource PrimaryButtonStyle}" Click="SavePlatform_Click" />
                             <Button x:Name="ScanPlatformButton" Content="扫描该平台库目录…" Margin="8,0,0,0"
                                     Style="{StaticResource SecondaryButtonStyle}" Click="ScanPlatformLibrary_Click" />
+                            <Button x:Name="OrganizePlatformButton" Content="整理该平台库文件…" Margin="8,0,0,0"
+                                    Style="{StaticResource SecondaryButtonStyle}" Click="OrganizePlatform_Click" />
                         </StackPanel>
                         <TextBlock x:Name="PlatformScanHint" Margin="0,6,0,0" MaxWidth="380" TextWrapping="Wrap"
                                    Foreground="{StaticResource TextSecondaryBrush}"
-                                   Text="只扫描该平台在库目录下的子文件夹，把其中未入库的 ROM 补进库（按路径与指纹去重）。" />
+                                   Text="扫描会补入未登记的 ROM，并清理该平台中文件已不存在的条目；整理会按「标题 (区域)(语言)」重命名子库内的文件（多碟自动带 Disc 号）。" />
                     </StackPanel>
                 </Grid>
             </TabItem>

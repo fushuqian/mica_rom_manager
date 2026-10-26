@@ -191,16 +191,27 @@ public partial class SettingsWindow : Window
 
         try
         {
-            var existingPaths = AppServices.GameRepo.ListAll().Select(g => g.RomPath).ToList();
-            var existingHashes = AppServices.GameRepo.ListHashes();
-            var scan = await Task.Run(() => RomImporter.Scan(new[] { dir }, true, existingPaths, existingHashes));
+            var (scan, removed) = await Task.Run(() =>
+            {
+                var platformGames = AppServices.GameRepo.ListAll()
+                    .Where(g => string.Equals(g.Platform, setting.Name, StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+                var cleaned = LibraryOrganizer.RemoveMissing(AppServices.GameRepo, platformGames);
+
+                // 清理后重新读取，避免被删记录的路径/指纹继续参与去重
+                var existingPaths = AppServices.GameRepo.ListAll().Select(g => g.RomPath).ToList();
+                var existingHashes = AppServices.GameRepo.ListHashes();
+                return (RomImporter.Scan(new[] { dir }, true, existingPaths, existingHashes), cleaned);
+            });
 
             if (scan.Candidates.Count == 0)
             {
                 MaintenanceStatus.Text = "";
                 MessageBox.Show(
-                    $"该平台库里没有需要补充的 ROM。\n已存在 {scan.DuplicateCount} 个，忽略 {scan.ExcludedCount} 个。",
+                    $"该平台库里没有需要补充的 ROM。\n已存在 {scan.DuplicateCount} 个，忽略 {scan.ExcludedCount} 个，"
+                    + $"清理失效记录 {removed} 条。",
                     "扫描平台库", MessageBoxButton.OK, MessageBoxImage.Information);
+                (Owner as MainWindow)?.RefreshGames();
                 return;
             }
 
@@ -237,7 +248,8 @@ public partial class SettingsWindow : Window
             }
 
             MaintenanceStatus.Text = "";
-            var message = $"已从该平台库补充 {added} 条" + (failed > 0 ? $"，失败 {failed} 条" : "") + "。";
+            var message = $"已从该平台库补充 {added} 条" + (failed > 0 ? $"，失败 {failed} 条" : "")
+                          + $"，清理失效记录 {removed} 条。";
             MessageBox.Show(message, "扫描平台库", MessageBoxButton.OK, MessageBoxImage.Information);
 
             (Owner as MainWindow)?.RefreshGames();
@@ -250,6 +262,79 @@ public partial class SettingsWindow : Window
         finally
         {
             ScanPlatformButton.IsEnabled = true;
+        }
+    }
+
+    private async void OrganizePlatform_Click(object sender, RoutedEventArgs e)
+    {
+        if (PlatformList.SelectedItem is not PlatformSetting setting)
+        {
+            MessageBox.Show("请先在左侧选择一个平台。", "整理平台库",
+                MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        var libraryRoot = AppServices.Settings.Get("library.root") ?? "";
+        if (string.IsNullOrWhiteSpace(libraryRoot))
+        {
+            MessageBox.Show("尚未配置库目录，请先到「常规」里设置库目录。", "整理平台库",
+                MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        var folderName = string.IsNullOrWhiteSpace(setting.Folder) ? setting.Name : setting.Folder;
+        var dir = Path.Combine(libraryRoot, RomImporter.SanitizeFolderName(folderName));
+        if (!Directory.Exists(dir))
+        {
+            MessageBox.Show($"该平台库目录不存在：\n{dir}", "整理平台库",
+                MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        var games = AppServices.GameRepo.ListAll()
+            .Where(g => string.Equals(g.Platform, setting.Name, StringComparison.OrdinalIgnoreCase)
+                        && g.Discs.Any(d => LibraryOrganizer.IsUnderDirectory(d, dir)))
+            .ToList();
+
+        if (games.Count == 0)
+        {
+            MessageBox.Show("该平台子库里没有可整理的已入库文件。", "整理平台库",
+                MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        var answer = MessageBox.Show(
+            $"将按「标题 (区域)(语言)」重命名该平台子库内的 ROM 文件，涉及 {games.Count} 条记录。\n"
+            + "只改文件名和库内路径，不动文件内容，是否继续？",
+            "整理平台库", MessageBoxButton.YesNo, MessageBoxImage.Question);
+        if (answer != MessageBoxResult.Yes) return;
+
+        ScanPlatformButton.IsEnabled = false;
+        OrganizePlatformButton.IsEnabled = false;
+        var originalHint = PlatformScanHint.Text;
+        PlatformScanHint.Text = "正在整理文件…";
+
+        try
+        {
+            var result = await Task.Run(() => LibraryOrganizer.Organize(AppServices.GameRepo, games, dir));
+
+            var message = $"重命名 {result.Renamed} 个文件，跳过 {result.Skipped} 条，失败 {result.Failed} 个。";
+            if (result.FailedFiles.Count > 0)
+                message += "\n失败文件：" + string.Join("、", result.FailedFiles.Take(5))
+                           + (result.FailedFiles.Count > 5 ? " 等" : "");
+
+            MessageBox.Show(message, "整理平台库", MessageBoxButton.OK, MessageBoxImage.Information);
+            (Owner as MainWindow)?.RefreshGames();
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"整理失败：{ex.Message}", "整理平台库", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+        finally
+        {
+            ScanPlatformButton.IsEnabled = true;
+            OrganizePlatformButton.IsEnabled = true;
+            PlatformScanHint.Text = originalHint;
         }
     }
 
