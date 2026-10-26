@@ -1,0 +1,55 @@
+<Window x:Class="MicaRomManager.Views.ImportPreviewWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="导入预览"
+        Width="860" Height="560"
+        WindowStartupLocation="CenterOwner"
+        FontFamily="{StaticResource AppFontFamily}"
+        FontSize="13"
+        Foreground="{StaticResource TextPrimaryBrush}"
+        Background="{StaticResource WindowBackgroundBrush}">
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Style="{StaticResource SectionTitleStyle}"
+                   Text="确认要导入的 ROM（可直接修改标题与平台）" />
+
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,10">
+            <TextBlock Text="批量指定平台：" Style="{StaticResource FieldLabelStyle}" />
+            <ComboBox x:Name="BulkPlatformCombo" Width="160" MinHeight="28" Margin="0,0,8,0"
+                      IsEditable="True" ItemsSource="{Binding Platforms}" />
+            <Button Content="应用到全部" Style="{StaticResource SecondaryButtonStyle}"
+                    Click="ApplyToAll_Click" />
+            <TextBlock Margin="16,0,0,0" VerticalAlignment="Center" Foreground="{StaticResource TextSecondaryBrush}"
+                       Text="{Binding Summary}" />
+        </StackPanel>
+
+        <DataGrid x:Name="PreviewGrid" Grid.Row="2" Style="{StaticResource AppDataGridStyle}"
+                  ItemsSource="{Binding Items}" IsReadOnly="False" SelectionMode="Extended">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="文件名" Binding="{Binding FileName}" Width="280" IsReadOnly="True" />
+                <DataGridTextColumn Header="标题" Binding="{Binding Title}" Width="260" />
+                <DataGridTemplateColumn Header="平台" Width="150">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <ComboBox IsEditable="True" MinHeight="24"
+                                      ItemsSource="{Binding DataContext.Platforms, RelativeSource={RelativeSource AncestorType=Window}}"
+                                      Text="{Binding Platform, UpdateSourceTrigger=PropertyChanged}" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTextColumn Header="大小" Binding="{Binding FileSizeDisplay}" Width="100" IsReadOnly="True" />
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,14,0,0">
+            <Button Content="开始导入" Width="100" Style="{StaticResource PrimaryButtonStyle}" Click="Confirm_Click" IsDefault="True" />
+            <Button Content="取消" Width="88" Style="{StaticResource SecondaryButtonStyle}" IsCancel="True" Margin="8,0,0,0" />
+        </StackPanel>
+    </Grid>
+</Window>

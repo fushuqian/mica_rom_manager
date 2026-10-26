@@ -1,0 +1,60 @@
+<UserControl x:Class="MicaRomManager.Views.EmulatorManagerView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             FontFamily="{StaticResource AppFontFamily}"
+             FontSize="13">
+    <Grid Margin="12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <WrapPanel Grid.Row="0" Margin="0,0,0,8">
+            <TextBlock Text="模板：" Style="{StaticResource FieldLabelStyle}" />
+            <ComboBox Width="230" MinHeight="28" Margin="0,0,8,6"
+                      ItemsSource="{Binding Templates}" DisplayMemberPath="DisplayName"
+                      SelectedItem="{Binding SelectedTemplate, Mode=TwoWay}" />
+            <Button Content="从模板新增" Style="{StaticResource SecondaryButtonStyle}"
+                    Command="{Binding AddFromTemplateCommand}" />
+            <Button Content="安装（文件夹）" Style="{StaticResource SecondaryButtonStyle}"
+                    Command="{Binding InstallFromFolderCommand}" />
+            <Button Content="安装（zip）" Style="{StaticResource SecondaryButtonStyle}"
+                    Command="{Binding InstallFromZipCommand}" />
+            <Button Content="编辑配置" Style="{StaticResource SecondaryButtonStyle}"
+                    Command="{Binding EditSelectedCommand}" />
+            <Button Content="设默认" Style="{StaticResource SecondaryButtonStyle}"
+                    Command="{Binding SetDefaultCommand}" />
+            <Button Content="刷新" Style="{StaticResource SecondaryButtonStyle}"
+                    Command="{Binding RefreshListCommand}" />
+        </WrapPanel>
+
+        <WrapPanel Grid.Row="1" Margin="0,0,0,8">
+            <Button Content="检查 GitHub 更新" Style="{StaticResource SecondaryButtonStyle}"
+                    Command="{Binding CheckUpdateCommand}" />
+            <Button Content="测试启动" Style="{StaticResource SecondaryButtonStyle}"
+                    Command="{Binding TestLaunchCommand}" />
+            <Button Content="打开安装目录" Style="{StaticResource SecondaryButtonStyle}"
+                    Command="{Binding OpenInstallDirCommand}" />
+            <Button Content="删除" Style="{StaticResource SecondaryButtonStyle}"
+                    Command="{Binding DeleteSelectedCommand}" />
+        </WrapPanel>
+
+        <DataGrid Grid.Row="2" Style="{StaticResource AppDataGridStyle}"
+                  ItemsSource="{Binding Emulators}"
+                  SelectedItem="{Binding SelectedEmulator, Mode=TwoWay}">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="名称" Binding="{Binding Name}" Width="140" />
+                <DataGridTextColumn Header="平台" Binding="{Binding PlatformDisplay}" Width="220" />
+                <DataGridTextColumn Header="默认平台" Binding="{Binding DefaultPlatformDisplay}" Width="150" />
+                <DataGridTextColumn Header="版本" Binding="{Binding Version}" Width="100" />
+                <DataGridTextColumn Header="可执行文件" Binding="{Binding ResolvedExeDisplay}" Width="*" />
+                <DataGridTextColumn Header="状态" Binding="{Binding EnabledDisplay}" Width="70" />
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <TextBlock Grid.Row="3" Margin="0,8,0,0" Text="{Binding StatusMessage}"
+                   Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" />
+    </Grid>
+</UserControl>

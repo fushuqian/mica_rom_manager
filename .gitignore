@@ -1,0 +1,10 @@
+bin/
+obj/
+data/
+toberemoved/
+.vs/
+*.user
+*.suo
+*.log
+TestResults/
+.vscode/

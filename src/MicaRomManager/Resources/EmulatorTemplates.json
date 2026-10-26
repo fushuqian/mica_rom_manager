@@ -1,0 +1,83 @@
+[
+  {
+    "name": "RetroArch",
+    "platforms": [ "NES", "SNES", "Game Boy", "GBC", "GBA", "NDS", "N64", "Mega Drive", "Master System", "Game Gear", "PC Engine", "PlayStation", "PSP", "Virtual Boy", "街机" ],
+    "extensions": [ ".nes", ".sfc", ".smc", ".gb", ".gbc", ".gba", ".nds", ".n64", ".z64", ".v64", ".md", ".gen", ".sms", ".gg", ".pce", ".cue", ".chd", ".iso", ".pbp", ".vb", ".zip" ],
+    "argsTemplate": "-L \"{core}\" \"{rom}\"",
+    "corePath": "",
+    "githubRepo": "libretro/RetroArch",
+    "notes": "需把对应核心 dll 放到 cores 目录，并在配置里填写核心相对路径（如 cores\\snes9x_libretro.dll）。"
+  },
+  {
+    "name": "Dolphin",
+    "platforms": [ "GameCube", "Wii" ],
+    "extensions": [ ".iso", ".gcm", ".rvz", ".wbfs", ".dol", ".elf" ],
+    "argsTemplate": "-b -e \"{rom}\"",
+    "corePath": "",
+    "githubRepo": "dolphin-emu/dolphin",
+    "notes": "GameCube/Wii 模拟器。"
+  },
+  {
+    "name": "PCSX2",
+    "platforms": [ "PS2" ],
+    "extensions": [ ".iso", ".chd", ".bin", ".cue" ],
+    "argsTemplate": "\"{rom}\" --fullscreen",
+    "corePath": "",
+    "githubRepo": "PCSX2/pcsx2",
+    "notes": "PS2 模拟器。"
+  },
+  {
+    "name": "PPSSPP",
+    "platforms": [ "PSP" ],
+    "extensions": [ ".iso", ".cso", ".pbp" ],
+    "argsTemplate": "\"{rom}\"",
+    "corePath": "",
+    "githubRepo": "hrydgard/ppsspp",
+    "notes": "PSP 模拟器。"
+  },
+  {
+    "name": "DuckStation",
+    "platforms": [ "PlayStation" ],
+    "extensions": [ ".cue", ".bin", ".chd", ".pbp", ".iso" ],
+    "argsTemplate": "\"{rom}\"",
+    "corePath": "",
+    "githubRepo": "stenzek/duckstation",
+    "notes": "PS1 模拟器。"
+  },
+  {
+    "name": "RPCS3",
+    "platforms": [ "PS3" ],
+    "extensions": [ ".iso", ".pkg", ".elf", ".self" ],
+    "argsTemplate": "\"{rom}\"",
+    "corePath": "",
+    "githubRepo": "RPCS3/rpcs3",
+    "notes": "PS3 模拟器，需要额外固件。"
+  },
+  {
+    "name": "mGBA",
+    "platforms": [ "Game Boy", "GBC", "GBA" ],
+    "extensions": [ ".gba", ".gb", ".gbc" ],
+    "argsTemplate": "\"{rom}\"",
+    "corePath": "",
+    "githubRepo": "mgba-emu/mgba",
+    "notes": "GB/GBC/GBA 模拟器。"
+  },
+  {
+    "name": "Mesen",
+    "platforms": [ "NES", "SNES" ],
+    "extensions": [ ".nes", ".sfc", ".smc" ],
+    "argsTemplate": "\"{rom}\"",
+    "corePath": "",
+    "githubRepo": "SourMesen/Mesen2",
+    "notes": "NES/SNES 高精度模拟器。"
+  },
+  {
+    "name": "Project64",
+    "platforms": [ "N64" ],
+    "extensions": [ ".n64", ".z64", ".v64", ".rom" ],
+    "argsTemplate": "\"{rom}\"",
+    "corePath": "",
+    "githubRepo": "project64/project64",
+    "notes": "N64 模拟器。"
+  }
+]

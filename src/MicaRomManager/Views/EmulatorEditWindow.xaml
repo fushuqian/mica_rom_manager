@@ -1,0 +1,117 @@
+<Window x:Class="MicaRomManager.Views.EmulatorEditWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="模拟器配置"
+        Width="720" Height="660"
+        WindowStartupLocation="CenterOwner"
+        FontFamily="{StaticResource AppFontFamily}"
+        FontSize="13"
+        Foreground="{StaticResource TextPrimaryBrush}"
+        Background="{StaticResource WindowBackgroundBrush}">
+    <Grid Margin="18">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Style="{StaticResource SectionTitleStyle}" Text="模拟器配置" />
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="86" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="名称" Style="{StaticResource FieldLabelStyle}" />
+                <TextBox Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2" Margin="0,0,0,10"
+                         Text="{Binding Model.Name, UpdateSourceTrigger=PropertyChanged}" />
+
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="绑定平台" Style="{StaticResource FieldLabelStyle}" />
+                <TextBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Margin="0,0,0,4"
+                         Text="{Binding PlatformsText, UpdateSourceTrigger=PropertyChanged}"
+                         ToolTip="多个平台用逗号分隔，例如：SNES, GBA" />
+                <CheckBox Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2" Margin="0,0,0,10"
+                          Content="把这些平台设为默认模拟器" IsChecked="{Binding MakeDefaultForPlatforms}" />
+
+                <TextBlock Grid.Row="3" Grid.Column="0" Text="安装目录" Style="{StaticResource FieldLabelStyle}" />
+                <TextBox Grid.Row="3" Grid.Column="1" Margin="0,0,8,10" Text="{Binding Model.InstallDir}" />
+                <Button Grid.Row="3" Grid.Column="2" Content="浏览…" Style="{StaticResource SecondaryButtonStyle}"
+                        Command="{Binding BrowseInstallDirCommand}" Margin="0,0,0,10" />
+
+                <TextBlock Grid.Row="4" Grid.Column="0" Text="可执行文件" Style="{StaticResource FieldLabelStyle}" />
+                <TextBox Grid.Row="4" Grid.Column="1" Margin="0,0,8,8"
+                         Text="{Binding Model.ExePath, UpdateSourceTrigger=PropertyChanged}"
+                         ToolTip="相对安装目录或绝对路径，例如 retroarch.exe" />
+                <Button Grid.Row="4" Grid.Column="2" Content="浏览…" Style="{StaticResource SecondaryButtonStyle}"
+                        Command="{Binding BrowseExeCommand}" Margin="0,0,0,8" />
+
+                <TextBlock Grid.Row="5" Grid.Column="0" Text="启动参数" Style="{StaticResource FieldLabelStyle}" />
+                <TextBox Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="2" Margin="0,0,0,2"
+                         Text="{Binding Model.ArgsTemplate, UpdateSourceTrigger=PropertyChanged}" />
+                <TextBlock Grid.Row="6" Grid.Column="1" Grid.ColumnSpan="2" Margin="0,0,0,10" FontSize="12"
+                           Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap"
+                           Text="占位符：{rom} ROM 路径、{romdir} 所在目录、{romname} 文件名、{core} 核心文件、{config} 配置路径。程序会自动加引号。" />
+
+                <TextBlock Grid.Row="7" Grid.Column="0" Text="核心文件" Style="{StaticResource FieldLabelStyle}" />
+                <TextBox Grid.Row="7" Grid.Column="1" Margin="0,0,8,10"
+                         Text="{Binding Model.CorePath, UpdateSourceTrigger=PropertyChanged}" />
+                <Button Grid.Row="7" Grid.Column="2" Content="浏览…" Style="{StaticResource SecondaryButtonStyle}"
+                        Command="{Binding BrowseCoreCommand}" Margin="0,0,0,10" />
+
+                <TextBlock Grid.Row="8" Grid.Column="0" Text="配置路径" Style="{StaticResource FieldLabelStyle}" />
+                <TextBox Grid.Row="8" Grid.Column="1" Margin="0,0,8,10"
+                         Text="{Binding Model.ConfigPath, UpdateSourceTrigger=PropertyChanged}"
+                         ToolTip="配置文件或配置目录，打包分享时会一起复制" />
+                <Button Grid.Row="8" Grid.Column="2" Content="浏览…" Style="{StaticResource SecondaryButtonStyle}"
+                        Command="{Binding BrowseConfigCommand}" Margin="0,0,0,10" />
+
+                <TextBlock Grid.Row="9" Grid.Column="0" Text="扩展名" Style="{StaticResource FieldLabelStyle}" />
+                <TextBox Grid.Row="9" Grid.Column="1" Margin="0,0,8,10"
+                         Text="{Binding Model.SupportedExt, UpdateSourceTrigger=PropertyChanged}"
+                         ToolTip="例如：.sfc,.smc" />
+                <TextBlock Grid.Row="9" Grid.Column="2" Text="版本" Style="{StaticResource FieldLabelStyle}" Margin="0,0,8,10" />
+
+                <TextBlock Grid.Row="10" Grid.Column="0" Text="GitHub 仓库" Style="{StaticResource FieldLabelStyle}" />
+                <TextBox Grid.Row="10" Grid.Column="1" Margin="0,0,8,10"
+                         Text="{Binding Model.GithubRepo, UpdateSourceTrigger=PropertyChanged}"
+                         ToolTip="owner/repo，用于检查更新" />
+                <TextBox Grid.Row="10" Grid.Column="2" Width="120" Margin="0,0,0,10"
+                         Text="{Binding Model.Version, UpdateSourceTrigger=PropertyChanged}" />
+
+                <StackPanel Grid.Row="11" Grid.Column="1" Grid.ColumnSpan="2">
+                    <CheckBox Content="启用该模拟器" IsChecked="{Binding Model.Enabled}" Margin="0,0,0,8" />
+                    <TextBlock Text="备注" Style="{StaticResource FieldLabelStyle}" Margin="0,0,0,4" />
+                    <TextBox Height="60" AcceptsReturn="True" TextWrapping="Wrap" VerticalContentAlignment="Top"
+                             Text="{Binding Model.Notes, UpdateSourceTrigger=PropertyChanged}" />
+                </StackPanel>
+            </Grid>
+        </ScrollViewer>
+
+        <StackPanel Grid.Row="2">
+            <TextBlock Text="{Binding Error}" Foreground="{StaticResource DangerBrush}" TextWrapping="Wrap" Margin="0,10,0,0" />
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+                <Button Content="保存" Width="88" Style="{StaticResource PrimaryButtonStyle}"
+                        Command="{Binding SaveCommand}" IsDefault="True" />
+                <Button Content="取消" Width="88" Style="{StaticResource SecondaryButtonStyle}"
+                        IsCancel="True" Margin="8,0,0,0" />
+            </StackPanel>
+        </StackPanel>
+    </Grid>
+</Window>

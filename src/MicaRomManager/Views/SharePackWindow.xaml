@@ -1,0 +1,87 @@
+<Window x:Class="MicaRomManager.Views.SharePackWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="分享打包"
+        Width="780" Height="620"
+        WindowStartupLocation="CenterOwner"
+        FontFamily="{StaticResource AppFontFamily}"
+        FontSize="13"
+        Foreground="{StaticResource TextPrimaryBrush}"
+        Background="{StaticResource WindowBackgroundBrush}">
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Style="{StaticResource SectionTitleStyle}"
+                   Text="把 ROM、模拟器与启动器打包成可拷走的一键游玩文件夹" />
+
+        <Grid Grid.Row="1" Margin="0,0,0,10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="80" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <TextBlock Grid.Row="0" Grid.Column="0" Text="包名" Style="{StaticResource FieldLabelStyle}" />
+            <TextBox Grid.Row="0" Grid.Column="1" Margin="0,0,8,8"
+                     Text="{Binding PackageName, UpdateSourceTrigger=PropertyChanged}" />
+            <Button Grid.Row="0" Grid.Column="2" Content="选择导出位置…" Margin="0,0,0,8"
+                    Style="{StaticResource SecondaryButtonStyle}" Command="{Binding BrowseExportDirCommand}" />
+
+            <TextBlock Grid.Row="1" Grid.Column="0" Text="导出到" Style="{StaticResource FieldLabelStyle}" />
+            <TextBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" IsReadOnly="True"
+                     Text="{Binding ExportDir}" />
+        </Grid>
+
+        <DataGrid Grid.Row="2" Style="{StaticResource AppDataGridStyle}" ItemsSource="{Binding Items}">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="游戏" Binding="{Binding Title}" Width="*" />
+                <DataGridTextColumn Header="平台" Binding="{Binding Platform}" Width="120" />
+                <DataGridTextColumn Header="模拟器" Binding="{Binding EmulatorName}" Width="160" />
+                <DataGridTextColumn Header="备注" Binding="{Binding Note}" Width="100" />
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <StackPanel Grid.Row="3" Margin="0,12,0,0">
+            <StackPanel Orientation="Horizontal">
+                <CheckBox Content="打包模拟器（推荐）" IsChecked="{Binding IncludeEmulators}" />
+                <CheckBox Content="压缩为 zip" IsChecked="{Binding CreateZip}" />
+                <CheckBox Content="打包存档" IsChecked="{Binding IncludeSaves}" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,8,0,0"
+                        IsEnabled="{Binding IncludeSaves}">
+                <TextBlock Text="存档目录：" Style="{StaticResource FieldLabelStyle}" />
+                <TextBox Width="360" Margin="0,0,8,0" Text="{Binding SaveDir}" />
+                <Button Content="浏览…" Style="{StaticResource SecondaryButtonStyle}"
+                        Command="{Binding BrowseSaveDirCommand}" />
+            </StackPanel>
+        </StackPanel>
+
+        <StackPanel Grid.Row="4" Margin="0,10,0,0">
+            <TextBlock Text="{Binding EstimateText}" Foreground="{StaticResource TextSecondaryBrush}" />
+            <TextBlock Text="{Binding WarningText}" Foreground="{StaticResource DangerBrush}"
+                       TextWrapping="Wrap" Margin="0,4,0,0" />
+            <TextBlock Text="{Binding StatusText}" Foreground="{StaticResource TextSecondaryBrush}"
+                       TextWrapping="Wrap" Margin="0,6,0,0" />
+        </StackPanel>
+
+        <StackPanel Grid.Row="5" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,14,0,0">
+            <Button Content="打开导出目录" Width="120" Style="{StaticResource SecondaryButtonStyle}"
+                    Command="{Binding OpenResultCommand}" />
+            <Button Content="开始导出" Width="110" Style="{StaticResource PrimaryButtonStyle}"
+                    Command="{Binding ExportCommand}" Margin="8,0,0,0" />
+            <Button Content="关闭" Width="88" Style="{StaticResource SecondaryButtonStyle}"
+                    IsCancel="True" Margin="8,0,0,0" />
+        </StackPanel>
+    </Grid>
+</Window>
