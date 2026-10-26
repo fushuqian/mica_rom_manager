@@ -184,10 +184,11 @@ public sealed class EmulatorRepository
 
         foreach (var row in rows)
         {
+            // exe/core/config 可能是相对 install_dir 的文件名，只有安装目录本身做便携转换
             var exe = LocalPath.ToStored(row.Exe);
             var core = LocalPath.ToStored(row.Core);
             var config = LocalPath.ToStored(row.Config);
-            var install = LocalPath.ToStored(row.Install);
+            var install = PortablePath.ToStored(row.Install);
 
             if (exe == row.Exe && core == row.Core && config == row.Config && install == row.Install)
                 continue;

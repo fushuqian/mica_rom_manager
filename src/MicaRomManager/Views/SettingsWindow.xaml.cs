@@ -34,7 +34,8 @@ public partial class SettingsWindow : Window
             "link" => 0,
             _ => AppServices.Settings.GetBool("library.copy_on_import") ? 1 : 0,
         };
-        LibraryRootBox.Text = AppServices.Settings.Get("library.root") ?? "";
+        LibraryRootBox.Text = PortablePath.Expand(AppServices.Settings.Get("library.root") ?? "");
+        PortableModeCheck.IsChecked = AppServices.Settings.GetBool(PortablePath.SettingKey);
 
         var mode = AppServices.Settings.Get(NetworkClientProvider.ModeKey);
         ProxyModeCombo.SelectedIndex = mode switch { "none" => 0, "manual" => 2, _ => 1 };
@@ -169,7 +170,7 @@ public partial class SettingsWindow : Window
             return;
         }
 
-        var libraryRoot = AppServices.Settings.Get("library.root") ?? "";
+        var libraryRoot = AppServices.LibraryRoot;
         if (string.IsNullOrWhiteSpace(libraryRoot))
         {
             MessageBox.Show("尚未配置库目录，请先到「常规」里设置库目录。", "扫描平台库",
@@ -274,7 +275,7 @@ public partial class SettingsWindow : Window
             return;
         }
 
-        var libraryRoot = AppServices.Settings.Get("library.root") ?? "";
+        var libraryRoot = AppServices.LibraryRoot;
         if (string.IsNullOrWhiteSpace(libraryRoot))
         {
             MessageBox.Show("尚未配置库目录，请先到「常规」里设置库目录。", "整理平台库",
@@ -391,6 +392,41 @@ public partial class SettingsWindow : Window
             return;
         }
 
+        var portable = PortableModeCheck.IsChecked == true;
+        var previousRoot = PortablePath.Expand(AppServices.Settings.Get("library.root") ?? "");
+        var libraryRoot = PortablePath.Expand(LibraryRootBox.Text.Trim());
+
+        if (portable && string.IsNullOrWhiteSpace(libraryRoot))
+        {
+            MessageBox.Show("便携模式下请指定库目录（程序目录下的库文件夹，例如 game_library）。",
+                "设置", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        if (!string.IsNullOrWhiteSpace(libraryRoot))
+        {
+            try
+            {
+                Directory.CreateDirectory(libraryRoot);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"库目录不可用：{ex.Message}", "设置", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+        }
+
+        AppServices.Settings.Set(PortablePath.SettingKey, portable.ToString());
+
+        var relocated = 0;
+        if (!string.IsNullOrWhiteSpace(previousRoot) && !string.IsNullOrWhiteSpace(libraryRoot) &&
+            !string.Equals(previousRoot, libraryRoot, StringComparison.OrdinalIgnoreCase))
+        {
+            relocated = AppServices.GameRepo.RelocateLibraryPaths(previousRoot, libraryRoot);
+        }
+
+        var converted = AppServices.GameRepo.NormalizePaths(portable);
+
         AppServices.Settings.Set("library.import_mode", ImportModeCombo.SelectedIndex switch
         {
             1 => "copy",
@@ -398,11 +434,14 @@ public partial class SettingsWindow : Window
             _ => "link",
         });
         AppServices.Settings.Set("library.copy_on_import", (ImportModeCombo.SelectedIndex == 1).ToString());
-        AppServices.Settings.Set("library.root", LibraryRootBox.Text.Trim());
+        AppServices.Settings.Set("library.root", portable ? PortablePath.ToStored(libraryRoot, true) : libraryRoot);
         AppServices.Settings.Set(NetworkClientProvider.ModeKey, mode);
         AppServices.Settings.Set(NetworkClientProvider.AddressKey, ProxyAddressBox.Text.Trim());
         AppServices.RebuildNetwork();
-        MessageBox.Show("常规设置已保存。", "设置", MessageBoxButton.OK, MessageBoxImage.Information);
+        AppServices.EmulatorRepo.NormalizePaths();
+        (Owner as MainWindow)?.RefreshGames();
+        MessageBox.Show($"常规设置已保存。\n已重定位 {relocated} 条记录，已转换 {converted} 条游戏路径。",
+            "设置", MessageBoxButton.OK, MessageBoxImage.Information);
     }
 
     private void ProxyMode_Changed(object sender, SelectionChangedEventArgs e)

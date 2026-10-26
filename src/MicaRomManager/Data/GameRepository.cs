@@ -1,5 +1,7 @@
+using System.IO;
 using Microsoft.Data.Sqlite;
 using MicaRomManager.Models;
+using MicaRomManager.Services;
 
 namespace MicaRomManager.Data;
 
@@ -91,6 +93,60 @@ public sealed class GameRepository
         cmd.ExecuteNonQuery();
     }
 
+    /// <summary>按便携开关统一改写已存路径（绝对 ↔ 相对），返回处理条数。</summary>
+    public int NormalizePaths(bool portable)
+    {
+        var games = ListAll();
+        using var connection = _db.Open();
+        foreach (var game in games)
+        {
+            UpdatePaths(connection, game.Id,
+                PortablePath.ToStored(game.RomPath, portable),
+                PortablePath.ToStoredMultiLine(game.DiscPaths, portable),
+                PortablePath.ToStored(game.CoverPath, portable));
+        }
+
+        return games.Count;
+    }
+
+    /// <summary>
+    /// 旧库目录换到新位置后，把「旧文件已不存在、新目录下有同相对路径文件」的记录改到新路径。
+    /// </summary>
+    public int RelocateLibraryPaths(string oldRoot, string newRoot)
+    {
+        if (string.IsNullOrWhiteSpace(oldRoot) || string.IsNullOrWhiteSpace(newRoot)) return 0;
+
+        var games = ListAll();
+        var changed = 0;
+        using var connection = _db.Open();
+
+        foreach (var game in games)
+        {
+            var rom = Relocate(game.RomPath, oldRoot, newRoot);
+            var discs = RelocateMultiLine(game.DiscPaths, oldRoot, newRoot);
+            var cover = RelocateCover(game.CoverPath);
+
+            if (rom == game.RomPath && discs == game.DiscPaths && cover == game.CoverPath) continue;
+
+            UpdatePaths(connection, game.Id,
+                PortablePath.ToStored(rom),
+                PortablePath.ToStoredMultiLine(discs, PortablePath.Enabled),
+                PortablePath.ToStored(cover));
+            changed++;
+        }
+
+        return changed;
+    }
+
+    /// <summary>清空游戏库；模拟器、平台、词典与设置保留。</summary>
+    public void DeleteAll()
+    {
+        using var connection = _db.Open();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = "DELETE FROM games;";
+        cmd.ExecuteNonQuery();
+    }
+
     public void Delete(long id)
     {
         using var connection = _db.Open();
@@ -98,6 +154,59 @@ public sealed class GameRepository
         cmd.CommandText = "DELETE FROM games WHERE id=@id;";
         cmd.Parameters.AddWithValue("@id", id);
         cmd.ExecuteNonQuery();
+    }
+
+    private static void UpdatePaths(SqliteConnection connection, long id, string romPath, string discPaths, string coverPath)
+    {
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = """
+            UPDATE games SET rom_path=@rom_path, disc_paths=@disc_paths, cover_path=@cover_path
+            WHERE id=@id;
+            """;
+        cmd.Parameters.AddWithValue("@rom_path", romPath);
+        cmd.Parameters.AddWithValue("@disc_paths", discPaths);
+        cmd.Parameters.AddWithValue("@cover_path", coverPath);
+        cmd.Parameters.AddWithValue("@id", id);
+        cmd.ExecuteNonQuery();
+    }
+
+    private static string Relocate(string path, string oldRoot, string newRoot)
+    {
+        if (string.IsNullOrWhiteSpace(path) || File.Exists(path)) return path;
+        if (!LibraryOrganizer.IsUnderDirectory(path, oldRoot)) return path;
+
+        try
+        {
+            var relative = Path.GetRelativePath(Path.GetFullPath(oldRoot), Path.GetFullPath(path));
+            if (Path.IsPathRooted(relative) || relative.StartsWith("..")) return path;
+
+            var candidate = Path.GetFullPath(Path.Combine(newRoot, relative));
+            return File.Exists(candidate) ? candidate : path;
+        }
+        catch
+        {
+            return path;
+        }
+    }
+
+    private static string RelocateMultiLine(string stored, string oldRoot, string newRoot)
+    {
+        if (string.IsNullOrWhiteSpace(stored)) return "";
+
+        var lines = stored.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        return string.Join("\n", lines.Select(line => Relocate(line, oldRoot, newRoot)));
+    }
+
+    /// <summary>封面随程序一起拷贝，旧绝对路径失效时按文件名在新 covers 目录找回。</summary>
+    private static string RelocateCover(string path)
+    {
+        if (string.IsNullOrWhiteSpace(path) || File.Exists(path)) return path;
+
+        var coversDir = AppServices.Paths?.CoversDir;
+        if (string.IsNullOrWhiteSpace(coversDir)) return path;
+
+        var candidate = Path.Combine(coversDir, Path.GetFileName(path));
+        return File.Exists(candidate) ? candidate : path;
     }
 
     /// <summary>游戏退出后累加游玩次数与时长。</summary>
@@ -132,16 +241,16 @@ public sealed class GameRepository
         cmd.Parameters.AddWithValue("@developer", g.Developer);
         cmd.Parameters.AddWithValue("@favorite", g.Favorite ? 1 : 0);
         cmd.Parameters.AddWithValue("@status", g.Status);
-        cmd.Parameters.AddWithValue("@rom_path", g.RomPath);
+        cmd.Parameters.AddWithValue("@rom_path", PortablePath.ToStored(g.RomPath));
         cmd.Parameters.AddWithValue("@file_size", g.FileSize);
-        cmd.Parameters.AddWithValue("@cover_path", g.CoverPath);
+        cmd.Parameters.AddWithValue("@cover_path", PortablePath.ToStored(g.CoverPath));
         cmd.Parameters.AddWithValue("@notes", g.Notes);
         cmd.Parameters.AddWithValue("@tags", g.Tags);
         cmd.Parameters.AddWithValue("@emulator_id", (object?)g.EmulatorId ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@play_count", g.PlayCount);
         cmd.Parameters.AddWithValue("@play_seconds", g.PlaySeconds);
         cmd.Parameters.AddWithValue("@last_played_at", (object?)g.LastPlayedAt ?? DBNull.Value);
-        cmd.Parameters.AddWithValue("@disc_paths", g.DiscPaths);
+        cmd.Parameters.AddWithValue("@disc_paths", PortablePath.ToStoredMultiLine(g.DiscPaths, PortablePath.Enabled));
         cmd.Parameters.AddWithValue("@rom_hash", g.RomHash);
         cmd.Parameters.AddWithValue("@created_at", g.CreatedAt.ToString("O"));
         cmd.Parameters.AddWithValue("@updated_at", g.UpdatedAt.ToString("O"));
@@ -162,9 +271,9 @@ public sealed class GameRepository
             Developer = r.GetString(8),
             Favorite = r.GetInt64(9) != 0,
             Status = r.GetString(10),
-            RomPath = r.GetString(11),
+            RomPath = PortablePath.Expand(r.GetString(11)),
             FileSize = r.GetInt64(12),
-            CoverPath = r.GetString(13),
+            CoverPath = PortablePath.Expand(r.GetString(13)),
             Notes = r.GetString(14),
             Tags = r.GetString(15),
             EmulatorId = r.IsDBNull(16) ? null : r.GetInt64(16),
@@ -173,7 +282,7 @@ public sealed class GameRepository
             LastPlayedAt = r.IsDBNull(19) ? null : r.GetString(19),
             CreatedAt = ParseDate(r.GetString(20)),
             UpdatedAt = ParseDate(r.GetString(21)),
-            DiscPaths = r.GetString(22),
+            DiscPaths = PortablePath.ExpandMultiLine(r.GetString(22)),
             RomHash = r.GetString(23),
         };
     }

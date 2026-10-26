@@ -207,7 +207,7 @@ public partial class MainViewModel : ObservableObject
     {
         if (IsBusy) return;
 
-        var libraryRoot = AppServices.Settings.Get("library.root") ?? "";
+        var libraryRoot = AppServices.LibraryRoot;
         var wizard = new ImportWizardWindow(
             initialSources,
             Games.Select(g => g.RomPath),

@@ -19,7 +19,7 @@ public static class EmulatorPaths
         try
         {
             var expanded = LocalPath.Expand(value);
-            var baseDir = string.IsNullOrWhiteSpace(installDir) ? "" : LocalPath.Expand(installDir);
+            var baseDir = string.IsNullOrWhiteSpace(installDir) ? "" : PortablePath.Expand(installDir);
             var combined = Path.IsPathRooted(expanded)
                 ? expanded
                 : Path.Combine(baseDir, expanded);

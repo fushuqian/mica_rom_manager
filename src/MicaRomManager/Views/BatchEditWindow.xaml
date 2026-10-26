@@ -66,13 +66,10 @@
 
                 <CheckBox Grid.Row="3" Content="语言" VerticalAlignment="Center"
                           IsChecked="{Binding ApplyLanguage}" />
-                <Border Grid.Row="3" Grid.Column="1" MinHeight="28" Margin="0,0,0,10" Background="White"
-                        BorderBrush="#DDE1E6" BorderThickness="1" CornerRadius="3"
-                        IsEnabled="{Binding ApplyLanguage}">
-                    <controls:MultiSelectComboBox VerticalAlignment="Center"
-                                                  ItemsSource="{Binding Languages}"
-                                                  Value="{Binding LanguageValue, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                </Border>
+                <ComboBox Grid.Row="3" Grid.Column="1" MinHeight="28" Margin="0,0,0,10" IsEditable="True"
+                          IsEnabled="{Binding ApplyLanguage}"
+                          ItemsSource="{Binding Languages}"
+                          Text="{Binding LanguageValue, UpdateSourceTrigger=PropertyChanged}" />
 
                 <CheckBox Grid.Row="4" Content="年份" VerticalAlignment="Center"
                           IsChecked="{Binding ApplyReleaseYear}" />

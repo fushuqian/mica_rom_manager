@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.IO;
 using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
@@ -7,7 +8,10 @@ using System.Windows.Media;
 using System.Windows.Media.Media3D;
 using System.Windows.Threading;
 using MicaRomManager.Models;
+using MicaRomManager.Services;
 using MicaRomManager.ViewModels;
+using MicaRomManager.Views;
+using Microsoft.Win32;
 
 namespace MicaRomManager;
 
@@ -30,6 +34,63 @@ public partial class MainWindow : Window
     {
         RestoreViewState();
         SearchBox.Focus();
+        Dispatcher.BeginInvoke(CheckPortableLibrary, DispatcherPriority.ApplicationIdle);
+    }
+
+    /// <summary>便携模式下每次启动检查库目录，找不到时让用户重新指定或重建。</summary>
+    private void CheckPortableLibrary()
+    {
+        if (!PortablePath.Enabled) return;
+
+        var root = AppServices.LibraryRoot;
+        if (!string.IsNullOrWhiteSpace(root) && Directory.Exists(root)) return;
+
+        var message = (string.IsNullOrWhiteSpace(root)
+                ? "便携模式已开启，但还没有设置库目录。"
+                : $"便携模式下找不到库目录：\n{root}")
+            + "\n\n「是」重新指定库目录（保留旧记录，并自动对到新位置）"
+            + "\n「否」放弃旧库：指定新文件夹并清空游戏库（模拟器与设置保留）"
+            + "\n「取消」退出程序";
+
+        switch (MessageBox.Show(message, "便携模式：库目录不可用",
+                    MessageBoxButton.YesNoCancel, MessageBoxImage.Warning))
+        {
+            case MessageBoxResult.Yes:
+                new SettingsWindow { Owner = this }.ShowDialog();
+                RefreshGames();
+                break;
+            case MessageBoxResult.No:
+                RebuildLibrary();
+                break;
+            default:
+                Application.Current.Shutdown();
+                break;
+        }
+    }
+
+    private void RebuildLibrary()
+    {
+        var dialog = new OpenFolderDialog { Title = "选择新的 ROM 库目录" };
+        if (dialog.ShowDialog() != true) return;
+
+        var newRoot = Path.GetFullPath(dialog.FolderName);
+        var confirm = MessageBox.Show(
+            $"将清空所有游戏记录（模拟器、平台设置、区域/语言词典都保留），并把库目录设为：\n{newRoot}\n\n是否继续？",
+            "放弃旧库并新建", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+        if (confirm != MessageBoxResult.Yes) return;
+
+        try
+        {
+            Directory.CreateDirectory(newRoot);
+            AppServices.GameRepo.DeleteAll();
+            AppServices.Settings.Set("library.root", PortablePath.ToStored(newRoot, true));
+            RefreshGames();
+            MessageBox.Show("新的游戏库已建立。", "便携模式", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"建立新库失败：{ex.Message}", "便携模式", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
     }
 
     /// <summary>还原上次的列宽、排序与筛选条件。</summary>
@@ -139,12 +200,6 @@ public partial class MainWindow : Window
         if (e.Row.Item is not Game game) return;
 
         Dispatcher.BeginInvoke(() => _viewModel.SaveInline(game), DispatcherPriority.Background);
-    }
-
-    private void OnLanguageCommitted(object? sender, EventArgs e)
-    {
-        if (sender is FrameworkElement { DataContext: Game game })
-            _viewModel.SaveInline(game);
     }
 
     private void OnPreviewKeyDown(object sender, KeyEventArgs e)

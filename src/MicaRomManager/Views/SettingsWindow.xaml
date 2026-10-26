@@ -31,6 +31,7 @@
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
                     <TextBlock Grid.Row="0" Grid.Column="0" Text="数据目录" Style="{StaticResource FieldLabelStyle}" />
@@ -52,8 +53,16 @@
                     <Button Grid.Row="2" Grid.Column="2" Content="浏览…" Style="{StaticResource SecondaryButtonStyle}"
                             Click="BrowseLibraryRoot_Click" Margin="0,0,0,12" />
 
-                    <TextBlock Grid.Row="3" Grid.Column="0" Text="网络代理" Style="{StaticResource FieldLabelStyle}" />
-                    <ComboBox x:Name="ProxyModeCombo" Grid.Row="3" Grid.Column="1" Width="280"
+                    <StackPanel Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="2" Margin="0,0,0,12">
+                        <CheckBox x:Name="PortableModeCheck"
+                                  Content="便携模式（库目录为程序目录下的相对路径）" />
+                        <TextBlock Margin="0,4,0,0" Foreground="{StaticResource TextSecondaryBrush}"
+                                   TextWrapping="Wrap" MaxWidth="520"
+                                   Text="程序 exe 与库文件夹放在同一盘，库目录为程序目录下的任意命名文件夹（如 E:\MicaRomManager.exe + E:\game_library\）。开启后库目录、ROM / 碟片 / 封面、模拟器路径都存为相对路径，换电脑盘符变化仍可用。" />
+                    </StackPanel>
+
+                    <TextBlock Grid.Row="4" Grid.Column="0" Text="网络代理" Style="{StaticResource FieldLabelStyle}" />
+                    <ComboBox x:Name="ProxyModeCombo" Grid.Row="4" Grid.Column="1" Width="280"
                               HorizontalAlignment="Left" MinHeight="28" Margin="0,0,0,12"
                               SelectionChanged="ProxyMode_Changed">
                         <ComboBoxItem Content="不使用代理" />
@@ -61,14 +70,14 @@
                         <ComboBoxItem Content="手动代理" />
                     </ComboBox>
 
-                    <TextBlock Grid.Row="4" Grid.Column="0" Text="代理地址" Style="{StaticResource FieldLabelStyle}" />
-                    <TextBox x:Name="ProxyAddressBox" Grid.Row="4" Grid.Column="1" Margin="0,0,8,12"
+                    <TextBlock Grid.Row="5" Grid.Column="0" Text="代理地址" Style="{StaticResource FieldLabelStyle}" />
+                    <TextBox x:Name="ProxyAddressBox" Grid.Row="5" Grid.Column="1" Margin="0,0,8,12"
                              ToolTip="格式：host:port，例如 127.0.0.1:7890（仅手动代理时生效）" />
-                    <Button Grid.Row="4" Grid.Column="2" Content="测试 GitHub 连接"
+                    <Button Grid.Row="5" Grid.Column="2" Content="测试 GitHub 连接"
                             Style="{StaticResource SecondaryButtonStyle}"
                             Click="TestNetwork_Click" Margin="0,0,0,12" />
 
-                    <StackPanel Grid.Row="5" Grid.Column="1" Orientation="Horizontal">
+                    <StackPanel Grid.Row="6" Grid.Column="1" Orientation="Horizontal">
                         <Button Content="保存常规设置" Width="130"
                                 Style="{StaticResource PrimaryButtonStyle}" Click="SaveGeneral_Click" />
                         <TextBlock x:Name="NetworkTestText" Margin="12,0,0,0" VerticalAlignment="Center"
@@ -76,7 +85,7 @@
                                    TextTrimming="CharacterEllipsis" />
                     </StackPanel>
 
-                    <TextBlock Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="3" Margin="0,16,0,0"
+                    <TextBlock Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="3" Margin="0,16,0,0"
                                Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap"
                                Text="提示：数据目录内含 mica.db、covers、emulators、downloads、exports、logs。程序优先使用便携目录，不可写时才回退到 LocalAppData。代理设置同时作用于 GitHub 检查更新与安装包下载。" />
                 </Grid>

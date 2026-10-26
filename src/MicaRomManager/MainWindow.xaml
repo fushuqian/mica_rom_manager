@@ -175,16 +175,20 @@
                         </DataTemplate>
                     </DataGridTemplateColumn.CellEditingTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTemplateColumn Header="语言" Width="86" IsReadOnly="True" SortMemberPath="Language">
+                <DataGridTemplateColumn Header="语言" Width="86" SortMemberPath="Language">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <controls:MultiSelectComboBox MinHeight="22"
-                                ItemsSource="{Binding DataContext.Languages, RelativeSource={RelativeSource AncestorType=Window}}"
-                                CanEdit="{Binding Tag, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                Value="{Binding Language, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                ValueCommitted="OnLanguageCommitted" />
+                            <TextBlock Text="{Binding Language}" VerticalAlignment="Center" Margin="8,0"
+                                       TextTrimming="CharacterEllipsis" />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
+                    <DataGridTemplateColumn.CellEditingTemplate>
+                        <DataTemplate>
+                            <ComboBox IsEditable="True" MinHeight="22" Padding="2,0"
+                                      ItemsSource="{Binding DataContext.Languages, RelativeSource={RelativeSource AncestorType=Window}}"
+                                      Text="{Binding Language, UpdateSourceTrigger=PropertyChanged}" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellEditingTemplate>
                 </DataGridTemplateColumn>
                 <DataGridTextColumn Header="类型" Binding="{Binding Genre}" Width="90"
                                     ElementStyle="{StaticResource DataGridTextStyle}" />

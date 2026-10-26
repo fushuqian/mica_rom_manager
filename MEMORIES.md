@@ -5,6 +5,8 @@
 - 老板说的「文件路径改成 hash 值」只指列表展示与排序筛查，不改文件命名、不改库结构；提需求时容易字面误解，先问清楚。
 - `games.rom_path` 有 UNIQUE 约束；写测试造数据时多条记录不能共用同一路径，否则 Insert 抛 `SQLite Error 19: UNIQUE constraint failed`。
 - 指纹列可直接用于人工筛查：同内容不同文件名的重复条目排序后相邻，肉眼即可发现。
+- 模拟器 `exe_path/core_path` 可能是相对 `install_dir` 的简单文件名（如 `retroarch.exe`），不能让便携相对路径逻辑对任意非绝对路径拼程序目录，否则会破坏该语义。只有安装目录本身、库目录、ROM/封面走程序目录相对化。
+- `AppServices` 未初始化时 `LocalPath.Expand` 不会展开 `%DATA%`；`PortablePath.Expand` 必须识别 `%DATA%` 前缀并原样返回，否则单元测试会把它误当相对路径。
 
 ## 2026-10-26
 

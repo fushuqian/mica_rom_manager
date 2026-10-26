@@ -45,6 +45,9 @@ public static class AppServices
         }
     }
 
+    /// <summary>当前库目录（已按便携模式展开为绝对路径）。</summary>
+    public static string LibraryRoot => PortablePath.Expand(Settings.Get("library.root") ?? "");
+
     /// <summary>代理设置变更后重建 HTTP 客户端。</summary>
     public static void RebuildNetwork()
     {
