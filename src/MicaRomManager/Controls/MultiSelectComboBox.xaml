@@ -1,36 +1,10 @@
 <UserControl x:Class="MicaRomManager.Controls.MultiSelectComboBox"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             x:Name="Root" Focusable="True">
-    <Grid>
-        <Border x:Name="Box" MinHeight="28" Background="White" CornerRadius="3"
-                BorderBrush="#DDE1E6" BorderThickness="1"
-                PreviewMouseLeftButtonDown="Box_PreviewDown"
-                PreviewMouseLeftButtonUp="Box_PreviewUp"
-                Cursor="Hand">
-            <Grid>
-                <TextBlock x:Name="DisplayText" Margin="8,0,26,0" VerticalAlignment="Center"
-                           TextTrimming="CharacterEllipsis" />
-                <TextBlock Text="&#xE70D;" FontFamily="Segoe MDL2 Assets" FontSize="10"
-                           HorizontalAlignment="Right" VerticalAlignment="Center"
-                           Margin="0,0,8,0" Foreground="#8A939C" />
-            </Grid>
-        </Border>
-
-        <Popup x:Name="DropPopup" PlacementTarget="{Binding ElementName=Box}" Placement="Bottom"
-               StaysOpen="False" AllowsTransparency="True">
-            <Border Background="White" BorderBrush="#DDE1E6" BorderThickness="1" CornerRadius="4"
-                    Padding="8" Width="190" Margin="0,2,0,0">
-                <StackPanel>
-                    <ScrollViewer MaxHeight="190" VerticalScrollBarVisibility="Auto">
-                        <StackPanel x:Name="OptionsPanel" />
-                    </ScrollViewer>
-                    <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
-                        <TextBox x:Name="NewBox" Width="112" MinHeight="24" />
-                        <Button Content="添加" Margin="6,0,0,0" Padding="8,2" Click="Add_Click" />
-                    </StackPanel>
-                </StackPanel>
-            </Border>
-        </Popup>
-    </Grid>
+             x:Name="Root" Focusable="False">
+    <Border x:Name="Box" MinHeight="26" Background="Transparent" BorderThickness="0"
+            PreviewMouseLeftButtonDown="Box_PreviewDown" Cursor="Hand">
+        <TextBlock x:Name="DisplayText" Margin="8,0" VerticalAlignment="Center"
+                   TextTrimming="CharacterEllipsis" />
+    </Border>
 </UserControl>

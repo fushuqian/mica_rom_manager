@@ -113,6 +113,7 @@
         <!-- 游戏列表 -->
         <DataGrid x:Name="GameGrid" Grid.Row="2" Margin="12,0,12,0"
                   Style="{StaticResource AppDataGridStyle}" RowHeight="44" IsReadOnly="True"
+                  Tag="{Binding IsChecked, ElementName=EditModeToggle}"
                   ItemsSource="{Binding GamesView}"
                   SelectionChanged="OnSelectionChanged"
                   MouseDoubleClick="OnRowDoubleClick"
@@ -186,20 +187,16 @@
                         </DataTemplate>
                     </DataGridTemplateColumn.CellEditingTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTemplateColumn Header="语言" Width="86">
+                <DataGridTemplateColumn Header="语言" Width="86" IsReadOnly="True">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <TextBlock Text="{Binding LanguageDisplay}" VerticalAlignment="Center" Margin="8,0"
-                                       TextTrimming="CharacterEllipsis" />
+                            <controls:MultiSelectComboBox MinHeight="26"
+                                ItemsSource="{Binding DataContext.Languages, RelativeSource={RelativeSource AncestorType=Window}}"
+                                CanEdit="{Binding Tag, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                Value="{Binding Language, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                ValueCommitted="OnLanguageCommitted" />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
-                    <DataGridTemplateColumn.CellEditingTemplate>
-                        <DataTemplate>
-                            <controls:MultiSelectComboBox MinHeight="30"
-                                ItemsSource="{Binding DataContext.Languages, RelativeSource={RelativeSource AncestorType=Window}}"
-                                Value="{Binding Language, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellEditingTemplate>
                 </DataGridTemplateColumn>
                 <DataGridTextColumn Header="类型" Binding="{Binding Genre}" Width="90"
                                     ElementStyle="{StaticResource DataGridTextStyle}" />

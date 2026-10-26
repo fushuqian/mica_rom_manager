@@ -49,6 +49,12 @@ public partial class MainWindow : Window
         Dispatcher.BeginInvoke(() => _viewModel.SaveInline(game), DispatcherPriority.Background);
     }
 
+    private void OnLanguageCommitted(object? sender, EventArgs e)
+    {
+        if (sender is FrameworkElement { DataContext: Game game })
+            _viewModel.SaveInline(game);
+    }
+
     private void OnPreviewKeyDown(object sender, KeyEventArgs e)
     {
         if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.F)
