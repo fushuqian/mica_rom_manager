@@ -22,6 +22,12 @@ public partial class Game : ObservableObject
     [ObservableProperty] private string genre = "";
     [ObservableProperty] private string region = "";
     [ObservableProperty] private string language = "";
+    /// <summary>多碟游戏的附加碟片路径，换行分隔（第一碟仍是 RomPath）。</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsMultiDisc))]
+    [NotifyPropertyChangedFor(nameof(DiscCount))]
+    [NotifyPropertyChangedFor(nameof(DiscCountText))]
+    private string discPaths = "";
     [ObservableProperty] private int? releaseYear;
     [ObservableProperty] private string publisher = "";
     [ObservableProperty] private string developer = "";
@@ -43,6 +49,25 @@ public partial class Game : ObservableObject
     public bool IsMissing => !string.IsNullOrWhiteSpace(RomPath) && !File.Exists(RomPath);
 
     public string FavoriteDisplay => Favorite ? "★" : "";
+
+    /// <summary>全部碟片路径（第一碟 + 附加碟）。</summary>
+    public IReadOnlyList<string> Discs
+    {
+        get
+        {
+            var list = new List<string>();
+            if (!string.IsNullOrWhiteSpace(RomPath)) list.Add(RomPath);
+            foreach (var path in DiscPaths.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                if (!list.Contains(path, StringComparer.OrdinalIgnoreCase)) list.Add(path);
+            return list;
+        }
+    }
+
+    public bool IsMultiDisc => Discs.Count > 1;
+
+    public int DiscCount => Discs.Count;
+
+    public string DiscCountText => IsMultiDisc ? $"碟{DiscCount}" : "";
 
     public string PlaySecondsDisplay => PlaySeconds <= 0
         ? ""

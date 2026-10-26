@@ -124,6 +124,8 @@
                     <MenuItem Header="启动游戏" Command="{Binding LaunchSelectedCommand}" InputGestureText="Enter" />
                     <MenuItem Header="用指定模拟器启动" />
                     <MenuItem Header="编辑信息…" Command="{Binding EditSelectedCommand}" InputGestureText="F2" />
+                    <MenuItem Header="合并为多碟游戏（选中多行，首行为主条目）" Command="{Binding MergeSelectedCommand}" />
+                    <MenuItem Header="拆分多碟…" Command="{Binding SplitMultiDiscCommand}" />
                     <Separator />
                     <MenuItem Header="分享打包…" Command="{Binding ShareSelectedCommand}" />
                     <MenuItem Header="打开所在文件夹" Command="{Binding OpenSelectedFolderCommand}" />
@@ -201,6 +203,8 @@
                 <DataGridTextColumn Header="类型" Binding="{Binding Genre}" Width="90"
                                     ElementStyle="{StaticResource DataGridTextStyle}" />
                 <DataGridTextColumn Header="年份" Binding="{Binding ReleaseYear}" Width="64"
+                                    ElementStyle="{StaticResource DataGridTextStyle}" />
+                <DataGridTextColumn Header="碟" Binding="{Binding DiscCountText}" Width="52"
                                     ElementStyle="{StaticResource DataGridTextStyle}" />
                 <DataGridTemplateColumn Header="状态" Width="76">
                     <DataGridTemplateColumn.CellTemplate>

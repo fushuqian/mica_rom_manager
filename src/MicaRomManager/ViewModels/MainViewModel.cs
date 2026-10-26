@@ -344,7 +344,7 @@ public partial class MainViewModel : ObservableObject
             return;
         }
 
-        if (!AppServices.Launcher.TryLaunch(game, emulator, out var error))
+        if (!AppServices.Launcher.TryLaunch(game, emulator, PickLaunchPath(game) ?? game.RomPath, out var error))
         {
             MessageBox.Show(error, "无法启动", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
@@ -353,13 +353,90 @@ public partial class MainViewModel : ObservableObject
         StatusMessage = $"已用「{emulator.Name}」启动「{game.Title}」";
     }
 
+    /// <summary>多碟游戏弹窗选碟；取消返回 null。</summary>
+    private static string? PickLaunchPath(Game game)
+    {
+        if (!game.IsMultiDisc) return game.RomPath;
+
+        var picker = new DiscSelectWindow(game) { Owner = Application.Current?.MainWindow };
+        return picker.ShowDialog() == true ? picker.SelectedPath : null;
+    }
+
+    [RelayCommand]
+    private void MergeSelected()
+    {
+        var games = SelectedGames.ToList();
+        if (games.Count < 2)
+        {
+            MessageBox.Show("请先选中至少 2 个游戏条目（第一行作为主条目）。", "合并为多碟游戏",
+                MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        var main = games[0];
+        var discs = new List<string>(main.Discs);
+        foreach (var other in games.Skip(1))
+        {
+            foreach (var disc in other.Discs)
+                if (!discs.Contains(disc, StringComparer.OrdinalIgnoreCase)) discs.Add(disc);
+        }
+
+        if (discs.Count < 2) return;
+
+        main.RomPath = discs[0];
+        main.DiscPaths = string.Join("\n", discs.Skip(1));
+        AppServices.GameRepo.Update(main);
+
+        foreach (var other in games.Skip(1)) AppServices.GameRepo.Delete(other.Id);
+
+        LoadGames();
+        StatusMessage = $"已合并为多碟游戏「{main.Title}」，共 {discs.Count} 碟";
+    }
+
+    [RelayCommand]
+    private void SplitMultiDisc()
+    {
+        var game = SelectedGame;
+        if (game == null || !game.IsMultiDisc) return;
+
+        var extra = game.Discs.Skip(1).ToList();
+        game.DiscPaths = "";
+        AppServices.GameRepo.Update(game);
+
+        for (var i = 0; i < extra.Count; i++)
+        {
+            var path = extra[i];
+            AppServices.GameRepo.Insert(new Game
+            {
+                Title = $"{game.Title}（碟{i + 2}）",
+                Platform = game.Platform,
+                Genre = game.Genre,
+                Region = game.Region,
+                Language = game.Language,
+                ReleaseYear = game.ReleaseYear,
+                Publisher = game.Publisher,
+                Developer = game.Developer,
+                Status = game.Status,
+                EmulatorId = game.EmulatorId,
+                RomPath = path,
+                FileSize = File.Exists(path) ? new FileInfo(path).Length : 0,
+            });
+        }
+
+        LoadGames();
+        StatusMessage = $"已把「{game.Title}」拆分为 {extra.Count + 1} 个条目";
+    }
+
     [RelayCommand]
     private void LaunchWith(Emulator? emulator)
     {
         var game = SelectedGame;
         if (game == null || emulator == null) return;
 
-        if (!AppServices.Launcher.TryLaunch(game, emulator, out var error))
+        var discPath = PickLaunchPath(game);
+        if (discPath == null) return;
+
+        if (!AppServices.Launcher.TryLaunch(game, emulator, discPath, out var error))
         {
             MessageBox.Show(error, "无法启动", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;

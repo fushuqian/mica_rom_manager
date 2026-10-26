@@ -59,7 +59,19 @@ public sealed class Database
             cmd.CommandText = SchemaV3;
             cmd.ExecuteNonQuery();
         }
+
+        if (version < 4)
+        {
+            using var cmd = connection.CreateCommand();
+            cmd.CommandText = SchemaV4;
+            cmd.ExecuteNonQuery();
+        }
     }
+
+    private const string SchemaV4 = """
+        ALTER TABLE games ADD COLUMN disc_paths TEXT DEFAULT '';
+        PRAGMA user_version = 4;
+        """;
 
     private const string SchemaV3 = """
         CREATE TABLE IF NOT EXISTS lookup_items (

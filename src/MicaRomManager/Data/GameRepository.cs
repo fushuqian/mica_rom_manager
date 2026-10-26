@@ -7,7 +7,7 @@ public sealed class GameRepository
 {
     private const string Columns =
         "id,title,platform,genre,region,language,release_year,publisher,developer,favorite,status," +
-        "rom_path,file_size,cover_path,notes,tags,emulator_id,play_count,play_seconds,last_played_at,created_at,updated_at";
+        "rom_path,file_size,cover_path,notes,tags,emulator_id,play_count,play_seconds,last_played_at,created_at,updated_at,disc_paths";
 
     private readonly Database _db;
 
@@ -33,10 +33,10 @@ public sealed class GameRepository
         cmd.CommandText = """
             INSERT INTO games
                 (title,platform,genre,region,language,release_year,publisher,developer,favorite,status,
-                 rom_path,file_size,cover_path,notes,tags,emulator_id,play_count,play_seconds,last_played_at,created_at,updated_at)
+                 rom_path,file_size,cover_path,notes,tags,emulator_id,play_count,play_seconds,last_played_at,created_at,updated_at,disc_paths)
             VALUES
                 (@title,@platform,@genre,@region,@language,@release_year,@publisher,@developer,@favorite,@status,
-                 @rom_path,@file_size,@cover_path,@notes,@tags,@emulator_id,@play_count,@play_seconds,@last_played_at,@created_at,@updated_at);
+                 @rom_path,@file_size,@cover_path,@notes,@tags,@emulator_id,@play_count,@play_seconds,@last_played_at,@created_at,@updated_at,@disc_paths);
             SELECT last_insert_rowid();
             """;
         AddParameters(cmd, game);
@@ -56,6 +56,7 @@ public sealed class GameRepository
                 favorite=@favorite, status=@status, rom_path=@rom_path, file_size=@file_size,
                 cover_path=@cover_path, notes=@notes, tags=@tags, emulator_id=@emulator_id,
                 play_count=@play_count, play_seconds=@play_seconds, last_played_at=@last_played_at,
+                disc_paths=@disc_paths,
                 updated_at=@updated_at
             WHERE id=@id;
             """;
@@ -114,6 +115,7 @@ public sealed class GameRepository
         cmd.Parameters.AddWithValue("@play_count", g.PlayCount);
         cmd.Parameters.AddWithValue("@play_seconds", g.PlaySeconds);
         cmd.Parameters.AddWithValue("@last_played_at", (object?)g.LastPlayedAt ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@disc_paths", g.DiscPaths);
         cmd.Parameters.AddWithValue("@created_at", g.CreatedAt.ToString("O"));
         cmd.Parameters.AddWithValue("@updated_at", g.UpdatedAt.ToString("O"));
     }
@@ -144,6 +146,7 @@ public sealed class GameRepository
             LastPlayedAt = r.IsDBNull(19) ? null : r.GetString(19),
             CreatedAt = ParseDate(r.GetString(20)),
             UpdatedAt = ParseDate(r.GetString(21)),
+            DiscPaths = r.GetString(22),
         };
     }
 

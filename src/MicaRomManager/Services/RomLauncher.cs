@@ -14,10 +14,14 @@ public sealed class RomLauncher
     /// <summary>游戏进程退出后触发：(游戏, 本次秒数)。在后台线程触发。</summary>
     public event Action<Game, long>? SessionEnded;
 
-    public bool TryLaunch(Game game, Emulator? emulator, out string message)
+    public bool TryLaunch(Game game, Emulator? emulator, out string message) =>
+        TryLaunch(game, emulator, game.RomPath, out message);
+
+    /// <summary>启动指定碟片（多碟游戏用）。</summary>
+    public bool TryLaunch(Game game, Emulator? emulator, string romPath, out string message)
     {
         message = "";
-        if (string.IsNullOrWhiteSpace(game.RomPath) || !File.Exists(game.RomPath))
+        if (string.IsNullOrWhiteSpace(romPath) || !File.Exists(romPath))
         {
             message = "ROM 文件不存在，请检查路径或刷新文件状态。";
             return false;
@@ -45,7 +49,7 @@ public sealed class RomLauncher
 
         try
         {
-            var arguments = ArgsBuilder.Build(emulator.ArgsTemplate, game.RomPath, corePath, EmulatorPaths.ResolveConfig(emulator));
+            var arguments = ArgsBuilder.Build(emulator.ArgsTemplate, romPath, corePath, EmulatorPaths.ResolveConfig(emulator));
             var startInfo = new ProcessStartInfo(exePath)
             {
                 Arguments = arguments,
