@@ -19,6 +19,13 @@
 - 远程：`https://github.com/fushuqian/mica_rom_manager`（Public）
 - remote：`origin` → 同上；主分支 `main`，已设置 upstream。
 
+## 发布
+
+- 构建/发布前需 .NET 9 SDK：`winget install Microsoft.DotNet.SDK.9`（本机 9.0.320）。
+- 发布命令：`dotnet publish src\MicaRomManager -c Release -r win-x64 --self-contained true -o publish`
+- 产物：`publish\` 打包为 `MicaRomManager-<版本>-win-x64.zip`；release note 取自 CHANGELOG。
+- Release 页：`https://github.com/fushuqian/mica_rom_manager/releases`
+
 ## 外部服务
 
 - GitHub Releases API：`https://api.github.com/repos/{owner}/{repo}/releases/latest`，免费，未认证限流 60 次/小时，仅在用户点击时调用。

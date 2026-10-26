@@ -1,5 +1,21 @@
 # 变更记录（CHANGELOG）
 
+## 2026-10-26 v0.2.1
+
+### 新增
+
+- 应用图标：生成卡带 + 手柄主题多尺寸 ico（16~256），exe 与窗口标题栏自动生效。
+- 发布打包：`dotnet publish` self-contained win-x64 便携 zip，附 GitHub Release（tag v0.2.0）。
+
+### 环境
+
+- 安装 .NET 9 SDK 9.0.320（winget，原机仅有运行时无法构建）。
+
+### 验证
+
+- `dotnet build`（Release）：0 警告 0 错误。
+- `dotnet test`：42/42 通过。
+
 ## 2026-10-26 v0.2.0
 
 ### 新增
