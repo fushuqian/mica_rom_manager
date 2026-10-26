@@ -12,6 +12,12 @@
 ## 密钥 / Token
 
 - 暂无。GitHub Release 检查使用公共 API，无需 Token。
+- GitHub 登录：`gh` CLI 已登录账号 `fushuqian`（凭据存于系统 keyring，不落盘）。
+
+## GitHub 仓库
+
+- 远程：`https://github.com/fushuqian/mica_rom_manager`（Public）
+- remote：`origin` → 同上；主分支 `main`，已设置 upstream。
 
 ## 外部服务
 
