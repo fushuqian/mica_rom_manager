@@ -32,18 +32,21 @@
         <DataGrid x:Name="PreviewGrid" Grid.Row="2" Style="{StaticResource AppDataGridStyle}"
                   ItemsSource="{Binding Items}" IsReadOnly="False" SelectionMode="Extended">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="文件名" Binding="{Binding FileName}" Width="280" IsReadOnly="True" />
-                <DataGridTextColumn Header="标题" Binding="{Binding Title}" Width="260" />
+                <DataGridTextColumn Header="文件名" Binding="{Binding FileName}" Width="280" IsReadOnly="True"
+                                    ElementStyle="{StaticResource DataGridTextStyle}" />
+                <DataGridTextColumn Header="标题" Binding="{Binding Title}" Width="260"
+                                    ElementStyle="{StaticResource DataGridTextStyle}" />
                 <DataGridTemplateColumn Header="平台" Width="150">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <ComboBox IsEditable="True" MinHeight="24"
+                            <ComboBox IsEditable="True" MinHeight="24" VerticalAlignment="Center"
                                       ItemsSource="{Binding DataContext.Platforms, RelativeSource={RelativeSource AncestorType=Window}}"
                                       Text="{Binding Platform, UpdateSourceTrigger=PropertyChanged}" />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTextColumn Header="大小" Binding="{Binding FileSizeDisplay}" Width="100" IsReadOnly="True" />
+                <DataGridTextColumn Header="大小" Binding="{Binding FileSizeDisplay}" Width="100" IsReadOnly="True"
+                                    ElementStyle="{StaticResource DataGridTextStyle}" />
             </DataGrid.Columns>
         </DataGrid>
 

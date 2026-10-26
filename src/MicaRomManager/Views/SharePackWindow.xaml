@@ -45,10 +45,14 @@
 
         <DataGrid Grid.Row="2" Style="{StaticResource AppDataGridStyle}" ItemsSource="{Binding Items}">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="游戏" Binding="{Binding Title}" Width="*" />
-                <DataGridTextColumn Header="平台" Binding="{Binding Platform}" Width="120" />
-                <DataGridTextColumn Header="模拟器" Binding="{Binding EmulatorName}" Width="160" />
-                <DataGridTextColumn Header="备注" Binding="{Binding Note}" Width="100" />
+                <DataGridTextColumn Header="游戏" Binding="{Binding Title}" Width="*"
+                                    ElementStyle="{StaticResource DataGridTextStyle}" />
+                <DataGridTextColumn Header="平台" Binding="{Binding Platform}" Width="120"
+                                    ElementStyle="{StaticResource DataGridTextStyle}" />
+                <DataGridTextColumn Header="模拟器" Binding="{Binding EmulatorName}" Width="160"
+                                    ElementStyle="{StaticResource DataGridTextStyle}" />
+                <DataGridTextColumn Header="备注" Binding="{Binding Note}" Width="100"
+                                    ElementStyle="{StaticResource DataGridTextStyle}" />
             </DataGrid.Columns>
         </DataGrid>
 

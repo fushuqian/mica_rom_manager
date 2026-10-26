@@ -2,7 +2,9 @@ using System.IO;
 using System.Reflection;
 using System.Text;
 using System.Windows;
+using System.Windows.Controls;
 using MicaRomManager.Models;
+using MicaRomManager.Services;
 using Microsoft.Win32;
 
 namespace MicaRomManager.Views;
@@ -24,13 +26,74 @@ public partial class SettingsWindow : Window
         var copyOnImport = AppServices.Settings.GetBool("library.copy_on_import");
         ImportModeCombo.SelectedIndex = copyOnImport ? 1 : 0;
         LibraryRootBox.Text = AppServices.Settings.Get("library.root") ?? "";
+
+        var mode = AppServices.Settings.Get(NetworkClientProvider.ModeKey);
+        ProxyModeCombo.SelectedIndex = mode switch { "none" => 0, "manual" => 2, _ => 1 };
+        ProxyAddressBox.Text = AppServices.Settings.Get(NetworkClientProvider.AddressKey) ?? NetworkClientProvider.DefaultAddress;
+        ProxyAddressBox.IsEnabled = ProxyModeCombo.SelectedIndex == 2;
     }
+
+    private string CurrentProxyMode() => ProxyModeCombo.SelectedIndex switch
+    {
+        0 => "none",
+        2 => "manual",
+        _ => "system",
+    };
 
     private void SaveGeneral_Click(object sender, RoutedEventArgs e)
     {
+        var mode = CurrentProxyMode();
+        if (mode == "manual" && !NetworkClientProvider.TryParseProxyAddress(ProxyAddressBox.Text, out _, out _))
+        {
+            MessageBox.Show("手动代理地址格式不正确，应为 host:port，例如 127.0.0.1:7890。",
+                "设置", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
         AppServices.Settings.Set("library.copy_on_import", (ImportModeCombo.SelectedIndex == 1).ToString());
         AppServices.Settings.Set("library.root", LibraryRootBox.Text.Trim());
+        AppServices.Settings.Set(NetworkClientProvider.ModeKey, mode);
+        AppServices.Settings.Set(NetworkClientProvider.AddressKey, ProxyAddressBox.Text.Trim());
+        AppServices.RebuildNetwork();
         MessageBox.Show("常规设置已保存。", "设置", MessageBoxButton.OK, MessageBoxImage.Information);
+    }
+
+    private void ProxyMode_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        if (ProxyAddressBox != null) ProxyAddressBox.IsEnabled = CurrentProxyMode() == "manual";
+    }
+
+    private async void TestNetwork_Click(object sender, RoutedEventArgs e)
+    {
+        var mode = CurrentProxyMode();
+        if (mode == "manual" && !NetworkClientProvider.TryParseProxyAddress(ProxyAddressBox.Text, out _, out _))
+        {
+            NetworkTestText.Text = "代理地址格式不正确，应为 host:port。";
+            return;
+        }
+
+        // 测试前先应用当前界面上的代理设置，避免必须先点保存
+        AppServices.Settings.Set(NetworkClientProvider.ModeKey, mode);
+        AppServices.Settings.Set(NetworkClientProvider.AddressKey, ProxyAddressBox.Text.Trim());
+        AppServices.RebuildNetwork();
+
+        NetworkTestText.Text = "正在测试…";
+        try
+        {
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+            using var response = await AppServices.Network.ApiClient.GetAsync("https://api.github.com/rate_limit", cts.Token);
+            NetworkTestText.Text = response.IsSuccessStatusCode
+                ? $"连接正常（HTTP {(int)response.StatusCode}）"
+                : $"GitHub 返回 HTTP {(int)response.StatusCode} {response.ReasonPhrase}";
+        }
+        catch (OperationCanceledException)
+        {
+            NetworkTestText.Text = "连接超时（10 秒），请检查代理设置。";
+        }
+        catch (Exception ex)
+        {
+            NetworkTestText.Text = $"连接失败：{ex.Message}";
+        }
     }
 
     private void BrowseLibraryRoot_Click(object sender, RoutedEventArgs e)

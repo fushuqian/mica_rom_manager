@@ -132,7 +132,8 @@
             </DataGrid.ContextMenu>
 
             <DataGrid.Columns>
-                <DataGridTextColumn Header="★" Binding="{Binding FavoriteDisplay}" Width="36" />
+                <DataGridTextColumn Header="★" Binding="{Binding FavoriteDisplay}" Width="36"
+                                    ElementStyle="{StaticResource DataGridTextStyle}" />
                 <DataGridTemplateColumn Header="封面" Width="62">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
@@ -150,14 +151,22 @@
                 </DataGridTemplateColumn>
                 <DataGridTextColumn Header="标题" Binding="{Binding Title}" Width="220"
                                     ElementStyle="{StaticResource DataGridTextStyle}" />
-                <DataGridTextColumn Header="平台" Binding="{Binding Platform}" Width="110" />
-                <DataGridTextColumn Header="类型" Binding="{Binding Genre}" Width="90" />
-                <DataGridTextColumn Header="年份" Binding="{Binding ReleaseYear}" Width="64" />
-                <DataGridTextColumn Header="状态" Binding="{Binding Status}" Width="76" />
-                <DataGridTextColumn Header="次数" Binding="{Binding PlayCount}" Width="56" />
-                <DataGridTextColumn Header="时长" Binding="{Binding PlaySecondsDisplay}" Width="72" />
-                <DataGridTextColumn Header="最近游玩" Binding="{Binding LastPlayedDisplay}" Width="124" />
-                <DataGridTextColumn Header="大小" Binding="{Binding FileSizeDisplay}" Width="82" />
+                <DataGridTextColumn Header="平台" Binding="{Binding Platform}" Width="110"
+                                    ElementStyle="{StaticResource DataGridTextStyle}" />
+                <DataGridTextColumn Header="类型" Binding="{Binding Genre}" Width="90"
+                                    ElementStyle="{StaticResource DataGridTextStyle}" />
+                <DataGridTextColumn Header="年份" Binding="{Binding ReleaseYear}" Width="64"
+                                    ElementStyle="{StaticResource DataGridTextStyle}" />
+                <DataGridTextColumn Header="状态" Binding="{Binding Status}" Width="76"
+                                    ElementStyle="{StaticResource DataGridTextStyle}" />
+                <DataGridTextColumn Header="次数" Binding="{Binding PlayCount}" Width="56"
+                                    ElementStyle="{StaticResource DataGridTextStyle}" />
+                <DataGridTextColumn Header="时长" Binding="{Binding PlaySecondsDisplay}" Width="72"
+                                    ElementStyle="{StaticResource DataGridTextStyle}" />
+                <DataGridTextColumn Header="最近游玩" Binding="{Binding LastPlayedDisplay}" Width="124"
+                                    ElementStyle="{StaticResource DataGridTextStyle}" />
+                <DataGridTextColumn Header="大小" Binding="{Binding FileSizeDisplay}" Width="82"
+                                    ElementStyle="{StaticResource DataGridTextStyle}" />
                 <DataGridTextColumn Header="标签" Binding="{Binding Tags}" Width="120"
                                     ElementStyle="{StaticResource DataGridTextStyle}" />
                 <DataGridTextColumn Header="文件路径" Binding="{Binding RomPath}" Width="300"

@@ -1,5 +1,7 @@
 using System.IO;
 using System.IO.Compression;
+using SharpCompress.Archives;
+using SharpCompress.Common;
 
 namespace MicaRomManager.Services;
 
@@ -29,6 +31,54 @@ public sealed class EmulatorInstaller
         try
         {
             ZipFile.ExtractToDirectory(zipPath, temp, true);
+            var source = FindExtractedRoot(temp);
+            var target = PrepareTarget(emulatorName);
+            CopyDirectory(source, target);
+            return new InstallResult(target, FindExeCandidates(target, emulatorName));
+        }
+        finally
+        {
+            TryDeleteDirectory(temp);
+        }
+    }
+
+    /// <summary>按扩展名分发：zip 用内置解压，7z 用 SharpCompress。</summary>
+    public InstallResult InstallFromArchive(string archivePath, string emulatorName)
+    {
+        var extension = Path.GetExtension(archivePath).ToLowerInvariant();
+        return extension switch
+        {
+            ".zip" => InstallFromZip(archivePath, emulatorName),
+            ".7z" => InstallFrom7z(archivePath, emulatorName),
+            _ => throw new NotSupportedException("仅支持 zip / 7z 压缩包。"),
+        };
+    }
+
+    private InstallResult InstallFrom7z(string archivePath, string emulatorName)
+    {
+        var temp = Path.Combine(Path.GetTempPath(), "MicaRomManager-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            Directory.CreateDirectory(temp);
+            var tempRoot = Path.GetFullPath(temp + Path.DirectorySeparatorChar);
+
+            using (var archive = ArchiveFactory.OpenArchive(archivePath))
+            {
+                foreach (var entry in archive.Entries)
+                {
+                    if (entry.IsDirectory || string.IsNullOrEmpty(entry.Key)) continue;
+
+                    // 防止目录穿越：解压后的最终路径必须仍在临时目录内
+                    var destination = Path.GetFullPath(Path.Combine(temp, entry.Key));
+                    if (!destination.StartsWith(tempRoot, StringComparison.OrdinalIgnoreCase))
+                    {
+                        throw new InvalidDataException("压缩包包含非法路径，已中止安装。");
+                    }
+
+                    entry.WriteToDirectory(temp, new ExtractionOptions { ExtractFullPath = true, Overwrite = true });
+                }
+            }
+
             var source = FindExtractedRoot(temp);
             var target = PrepareTarget(emulatorName);
             CopyDirectory(source, target);

@@ -31,7 +31,7 @@
         </WrapPanel>
 
         <WrapPanel Grid.Row="1" Margin="0,0,0,8">
-            <Button Content="检查 GitHub 更新" Style="{StaticResource SecondaryButtonStyle}"
+            <Button Content="检查更新 / 下载安装" Style="{StaticResource SecondaryButtonStyle}"
                     Command="{Binding CheckUpdateCommand}" />
             <Button Content="测试启动" Style="{StaticResource SecondaryButtonStyle}"
                     Command="{Binding TestLaunchCommand}" />
@@ -45,16 +45,31 @@
                   ItemsSource="{Binding Emulators}"
                   SelectedItem="{Binding SelectedEmulator, Mode=TwoWay}">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="名称" Binding="{Binding Name}" Width="140" />
-                <DataGridTextColumn Header="平台" Binding="{Binding PlatformDisplay}" Width="220" />
-                <DataGridTextColumn Header="默认平台" Binding="{Binding DefaultPlatformDisplay}" Width="150" />
-                <DataGridTextColumn Header="版本" Binding="{Binding Version}" Width="100" />
-                <DataGridTextColumn Header="可执行文件" Binding="{Binding ResolvedExeDisplay}" Width="*" />
-                <DataGridTextColumn Header="状态" Binding="{Binding EnabledDisplay}" Width="70" />
+                <DataGridTextColumn Header="名称" Binding="{Binding Name}" Width="140"
+                                    ElementStyle="{StaticResource DataGridTextStyle}" />
+                <DataGridTextColumn Header="平台" Binding="{Binding PlatformDisplay}" Width="220"
+                                    ElementStyle="{StaticResource DataGridTextStyle}" />
+                <DataGridTextColumn Header="默认平台" Binding="{Binding DefaultPlatformDisplay}" Width="150"
+                                    ElementStyle="{StaticResource DataGridTextStyle}" />
+                <DataGridTextColumn Header="版本" Binding="{Binding Version}" Width="100"
+                                    ElementStyle="{StaticResource DataGridTextStyle}" />
+                <DataGridTextColumn Header="可执行文件" Binding="{Binding ResolvedExeDisplay}" Width="*"
+                                    ElementStyle="{StaticResource DataGridTextStyle}" />
+                <DataGridTextColumn Header="状态" Binding="{Binding EnabledDisplay}" Width="70"
+                                    ElementStyle="{StaticResource DataGridTextStyle}" />
             </DataGrid.Columns>
         </DataGrid>
 
-        <TextBlock Grid.Row="3" Margin="0,8,0,0" Text="{Binding StatusMessage}"
-                   Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" />
+        <Grid Grid.Row="3" Margin="0,8,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBlock Text="{Binding StatusMessage}" Foreground="{StaticResource TextSecondaryBrush}"
+                       TextWrapping="Wrap" VerticalAlignment="Center" />
+            <ProgressBar Grid.Column="1" Width="140" Height="4" Margin="12,0,0,0" VerticalAlignment="Center"
+                         Maximum="100" Value="{Binding DownloadProgress}"
+                         Visibility="{Binding IsBusy, Converter={StaticResource BoolToVis}}" />
+        </Grid>
     </Grid>
 </UserControl>

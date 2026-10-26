@@ -19,6 +19,8 @@ public partial class EmulatorManagerViewModel : ObservableObject
     [ObservableProperty] private EmulatorTemplate? selectedTemplate;
     [ObservableProperty] private Emulator? selectedEmulator;
     [ObservableProperty] private string statusMessage = "选择模拟器后可安装、配置或检查更新。";
+    [ObservableProperty] private bool isBusy;
+    [ObservableProperty] private double downloadProgress;
 
     public EmulatorManagerViewModel()
     {
@@ -231,26 +233,98 @@ public partial class EmulatorManagerViewModel : ObservableObject
             return;
         }
 
-        StatusMessage = "正在请求 GitHub…";
-        var result = await AppServices.Updater.CheckAsync(emulator.GithubRepo, emulator.Version);
-        StatusMessage = result.Message;
+        if (IsBusy) return;
 
-        if (!result.Success)
+        IsBusy = true;
+        try
         {
-            MessageBox.Show(result.Message, "检查更新", MessageBoxButton.OK, MessageBoxImage.Warning);
+            StatusMessage = "正在请求 GitHub…";
+            var result = await AppServices.Updater.CheckAsync(emulator.GithubRepo, emulator.Version);
+            StatusMessage = result.Message;
+
+            if (!result.Success)
+            {
+                MessageBox.Show(result.Message, "检查更新", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            if (IsInstallableAsset(result.AssetName) && !string.IsNullOrWhiteSpace(result.AssetUrl))
+            {
+                var answer = MessageBox.Show(
+                    $"{result.Message}\n\n是否下载「{result.AssetName}」并安装到本程序？",
+                    "检查更新", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                if (answer == MessageBoxResult.Yes)
+                {
+                    await DownloadAndInstallAsync(emulator, result);
+                }
+
+                return;
+            }
+
+            var target = result.ReleaseUrl ?? result.AssetUrl;
+            var open = MessageBox.Show(
+                $"{result.Message}\n\n没有可自动安装的 zip / 7z 资产。{ (target != null ? "\n\n是否打开 Release 页面手动下载？" : "") }",
+                "检查更新", target != null ? MessageBoxButton.YesNo : MessageBoxButton.OK,
+                MessageBoxImage.Information);
+            if (open == MessageBoxResult.Yes && !string.IsNullOrWhiteSpace(target))
+            {
+                Process.Start(new ProcessStartInfo(target) { UseShellExecute = true });
+            }
+        }
+        finally
+        {
+            IsBusy = false;
+            DownloadProgress = 0;
+        }
+    }
+
+    private static bool IsInstallableAsset(string? assetName) =>
+        assetName?.EndsWith(".zip", StringComparison.OrdinalIgnoreCase) == true ||
+        assetName?.EndsWith(".7z", StringComparison.OrdinalIgnoreCase) == true;
+
+    private async Task DownloadAndInstallAsync(Emulator emulator, UpdateCheckResult result)
+    {
+        var assetName = result.AssetName!;
+        var extension = Path.GetExtension(assetName).ToLowerInvariant();
+        var fileName = $"{RomImporter.SanitizeFolderName(emulator.GithubRepo.Replace('/', '-'))}-{result.LatestTag ?? "latest"}{extension}";
+        var targetFile = Path.Combine(AppServices.Paths.DownloadsDir, fileName);
+
+        DownloadProgress = 0;
+        var progress = new Progress<double>(value =>
+        {
+            DownloadProgress = value < 0 ? 0 : value;
+            StatusMessage = value < 0 ? "正在下载…" : $"下载中 {value:0}%";
+        });
+
+        var download = await AppServices.Updater.DownloadAsync(result.AssetUrl!, targetFile, progress, CancellationToken.None);
+        StatusMessage = download.Message;
+        if (!download.Success)
+        {
+            MessageBox.Show(download.Message, "下载安装包", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
-        var target = result.ReleaseUrl ?? result.AssetUrl;
-        var answer = MessageBox.Show(
-            result.Message + (target != null ? "\n\n是否打开 Release 页面查看下载？" : ""),
-            "检查更新", target != null ? MessageBoxButton.YesNo : MessageBoxButton.OK,
-            MessageBoxImage.Information);
-
-        if (answer == MessageBoxResult.Yes && !string.IsNullOrWhiteSpace(target))
+        StatusMessage = "正在解压并安装…";
+        try
         {
-            Process.Start(new ProcessStartInfo(target) { UseShellExecute = true });
+            var install = AppServices.Installer.InstallFromArchive(targetFile, emulator.Name);
+            FinishInstall(emulator, install);
         }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"安装失败：{ex.Message}", "下载安装", MessageBoxButton.OK, MessageBoxImage.Error);
+            return;
+        }
+
+        var version = result.LatestTag?.TrimStart('v', 'V');
+        if (!string.IsNullOrWhiteSpace(version))
+        {
+            emulator.Version = version;
+            AppServices.EmulatorRepo.Save(emulator);
+            Reload();
+        }
+
+        StatusMessage = $"「{emulator.Name}」已更新到 {version ?? "最新版本"}，安装包：{targetFile}";
     }
 
     [RelayCommand]

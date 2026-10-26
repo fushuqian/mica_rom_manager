@@ -10,6 +10,7 @@ public sealed class PathService
     public string EmulatorsDir => Path.Combine(DataDir, "emulators");
     public string ExportsDir => Path.Combine(DataDir, "exports");
     public string LogsDir => Path.Combine(DataDir, "logs");
+    public string DownloadsDir => Path.Combine(DataDir, "downloads");
     public string BackupsDir => Path.Combine(EmulatorsDir, ".backup");
 
     public static string TemplatesPath => Path.Combine(AppContext.BaseDirectory, "Resources", "EmulatorTemplates.json");
@@ -26,6 +27,7 @@ public sealed class PathService
         Directory.CreateDirectory(EmulatorsDir);
         Directory.CreateDirectory(ExportsDir);
         Directory.CreateDirectory(LogsDir);
+        Directory.CreateDirectory(DownloadsDir);
         Directory.CreateDirectory(BackupsDir);
     }
 

@@ -11,6 +11,7 @@ public static class AppServices
     public static GameRepository GameRepo { get; private set; } = null!;
     public static EmulatorRepository EmulatorRepo { get; private set; } = null!;
     public static SettingsRepository Settings { get; private set; } = null!;
+    public static NetworkClientProvider Network { get; private set; } = null!;
     public static CoverStore Covers { get; private set; } = null!;
     public static RomLauncher Launcher { get; private set; } = null!;
     public static EmulatorInstaller Installer { get; private set; } = null!;
@@ -23,9 +24,17 @@ public static class AppServices
         GameRepo = new GameRepository(Db);
         EmulatorRepo = new EmulatorRepository(Db);
         Settings = new SettingsRepository(Db);
+        Network = new NetworkClientProvider(Settings);
         Covers = new CoverStore(Paths);
         Launcher = new RomLauncher(GameRepo);
         Installer = new EmulatorInstaller(Paths);
-        Updater = new EmulatorUpdater();
+        Updater = new EmulatorUpdater(Network);
+    }
+
+    /// <summary>代理设置变更后重建 HTTP 客户端。</summary>
+    public static void RebuildNetwork()
+    {
+        Network.Rebuild();
+        Updater = new EmulatorUpdater(Network);
     }
 }

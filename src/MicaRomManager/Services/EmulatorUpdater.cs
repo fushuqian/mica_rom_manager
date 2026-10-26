@@ -1,3 +1,4 @@
+using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Text.Json;
@@ -14,14 +15,9 @@ public sealed record UpdateCheckResult(
 
 public sealed class EmulatorUpdater
 {
-    private readonly HttpClient _client;
+    private readonly NetworkClientProvider _network;
 
-    public EmulatorUpdater()
-    {
-        _client = new HttpClient { Timeout = TimeSpan.FromSeconds(15) };
-        _client.DefaultRequestHeaders.UserAgent.ParseAdd("MicaRomManager/0.1");
-        _client.DefaultRequestHeaders.TryAddWithoutValidation("Accept", "application/vnd.github+json");
-    }
+    public EmulatorUpdater(NetworkClientProvider network) => _network = network;
 
     /// <summary>调用 GitHub 公共 Release API（免费、无需 Token，未认证 60 次/小时）。</summary>
     public async Task<UpdateCheckResult> CheckAsync(string repository, string currentVersion)
@@ -40,7 +36,7 @@ public sealed class EmulatorUpdater
         var url = $"https://api.github.com/repos/{parts[0]}/{parts[1]}/releases/latest";
         try
         {
-            using var response = await _client.GetAsync(url);
+            using var response = await _network.ApiClient.GetAsync(url);
             if (response.StatusCode == HttpStatusCode.NotFound)
             {
                 return new UpdateCheckResult(false, "仓库不存在或没有已发布的 Release。");
@@ -68,15 +64,30 @@ public sealed class EmulatorUpdater
             if (root.TryGetProperty("assets", out var assets) && assets.ValueKind == JsonValueKind.Array)
             {
                 var candidates = assets.EnumerateArray()
-                    .Where(a => a.TryGetProperty("browser_download_url", out _))
+                    .Select(a => new
+                    {
+                        Name = a.TryGetProperty("name", out var nameElement) ? nameElement.GetString() : null,
+                        Url = a.TryGetProperty("browser_download_url", out var downloadElement) ? downloadElement.GetString() : null,
+                    })
+                    .Where(a => !string.IsNullOrWhiteSpace(a.Url))
                     .ToList();
-                var picked = candidates.FirstOrDefault(a =>
-                    (a.TryGetProperty("name", out var nameElement) ? nameElement.GetString() : "")?.EndsWith(".zip", StringComparison.OrdinalIgnoreCase) == true);
-                if (picked.ValueKind == JsonValueKind.Undefined) picked = candidates.FirstOrDefault();
-                if (picked.ValueKind == JsonValueKind.Object)
+
+                // 优先 Windows 版压缩包（zip 优先于 7z），其它格式不自动安装
+                var archives = candidates
+                    .Where(a => a.Name?.EndsWith(".zip", StringComparison.OrdinalIgnoreCase) == true ||
+                                a.Name?.EndsWith(".7z", StringComparison.OrdinalIgnoreCase) == true)
+                    .ToList();
+                var picked =
+                    archives.FirstOrDefault(a => a.Name!.Contains("win64", StringComparison.OrdinalIgnoreCase)) ??
+                    archives.FirstOrDefault(a => a.Name!.Contains("windows", StringComparison.OrdinalIgnoreCase)) ??
+                    archives.FirstOrDefault(a => a.Name!.Contains("-win", StringComparison.OrdinalIgnoreCase)) ??
+                    archives.FirstOrDefault(a => a.Name!.EndsWith(".zip", StringComparison.OrdinalIgnoreCase)) ??
+                    archives.FirstOrDefault() ??
+                    candidates.FirstOrDefault();
+                if (picked != null)
                 {
-                    assetName = picked.TryGetProperty("name", out var nameElement) ? nameElement.GetString() : null;
-                    assetUrl = picked.TryGetProperty("browser_download_url", out var downloadElement) ? downloadElement.GetString() : null;
+                    assetName = picked.Name;
+                    assetUrl = picked.Url;
                 }
             }
 
@@ -95,11 +106,78 @@ public sealed class EmulatorUpdater
         }
         catch (TaskCanceledException)
         {
-            return new UpdateCheckResult(false, "请求 GitHub 超时，请检查网络。");
+            return new UpdateCheckResult(false, "请求 GitHub 超时，请检查网络或设置代理。");
         }
         catch (Exception ex)
         {
             return new UpdateCheckResult(false, $"检查更新失败：{ex.Message}");
+        }
+    }
+
+    /// <summary>把 Release 资产流式下载到本地，先写 .part 再改名，避免留下半截文件。</summary>
+    public async Task<(bool Success, string Message, long Bytes)> DownloadAsync(
+        string url, string targetFile, IProgress<double>? progress, CancellationToken cancellationToken)
+    {
+        var partFile = targetFile + ".part";
+        try
+        {
+            var directory = Path.GetDirectoryName(targetFile);
+            if (!string.IsNullOrEmpty(directory)) Directory.CreateDirectory(directory);
+
+            using var response = await _network.TransferClient.GetAsync(
+                url, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+            if (!response.IsSuccessStatusCode)
+            {
+                return (false, $"下载失败：HTTP {(int)response.StatusCode} {response.ReasonPhrase}", 0);
+            }
+
+            var total = response.Content.Headers.ContentLength ?? -1;
+            if (total > 0) progress?.Report(0);
+            else progress?.Report(-1);
+
+            long received = 0;
+            var buffer = new byte[81920];
+            await using (var source = await response.Content.ReadAsStreamAsync(cancellationToken))
+            await using (var target = File.Create(partFile))
+            {
+                int read;
+                while ((read = await source.ReadAsync(buffer, cancellationToken)) > 0)
+                {
+                    await target.WriteAsync(buffer.AsMemory(0, read), cancellationToken);
+                    received += read;
+                    if (total > 0) progress?.Report(received * 100d / total);
+                }
+            }
+
+            File.Move(partFile, targetFile, true);
+            return (true, $"下载完成（{FormatSize(received)}）。", received);
+        }
+        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+        {
+            return (false, "下载超时，请检查网络或设置代理。", 0);
+        }
+        catch (Exception ex)
+        {
+            return (false, $"下载失败：{ex.Message}", 0);
+        }
+        finally
+        {
+            TryDeleteFile(partFile);
+        }
+    }
+
+    private static string FormatSize(long bytes) =>
+        bytes >= 1024 * 1024 ? $"{bytes / 1024d / 1024d:0.0} MB" : $"{bytes / 1024d:0.0} KB";
+
+    private static void TryDeleteFile(string path)
+    {
+        try
+        {
+            if (File.Exists(path)) File.Delete(path);
+        }
+        catch
+        {
+            // 临时文件清理失败可忽略
         }
     }
 
