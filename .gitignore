@@ -6,6 +6,7 @@ obj/
 .vs/
 *.user
 *.suo
+*_wpftmp.csproj
 *.log
 TestResults/
 .vscode/
