@@ -141,12 +141,19 @@ public sealed class AiAssistantService
             ? "无"
             : $"「{host.SelectedGame.Title}」（{host.SelectedGame.Platform}，{host.SelectedGame.Status}）";
         var device = string.IsNullOrWhiteSpace(host.ConnectedDevice) ? "未连接" : host.ConnectedDevice;
+        var platforms = string.Join("、", host.AllGames
+            .Where(game => !string.IsNullOrWhiteSpace(game.Platform))
+            .GroupBy(game => game.Platform)
+            .OrderByDescending(group => group.Count())
+            .Take(10)
+            .Select(group => $"{group.Key}({group.Count()})"));
 
         return $$"""
             你是 Mica ROM Manager 的内置 AI 助手，帮助用户管理本地模拟器游戏库。
 
             当前状态：
             - 库内游戏：{{host.AllGames.Count}} 款
+            - 平台分布（前 10）：{{(platforms.Length == 0 ? "暂无" : platforms)}}
             - 当前选中：{{selected}}
             - 当前筛选结果：{{host.FilteredGames.Count}} 款
             - 已连接设备：{{device}}
