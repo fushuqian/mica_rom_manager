@@ -1,6 +1,7 @@
 <script lang="ts">
   import { open } from "@tauri-apps/plugin-dialog";
   import { api, type Game } from "../lib/api";
+  import { clone } from "../lib/format";
   import { STATUSES, store } from "../lib/state.svelte";
 
   let {
@@ -15,7 +16,7 @@
     onSaved: (game: Game) => void;
   } = $props();
 
-  let draft = $state<Game>(structuredClone(initial));
+  let draft = $state<Game>(clone(initial));
   let error = $state("");
   let saving = $state(false);
   let pendingCover = $state("");
@@ -49,7 +50,7 @@
     saving = true;
     error = "";
     try {
-      const payload = structuredClone(draft);
+      const payload = clone(draft);
       if (payload.romPath.trim()) {
         try {
           payload.fileSize = await api.fileSize(payload.romPath.trim());

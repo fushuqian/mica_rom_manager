@@ -15,7 +15,7 @@
   import SharePackDialog from "./components/SharePackDialog.svelte";
   import Toolbar from "./components/Toolbar.svelte";
   import { api, type BatchChanges, type Game } from "./lib/api";
-  import { discs } from "./lib/format";
+  import { clone, discs } from "./lib/format";
   import { COLUMNS, compareGames } from "./lib/grid";
   import {
     ALL_DEVELOPERS,
@@ -109,7 +109,7 @@
   }
 
   function openEditDialog(game: Game) {
-    editState = { game: structuredClone(game), isNew: false };
+    editState = { game: clone(game), isNew: false };
   }
 
   function openNewDialog() {
@@ -157,7 +157,7 @@
   }
 
   async function commitCell(game: Game, header: string, value: string) {
-    const updated = structuredClone(game);
+    const updated = clone(game);
     switch (header) {
       case "标题":
         updated.title = value;

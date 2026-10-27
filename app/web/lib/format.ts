@@ -1,5 +1,10 @@
 import type { Game } from "./api";
 
+/// 深拷贝纯数据对象（替代 structuredClone，避免 Svelte 响应式代理导致的 DataCloneError）。
+export function clone<T>(value: T): T {
+  return value === undefined ? value : JSON.parse(JSON.stringify(value));
+}
+
 export function formatSize(bytes: number): string {
   if (!bytes || bytes <= 0) return "";
   const units = ["B", "KB", "MB", "GB", "TB"];

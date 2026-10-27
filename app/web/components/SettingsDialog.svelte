@@ -13,7 +13,7 @@
     type ReleaseAsset,
     type ReleaseInfo,
   } from "../lib/api";
-  import { formatSize } from "../lib/format";
+  import { clone, formatSize } from "../lib/format";
   import { store } from "../lib/state.svelte";
 
   let { onClose, onDataChanged }: { onClose: () => void; onDataChanged: () => void } = $props();
@@ -381,12 +381,12 @@
     const name = select ?? selectedPlatform;
     const match = platforms.find((p) => p.name === name) ?? platforms[0];
     selectedPlatform = match?.name ?? "";
-    platformDraft = match ? structuredClone(match) : null;
+    platformDraft = match ? clone(match) : null;
   }
 
   function selectPlatform(setting: PlatformSetting) {
     selectedPlatform = setting.name;
-    platformDraft = structuredClone(setting);
+    platformDraft = clone(setting);
   }
 
   async function savePlatform() {
@@ -656,7 +656,7 @@
                 class="list-item"
                 class:active={selectedEmulatorId === emulator.id}
                 onclick={() => (selectedEmulatorId = emulator.id)}
-                ondblclick={() => (editingEmulator = structuredClone(emulator))}
+                ondblclick={() => (editingEmulator = clone(emulator))}
               >
                 <span class="ellipsis">{emulator.name}</span>
                 <span class="badge" class:off={!emulator.available}>{emulator.available ? "可用" : "未找到"}</span>
@@ -673,7 +673,7 @@
               disabled={!selectedEmulatorId}
               onclick={() => {
                 const emulator = emulators.find((e) => e.id === selectedEmulatorId);
-                if (emulator) editingEmulator = structuredClone(emulator);
+                if (emulator) editingEmulator = clone(emulator);
               }}
             >编辑…</button>
             <button
@@ -814,7 +814,7 @@
                 </div>
 
                 <label>启动参数</label>
-                <input type="text" bind:value={platformDraft.argsTemplate} placeholder='例如：-L "{core}" "{rom}"' />
+                <input type="text" bind:value={platformDraft.argsTemplate} placeholder={'例如：-L "{core}" "{rom}"'} />
               </div>
               <div class="hint block">平台名称请在「字典库 → 平台」里维护；启动时使用这里的默认模拟器、核心与参数。</div>
               <div class="pane-foot split-foot">

@@ -1,6 +1,7 @@
 <script lang="ts">
   import { open as openDialog } from "@tauri-apps/plugin-dialog";
   import { api, type Emulator } from "../lib/api";
+  import { clone } from "../lib/format";
 
   let {
     emulator,
@@ -14,7 +15,7 @@
     onSaved: (emulator: Emulator) => void;
   } = $props();
 
-  let draft = $state<Emulator>(structuredClone(emulator));
+  let draft = $state<Emulator>(clone(emulator));
   let platformsText = $state(draft.platforms.join(","));
   let error = $state("");
   let saving = $state(false);
@@ -66,7 +67,7 @@
         .map((s) => s.trim())
         .filter(Boolean);
       if (draft.defaultPlatforms.length === 0) draft.defaultPlatforms = [...draft.platforms];
-      const saved = await api.emulatorSave(structuredClone(draft));
+      const saved = await api.emulatorSave(clone(draft));
       onSaved(saved);
     } catch (e) {
       error = String(e);
@@ -96,7 +97,7 @@
         </div>
 
         <label>启动参数</label>
-        <input type="text" bind:value={draft.argsTemplate} placeholder='例如 "{rom}" 或 -L "{core}" "{rom}"' />
+        <input type="text" bind:value={draft.argsTemplate} placeholder={'例如 "{rom}" 或 -L "{core}" "{rom}"'} />
 
         <label>核心路径</label>
         <div class="inline">
