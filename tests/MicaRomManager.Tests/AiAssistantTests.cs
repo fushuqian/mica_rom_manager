@@ -221,6 +221,32 @@ public class AiAssistantTests
     }
 
     [Fact]
+    public async Task AssistantService_IntroRequestMustHaveTextBeforeCard()
+    {
+        var host = new FakeHost(new[]
+        {
+            new Game { Id = 7, Title = "亚克传承3", Platform = "PlayStation" },
+        });
+        var client = new FakeChatClient();
+        client.Results.Enqueue(ToolCallResult(Tool("update_games",
+            "{\"game_ids\":[7],\"fields\":{\"release_year\":1999}}")));
+        client.Results.Enqueue(new AiToolChatResult(true,
+            "《亚克传承3》是 1999 年的策略角色扮演游戏，讲述猎人少年阿雷克的故事。", "",
+            new List<AiToolCall>
+            {
+                Tool("update_games", "{\"game_ids\":[7],\"fields\":{\"release_year\":1999}}"),
+            }, 200, TimeSpan.Zero));
+
+        var service = new AiAssistantService(client);
+        var result = await service.SendAsync("介绍一下亚克传承3", host, CancellationToken.None);
+
+        Assert.NotNull(result.Pending);
+        Assert.Contains("策略角色扮演游戏", result.Text);
+        Assert.Equal(2, client.Requests.Count);
+        Assert.Equal(0, host.UpdateCalls);
+    }
+
+    [Fact]
     public void ChatStore_SaveLoadAndClear()
     {
         var path = Path.Combine(Path.GetTempPath(), "mica-chat-" + Guid.NewGuid().ToString("N") + ".json");
