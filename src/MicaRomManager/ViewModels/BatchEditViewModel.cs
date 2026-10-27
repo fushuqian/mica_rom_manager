@@ -25,6 +25,8 @@ public partial class BatchEditViewModel : ObservableObject
     [ObservableProperty] private string regionValue = "";
     [ObservableProperty] private bool applyLanguage;
     [ObservableProperty] private string languageValue = "";
+    [ObservableProperty] private bool applySpecialNote;
+    [ObservableProperty] private string specialNoteValue = "";
     [ObservableProperty] private bool applyReleaseYear;
     [ObservableProperty] private string releaseYearText = "";
     [ObservableProperty] private bool applyPublisher;
@@ -82,6 +84,8 @@ public partial class BatchEditViewModel : ObservableObject
             Region = Clean(RegionValue),
             ApplyLanguage = ApplyLanguage,
             Language = Clean(LanguageValue),
+            ApplySpecialNote = ApplySpecialNote,
+            SpecialNote = Clean(SpecialNoteValue),
             ApplyReleaseYear = ApplyReleaseYear,
             ApplyPublisher = ApplyPublisher,
             Publisher = Clean(PublisherValue),

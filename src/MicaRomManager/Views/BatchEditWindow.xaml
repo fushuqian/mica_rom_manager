@@ -42,6 +42,9 @@
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
                 <CheckBox Grid.Row="0" Content="平台" VerticalAlignment="Center"
@@ -71,56 +74,63 @@
                           ItemsSource="{Binding Languages}"
                           Text="{Binding LanguageValue, UpdateSourceTrigger=PropertyChanged}" />
 
-                <CheckBox Grid.Row="4" Content="年份" VerticalAlignment="Center"
-                          IsChecked="{Binding ApplyReleaseYear}" />
+                <CheckBox Grid.Row="4" Content="特注" VerticalAlignment="Center"
+                          IsChecked="{Binding ApplySpecialNote}" />
                 <TextBox Grid.Row="4" Grid.Column="1" MinHeight="28" Margin="0,0,0,10"
+                         IsEnabled="{Binding ApplySpecialNote}"
+                         ToolTip="特别标注，整理文件名时放在语言后面，如 (汉化版)"
+                         Text="{Binding SpecialNoteValue, UpdateSourceTrigger=PropertyChanged}" />
+
+                <CheckBox Grid.Row="5" Content="年份" VerticalAlignment="Center"
+                          IsChecked="{Binding ApplyReleaseYear}" />
+                <TextBox Grid.Row="5" Grid.Column="1" MinHeight="28" Margin="0,0,0,10"
                          IsEnabled="{Binding ApplyReleaseYear}"
                          ToolTip="1950–2100 的整数；留空表示清空年份"
                          Text="{Binding ReleaseYearText, UpdateSourceTrigger=PropertyChanged}" />
 
-                <CheckBox Grid.Row="5" Content="发行商" VerticalAlignment="Center"
+                <CheckBox Grid.Row="6" Content="发行商" VerticalAlignment="Center"
                           IsChecked="{Binding ApplyPublisher}" />
-                <TextBox Grid.Row="5" Grid.Column="1" MinHeight="28" Margin="0,0,0,10"
+                <TextBox Grid.Row="6" Grid.Column="1" MinHeight="28" Margin="0,0,0,10"
                          IsEnabled="{Binding ApplyPublisher}"
                          Text="{Binding PublisherValue, UpdateSourceTrigger=PropertyChanged}" />
 
-                <CheckBox Grid.Row="6" Content="开发商" VerticalAlignment="Center"
+                <CheckBox Grid.Row="7" Content="开发商" VerticalAlignment="Center"
                           IsChecked="{Binding ApplyDeveloper}" />
-                <TextBox Grid.Row="6" Grid.Column="1" MinHeight="28" Margin="0,0,0,10"
+                <TextBox Grid.Row="7" Grid.Column="1" MinHeight="28" Margin="0,0,0,10"
                          IsEnabled="{Binding ApplyDeveloper}"
                          Text="{Binding DeveloperValue, UpdateSourceTrigger=PropertyChanged}" />
 
-                <CheckBox Grid.Row="7" Content="状态" VerticalAlignment="Center"
+                <CheckBox Grid.Row="8" Content="状态" VerticalAlignment="Center"
                           IsChecked="{Binding ApplyStatus}" />
-                <ComboBox Grid.Row="7" Grid.Column="1" MinHeight="28" Margin="0,0,0,10"
+                <ComboBox Grid.Row="8" Grid.Column="1" MinHeight="28" Margin="0,0,0,10"
                           IsEnabled="{Binding ApplyStatus}"
                           ItemsSource="{Binding Statuses}"
                           SelectedItem="{Binding StatusValue, Mode=TwoWay}" />
 
-                <CheckBox Grid.Row="8" Content="模拟器" VerticalAlignment="Center"
+                <CheckBox Grid.Row="9" Content="模拟器" VerticalAlignment="Center"
                           IsChecked="{Binding ApplyEmulator}" />
-                <ComboBox Grid.Row="8" Grid.Column="1" MinHeight="28" Margin="0,0,0,10"
+                <ComboBox Grid.Row="9" Grid.Column="1" MinHeight="28" Margin="0,0,0,10"
                           IsEnabled="{Binding ApplyEmulator}"
                           ItemsSource="{Binding EmulatorChoices}" DisplayMemberPath="Name"
                           SelectedItem="{Binding SelectedEmulator, Mode=TwoWay}" />
 
-                <CheckBox Grid.Row="9" Content="追加标签" VerticalAlignment="Center"
+                <CheckBox Grid.Row="10" Content="追加标签" VerticalAlignment="Center"
                           IsChecked="{Binding ApplyTagsAdd}" />
-                <TextBox Grid.Row="9" Grid.Column="1" MinHeight="28" Margin="0,0,0,10"
+                <TextBox Grid.Row="10" Grid.Column="1" MinHeight="28" Margin="0,0,0,10"
                          IsEnabled="{Binding ApplyTagsAdd}"
                          ToolTip="多个标签用逗号分隔；已有同名标签不会重复添加"
                          Text="{Binding TagsAddValue, UpdateSourceTrigger=PropertyChanged}" />
 
-                <CheckBox Grid.Row="10" Content="移除标签" VerticalAlignment="Center"
+                <CheckBox Grid.Row="11" Content="移除标签" VerticalAlignment="Center"
                           IsChecked="{Binding ApplyTagsRemove}" />
-                <TextBox Grid.Row="10" Grid.Column="1" MinHeight="28" Margin="0,0,0,10"
+                <TextBox Grid.Row="11" Grid.Column="1" MinHeight="28" Margin="0,0,0,10"
                          IsEnabled="{Binding ApplyTagsRemove}"
                          ToolTip="多个标签用逗号分隔"
                          Text="{Binding TagsRemoveValue, UpdateSourceTrigger=PropertyChanged}" />
 
-                <CheckBox Grid.Row="11" Content="备注" VerticalAlignment="Top" Margin="0,6,0,0"
+                <CheckBox Grid.Row="12" Content="备注" VerticalAlignment="Top" Margin="0,6,0,0"
                           IsChecked="{Binding ApplyNotes}" />
-                <StackPanel Grid.Row="11" Grid.Column="1" IsEnabled="{Binding ApplyNotes}">
+                <StackPanel Grid.Row="12" Grid.Column="1" IsEnabled="{Binding ApplyNotes}">
                     <ComboBox MinHeight="28" Margin="0,0,0,8" SelectedIndex="{Binding NotesModeIndex, Mode=TwoWay}">
                         <ComboBoxItem Content="追加到原备注末尾" />
                         <ComboBoxItem Content="覆盖原备注" />

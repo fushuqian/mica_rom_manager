@@ -15,6 +15,7 @@ public class BatchEditChangesTests
             Genre = "动作",
             Region = "日版",
             Language = "日语",
+            SpecialNote = "原特注",
             ReleaseYear = 2001,
             Publisher = "Capcom",
             Developer = "Capcom",
@@ -31,6 +32,7 @@ public class BatchEditChangesTests
         Assert.Equal("动作", game.Genre);
         Assert.Equal("日版", game.Region);
         Assert.Equal("日语", game.Language);
+        Assert.Equal("原特注", game.SpecialNote);
         Assert.Equal(2001, game.ReleaseYear);
         Assert.Equal("Capcom", game.Publisher);
         Assert.Equal("Capcom", game.Developer);
@@ -54,6 +56,8 @@ public class BatchEditChangesTests
             Region = "美版",
             ApplyLanguage = true,
             Language = "英语,法语",
+            ApplySpecialNote = true,
+            SpecialNote = "汉化版",
             ApplyReleaseYear = true,
             ReleaseYear = 2005,
             ApplyPublisher = true,
@@ -70,6 +74,7 @@ public class BatchEditChangesTests
         Assert.Equal("冒险", game.Genre);
         Assert.Equal("美版", game.Region);
         Assert.Equal("英语,法语", game.Language);
+        Assert.Equal("汉化版", game.SpecialNote);
         Assert.Equal(2005, game.ReleaseYear);
         Assert.Equal("Sony", game.Publisher);
         Assert.Equal("Team", game.Developer);

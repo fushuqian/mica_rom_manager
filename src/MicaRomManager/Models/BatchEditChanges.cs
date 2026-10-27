@@ -11,6 +11,8 @@ public sealed class BatchEditChanges
     public string Region = "";
     public bool ApplyLanguage;
     public string Language = "";
+    public bool ApplySpecialNote;
+    public string SpecialNote = "";
     public bool ApplyReleaseYear;
     public int? ReleaseYear;
     public bool ApplyPublisher;
@@ -30,7 +32,8 @@ public sealed class BatchEditChanges
     public string Notes = "";
 
     public bool HasAny =>
-        ApplyPlatform || ApplyGenre || ApplyRegion || ApplyLanguage || ApplyReleaseYear ||
+        ApplyPlatform || ApplyGenre || ApplyRegion || ApplyLanguage || ApplySpecialNote ||
+        ApplyReleaseYear ||
         ApplyPublisher || ApplyDeveloper || ApplyStatus || ApplyEmulator ||
         ApplyTagsAdd || ApplyTagsRemove || ApplyNotes;
 
@@ -40,6 +43,7 @@ public sealed class BatchEditChanges
         if (ApplyGenre) game.Genre = Genre;
         if (ApplyRegion) game.Region = Region;
         if (ApplyLanguage) game.Language = Language;
+        if (ApplySpecialNote) game.SpecialNote = SpecialNote;
         if (ApplyReleaseYear) game.ReleaseYear = ReleaseYear;
         if (ApplyPublisher) game.Publisher = Publisher;
         if (ApplyDeveloper) game.Developer = Developer;

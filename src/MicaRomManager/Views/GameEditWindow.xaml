@@ -45,6 +45,10 @@
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
                 <TextBlock Grid.Row="0" Grid.Column="0" Text="标题" Style="{StaticResource FieldLabelStyle}" />
                 <TextBox Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2" Margin="0,0,8,10"
@@ -68,56 +72,61 @@
                           ItemsSource="{Binding Languages}"
                           Text="{Binding Model.Language, UpdateSourceTrigger=PropertyChanged}" />
 
-                <TextBlock Grid.Row="3" Grid.Column="0" Text="年份" Style="{StaticResource FieldLabelStyle}" />
-                <TextBox Grid.Row="3" Grid.Column="1" Margin="0,0,8,10"
+                <TextBlock Grid.Row="3" Grid.Column="0" Text="特注" Style="{StaticResource FieldLabelStyle}" />
+                <TextBox Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="3" Margin="0,0,0,10"
+                         Text="{Binding Model.SpecialNote, UpdateSourceTrigger=PropertyChanged}"
+                         ToolTip="特别标注，整理文件名时放在语言后面，如 (汉化版)" />
+
+                <TextBlock Grid.Row="4" Grid.Column="0" Text="年份" Style="{StaticResource FieldLabelStyle}" />
+                <TextBox Grid.Row="4" Grid.Column="1" Margin="0,0,8,10"
                          Text="{Binding Model.ReleaseYear, UpdateSourceTrigger=PropertyChanged}" />
-                <TextBlock Grid.Row="3" Grid.Column="2" Text="发行商" Style="{StaticResource FieldLabelStyle}" />
-                <TextBox Grid.Row="3" Grid.Column="3" Margin="0,0,0,10"
+                <TextBlock Grid.Row="4" Grid.Column="2" Text="发行商" Style="{StaticResource FieldLabelStyle}" />
+                <TextBox Grid.Row="4" Grid.Column="3" Margin="0,0,0,10"
                          Text="{Binding Model.Publisher, UpdateSourceTrigger=PropertyChanged}" />
 
-                <TextBlock Grid.Row="4" Grid.Column="0" Text="开发商" Style="{StaticResource FieldLabelStyle}" />
-                <TextBox Grid.Row="4" Grid.Column="1" Margin="0,0,8,10"
+                <TextBlock Grid.Row="5" Grid.Column="0" Text="开发商" Style="{StaticResource FieldLabelStyle}" />
+                <TextBox Grid.Row="5" Grid.Column="1" Margin="0,0,8,10"
                          Text="{Binding Model.Developer, UpdateSourceTrigger=PropertyChanged}" />
-                <TextBlock Grid.Row="4" Grid.Column="2" Text="状态" Style="{StaticResource FieldLabelStyle}" />
-                <ComboBox Grid.Row="4" Grid.Column="3" Margin="0,0,0,10" MinHeight="28"
+                <TextBlock Grid.Row="5" Grid.Column="2" Text="状态" Style="{StaticResource FieldLabelStyle}" />
+                <ComboBox Grid.Row="5" Grid.Column="3" Margin="0,0,0,10" MinHeight="28"
                           ItemsSource="{Binding Statuses}"
                           SelectedItem="{Binding Model.Status, Mode=TwoWay}" />
 
-                <TextBlock Grid.Row="5" Grid.Column="0" Text="模拟器" Style="{StaticResource FieldLabelStyle}" />
-                <ComboBox Grid.Row="5" Grid.Column="1" Margin="0,0,8,10" MinHeight="28"
+                <TextBlock Grid.Row="6" Grid.Column="0" Text="模拟器" Style="{StaticResource FieldLabelStyle}" />
+                <ComboBox Grid.Row="6" Grid.Column="1" Margin="0,0,8,10" MinHeight="28"
                           ItemsSource="{Binding Emulators}" DisplayMemberPath="Name"
                           SelectedItem="{Binding SelectedEmulator, Mode=TwoWay}" />
-                <TextBlock Grid.Row="5" Grid.Column="2" Text="标签" Style="{StaticResource FieldLabelStyle}" />
-                <TextBox Grid.Row="5" Grid.Column="3" Margin="0,0,0,10"
+                <TextBlock Grid.Row="6" Grid.Column="2" Text="标签" Style="{StaticResource FieldLabelStyle}" />
+                <TextBox Grid.Row="6" Grid.Column="3" Margin="0,0,0,10"
                          Text="{Binding Model.Tags, UpdateSourceTrigger=PropertyChanged}"
                          ToolTip="多个标签用逗号分隔" />
 
-                <TextBlock Grid.Row="6" Grid.Column="0" Text="ROM 路径" Style="{StaticResource FieldLabelStyle}" />
-                <TextBox Grid.Row="6" Grid.Column="1" Grid.ColumnSpan="2" Margin="0,0,8,10" IsReadOnly="True"
+                <TextBlock Grid.Row="7" Grid.Column="0" Text="ROM 路径" Style="{StaticResource FieldLabelStyle}" />
+                <TextBox Grid.Row="7" Grid.Column="1" Grid.ColumnSpan="2" Margin="0,0,8,10" IsReadOnly="True"
                          Text="{Binding Model.RomPath}" />
-                <Button Grid.Row="6" Grid.Column="3" Content="浏览…" Margin="0,0,0,10"
+                <Button Grid.Row="7" Grid.Column="3" Content="浏览…" Margin="0,0,0,10"
                         Style="{StaticResource SecondaryButtonStyle}" Command="{Binding BrowseRomCommand}" />
 
-                <TextBlock Grid.Row="7" Grid.Column="0" Text="文件大小" Style="{StaticResource FieldLabelStyle}" />
-                <TextBox Grid.Row="7" Grid.Column="1" Margin="0,0,8,10" IsReadOnly="True"
+                <TextBlock Grid.Row="8" Grid.Column="0" Text="文件大小" Style="{StaticResource FieldLabelStyle}" />
+                <TextBox Grid.Row="8" Grid.Column="1" Margin="0,0,8,10" IsReadOnly="True"
                          Text="{Binding Model.FileSizeDisplay, Mode=OneWay}" />
-                <TextBlock Grid.Row="7" Grid.Column="2" Text="封面" Style="{StaticResource FieldLabelStyle}" />
-                <StackPanel Grid.Row="7" Grid.Column="3" Orientation="Horizontal" Margin="0,0,0,10">
+                <TextBlock Grid.Row="8" Grid.Column="2" Text="封面" Style="{StaticResource FieldLabelStyle}" />
+                <StackPanel Grid.Row="8" Grid.Column="3" Orientation="Horizontal" Margin="0,0,0,10">
                     <Button Content="选择封面…" Style="{StaticResource SecondaryButtonStyle}"
                             Command="{Binding BrowseCoverCommand}" />
                     <Button Content="清除" Style="{StaticResource SecondaryButtonStyle}" Margin="8,0,0,0"
                             Command="{Binding ClearCoverCommand}" />
                 </StackPanel>
 
-                <Border Grid.Row="8" Grid.Column="1" Grid.ColumnSpan="3" Height="96" Margin="0,0,0,10"
+                <Border Grid.Row="9" Grid.Column="1" Grid.ColumnSpan="3" Height="96" Margin="0,0,0,10"
                         Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource BorderBrush}"
                         BorderThickness="1" HorizontalAlignment="Left" Width="96">
                     <Image Stretch="UniformToFill"
                            Source="{Binding Model.CoverPath, Converter={StaticResource CoverThumbnailConverter}}" />
                 </Border>
 
-                <TextBlock Grid.Row="9" Grid.Column="0" Text="碟片" Style="{StaticResource FieldLabelStyle}" VerticalAlignment="Top" Margin="0,4,8,0" />
-                <StackPanel Grid.Row="9" Grid.Column="1" Grid.ColumnSpan="3" Orientation="Horizontal" Margin="0,0,0,8">
+                <TextBlock Grid.Row="10" Grid.Column="0" Text="碟片" Style="{StaticResource FieldLabelStyle}" VerticalAlignment="Top" Margin="0,4,8,0" />
+                <StackPanel Grid.Row="10" Grid.Column="1" Grid.ColumnSpan="3" Orientation="Horizontal" Margin="0,0,0,8">
                     <Button Content="添加碟片…" Style="{StaticResource SecondaryButtonStyle}"
                             Command="{Binding AddDiscsCommand}" />
                     <Button Content="移除" Style="{StaticResource SecondaryButtonStyle}" Margin="6,0,0,0"
@@ -128,27 +137,23 @@
                             Command="{Binding MoveDiscDownCommand}" />
                 </StackPanel>
 
-                <ListBox Grid.Row="10" Grid.Column="1" Grid.ColumnSpan="3" Height="100" Margin="0,0,0,10"
+                <ListBox Grid.Row="11" Grid.Column="1" Grid.ColumnSpan="3" Height="100" Margin="0,0,0,10"
                          ItemsSource="{Binding DiscItems}"
                          SelectedIndex="{Binding SelectedDiscIndex, Mode=TwoWay}" />
 
-                <TextBlock Grid.Row="11" Grid.Column="0" Text="备注" Style="{StaticResource FieldLabelStyle}" VerticalAlignment="Top" Margin="0,4,8,0" />
-                <TextBox Grid.Row="11" Grid.Column="1" Grid.ColumnSpan="3" Height="70" Margin="0,0,0,10"
+                <TextBlock Grid.Row="12" Grid.Column="0" Text="备注" Style="{StaticResource FieldLabelStyle}" VerticalAlignment="Top" Margin="0,4,8,0" />
+                <TextBox Grid.Row="12" Grid.Column="1" Grid.ColumnSpan="3" Height="70" Margin="0,0,0,10"
                          AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"
                          VerticalContentAlignment="Top"
                          Text="{Binding Model.Notes, UpdateSourceTrigger=PropertyChanged}" />
 
-                <TextBlock Grid.Row="12" Grid.Column="0" Text="评分" Style="{StaticResource FieldLabelStyle}" />
-                <ComboBox Grid.Row="12" Grid.Column="1" Width="140" HorizontalAlignment="Left" MinHeight="28"
+                <TextBlock Grid.Row="13" Grid.Column="0" Text="评分" Style="{StaticResource FieldLabelStyle}" />
+                <ComboBox Grid.Row="13" Grid.Column="1" Width="140" HorizontalAlignment="Left" MinHeight="28"
                           Margin="0,0,0,10"
                           ItemsSource="{Binding RatingOptions}" DisplayMemberPath="Text"
                           SelectedValuePath="Value" SelectedValue="{Binding Model.Rating, Mode=TwoWay}" />
-                <TextBlock Grid.Row="12" Grid.Column="2" Text="特注" Style="{StaticResource FieldLabelStyle}" />
-                <TextBox Grid.Row="12" Grid.Column="3" Margin="0,0,0,10"
-                         Text="{Binding Model.SpecialNote, UpdateSourceTrigger=PropertyChanged}"
-                         ToolTip="特别标注，整理文件名时放在语言后面，如 (汉化版)" />
 
-                <TextBlock Grid.Row="13" Grid.Column="1" Grid.ColumnSpan="3" Text="{Binding Error}"
+                <TextBlock Grid.Row="14" Grid.Column="1" Grid.ColumnSpan="3" Text="{Binding Error}"
                            Foreground="{StaticResource DangerBrush}" TextWrapping="Wrap" />
             </Grid>
         </ScrollViewer>
