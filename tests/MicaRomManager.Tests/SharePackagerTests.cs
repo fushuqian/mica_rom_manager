@@ -13,9 +13,11 @@ public class SharePackagerTests : IDisposable
     {
         Directory.CreateDirectory(RomDir);
         Directory.CreateDirectory(EmulatorDir);
+        Directory.CreateDirectory(Path.Combine(EmulatorDir, "cores"));
 
         File.WriteAllText(Path.Combine(RomDir, "Super Metroid.sfc"), "rom-data");
         File.WriteAllText(Path.Combine(EmulatorDir, "retroarch.exe"), "exe");
+        File.WriteAllText(Path.Combine(EmulatorDir, "cores", "snes9x_libretro.dll"), "core");
     }
 
     private string RomDir => Path.Combine(_root, "library", "SNES");
@@ -43,6 +45,7 @@ public class SharePackagerTests : IDisposable
             InstallDir = EmulatorDir,
             ExePath = "retroarch.exe",
             ArgsTemplate = "\"{rom}\"",
+            CorePath = "cores\\snes9x_libretro.dll",
             Version = "1.19",
         };
 
@@ -83,6 +86,7 @@ public class SharePackagerTests : IDisposable
         var script = File.ReadAllText(launcher);
         Assert.Contains("chcp 65001", script);
         Assert.Contains("emulators\\RetroArch\\retroarch.exe", script);
+        Assert.Contains("cores\\snes9x_libretro.dll", script);
         Assert.Contains("roms\\Super Metroid\\Super Metroid.sfc", script);
 
         Assert.True(File.Exists(Path.Combine(result.PackageDir, "manifest.json")));

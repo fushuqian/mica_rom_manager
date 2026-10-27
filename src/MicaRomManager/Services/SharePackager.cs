@@ -159,9 +159,8 @@ public sealed class SharePackager
 
                 layouts.TryGetValue((item.Emulator.Id, item.Game.Platform), out var layout);
                 var platformSetting = AppServices.Platforms?.Get(item.Game.Platform);
-                var argsTemplate = string.IsNullOrWhiteSpace(platformSetting?.ArgsTemplate)
-                    ? "\"{rom}\""
-                    : platformSetting.ArgsTemplate;
+                var argsTemplate = ArgsBuilder.ResolveTemplate(
+                    platformSetting?.ArgsTemplate, item.Emulator.Name, item.Emulator.ArgsTemplate);
 
                 var exeExpression = layout?.ExeRelative
                                     ?? EmulatorPaths.ResolveExe(item.Emulator)

@@ -2,6 +2,7 @@
 
 ## 2026-10-27
 
+- 平台级启动参数为空时不能固定回退 `"{rom}"`：应沿用模拟器自带 `ArgsTemplate`；RetroArch 必须带 `-L "{core}" "{rom}"`，否则双击没有核心直接启动失败。平台设置里选 RetroArch 时自动补默认参数，后台解析也要有同样的兜底。
 - 主界面筛选侧栏用 ListBox 绑定 `SelectedItem` 时，重建列表的 `Clear()` 会把选中值写成 null；在字段的 `OnXxxChanged` 里对 null 直接 return，才能保证筛选不被意外清空，重建后再按名字回填选中项。
 - 状态字段不能只靠用户手填：在 `AddPlayStats` 落库时用 `CASE WHEN status='未玩' THEN '在玩'` 同步，迁移里也要把 `play_count > 0` 的历史「未玩」修正，否则用户会觉得状态「没用」。
 - 评分星标放在 DataGrid 只读 CellTemplate 里点击时，要同时处理行双击启动：`OnRowDoubleClick` 中判断原始命中的 `DataGridCell.Column` 是否为评分列，避免连点星标误启动游戏。

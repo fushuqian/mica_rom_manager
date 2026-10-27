@@ -48,4 +48,37 @@ public class LauncherArgsTests
     {
         Assert.Equal(expected, ArgsBuilder.RequiresCore(template));
     }
+
+    [Fact]
+    public void ResolveTemplate_PrefersPlatformTemplate()
+    {
+        Assert.Equal("--fullscreen",
+            ArgsBuilder.ResolveTemplate("--fullscreen", "RetroArch", "-L \"{core}\" \"{rom}\""));
+    }
+
+    [Fact]
+    public void ResolveTemplate_UsesEmulatorTemplateWithCore()
+    {
+        Assert.Equal("-L \"{core}\" \"{rom}\"",
+            ArgsBuilder.ResolveTemplate("", "My Emulator", "-L \"{core}\" \"{rom}\""));
+    }
+
+    [Fact]
+    public void ResolveTemplate_RetroArchNameGetsDefaultEvenWithPlainTemplate()
+    {
+        Assert.Equal(ArgsBuilder.RetroArchDefaultTemplate,
+            ArgsBuilder.ResolveTemplate(null, "RetroArch", "\"{rom}\""));
+    }
+
+    [Fact]
+    public void ResolveTemplate_NonCoreEmulatorKeepsOwnTemplate()
+    {
+        Assert.Equal("\"{rom}\"", ArgsBuilder.ResolveTemplate(null, "Dolphin", "\"{rom}\""));
+    }
+
+    [Fact]
+    public void ResolveTemplate_EmptyFallsBackToRom()
+    {
+        Assert.Equal("\"{rom}\"", ArgsBuilder.ResolveTemplate(null, "Dolphin", ""));
+    }
 }

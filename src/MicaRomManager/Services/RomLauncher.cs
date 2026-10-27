@@ -41,9 +41,8 @@ public sealed class RomLauncher
         }
 
         var platformSetting = AppServices.Platforms.Get(game.Platform);
-        var argsTemplate = string.IsNullOrWhiteSpace(platformSetting?.ArgsTemplate)
-            ? "\"{rom}\""
-            : platformSetting.ArgsTemplate;
+        var argsTemplate = ArgsBuilder.ResolveTemplate(
+            platformSetting?.ArgsTemplate, emulator.Name, emulator.ArgsTemplate);
 
         var corePath = EmulatorPaths.ResolvePlatformCore(emulator, platformSetting?.CorePath)
                        ?? EmulatorPaths.ResolveCore(emulator);
