@@ -160,6 +160,8 @@
                   SelectionChanged="OnSelectionChanged"
                   MouseDoubleClick="OnRowDoubleClick"
                   CellEditEnding="OnCellEditEnding"
+                  RowEditEnding="OnRowEditEnding"
+                  CurrentCellChanged="OnCurrentCellChanged"
                   ContextMenuOpening="OnContextMenuOpening">
             <DataGrid.ContextMenu>
                 <ContextMenu DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">

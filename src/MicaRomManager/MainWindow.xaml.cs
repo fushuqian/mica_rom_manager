@@ -224,6 +224,16 @@ public partial class MainWindow : Window
         Dispatcher.BeginInvoke(() => _viewModel.SaveInline(game), DispatcherPriority.Background);
     }
 
+    private void OnRowEditEnding(object sender, DataGridRowEditEndingEventArgs e)
+    {
+        Dispatcher.BeginInvoke(_viewModel.RefreshFilterAfterEdit, DispatcherPriority.ApplicationIdle);
+    }
+
+    private void OnCurrentCellChanged(object sender, EventArgs e)
+    {
+        Dispatcher.BeginInvoke(_viewModel.RefreshFilterAfterEdit, DispatcherPriority.ApplicationIdle);
+    }
+
     private void OnPreviewKeyDown(object sender, KeyEventArgs e)
     {
         if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.F)

@@ -167,10 +167,26 @@ public partial class MainViewModel : ObservableObject
             value?.Contains(keyword, StringComparison.OrdinalIgnoreCase) == true;
     }
 
+    private bool _refreshPending;
+
     private void ApplyFilter()
     {
+        // DataGrid 行仍处于编辑事务时 Refresh 会抛异常，先记下待刷新，等提交后补刷新。
+        if (GamesView is IEditableCollectionView editable && editable.IsEditingItem)
+        {
+            _refreshPending = true;
+            return;
+        }
+
         GamesView.Refresh();
         FilteredCount = GamesView.Cast<object>().Count();
+        _refreshPending = false;
+    }
+
+    /// <summary>行编辑结束后补做挂起的筛选刷新。</summary>
+    public void RefreshFilterAfterEdit()
+    {
+        if (_refreshPending) ApplyFilter();
     }
 
     private void RefreshLookups()
