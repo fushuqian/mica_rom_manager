@@ -4,6 +4,7 @@
 
 - 「特注」是独立字段，不是备注/标签的别名；整理文件名顺序固定为 `标题 [Disc-n] (区域)(语言)(特注).扩展名`，新增字段要同步 schema、仓储、编辑窗口与整理逻辑。
 - DataGrid 行内编辑时不能直接 `ICollectionView.Refresh()`，否则切格会抛「AddNew 或 EditItem 事务过程中不允许 Refresh」；ApplyFilter 要先判断 `IEditableCollectionView.IsEditingItem`，挂起刷新并在 RowEditEnding / CurrentCellChanged 后补做。
+- 左侧平台列表刷新不要 `Clear()` 后重建：选中项会被绑定写成 null，视觉上像筛选被重置。改为按名字增量增删/移动并更新计数，保持项目对象不变，选中状态自然保留；「清除筛选」也不应改 `SelectedPlatform`。
 - 平台级启动参数是「额外参数」，语义为「模拟器默认参数 + 平台额外参数」，不是整体覆盖；平台留空就只用模拟器默认参数。界面不要自动把默认参数填进平台框，否则会重复。RetroArch 默认参数必须带 `-L "{core}" "{rom}"`。
 - 主界面筛选侧栏用 ListBox 绑定 `SelectedItem` 时，重建列表的 `Clear()` 会把选中值写成 null；在字段的 `OnXxxChanged` 里对 null 直接 return，才能保证筛选不被意外清空，重建后再按名字回填选中项。
 - 状态字段不能只靠用户手填：在 `AddPlayStats` 落库时用 `CASE WHEN status='未玩' THEN '在玩'` 同步，迁移里也要把 `play_count > 0` 的历史「未玩」修正，否则用户会觉得状态「没用」。

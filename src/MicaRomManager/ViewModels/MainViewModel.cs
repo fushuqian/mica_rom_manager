@@ -233,17 +233,44 @@ public partial class MainViewModel : ObservableObject
         foreach (var name in gamePlatforms.OrderBy(name => name, StringComparer.CurrentCultureIgnoreCase))
             if (!ordered.Contains(name, StringComparer.OrdinalIgnoreCase)) ordered.Add(name);
 
-        var current = SelectedPlatform;
-        PlatformFilters.Clear();
-        PlatformFilters.Add(new PlatformFilterItem(AllPlatforms) { Count = Games.Count });
-        foreach (var name in ordered)
+        // 增量同步而不是 Clear，避免 ListBox 选中项被清空、左侧平台状态被重置。
+        var desired = new List<string> { AllPlatforms };
+        desired.AddRange(ordered);
+
+        for (var index = PlatformFilters.Count - 1; index >= 0; index--)
         {
-            PlatformFilters.Add(new PlatformFilterItem(name)
-            {
-                Count = Games.Count(g => string.Equals(g.Platform, name, StringComparison.OrdinalIgnoreCase)),
-            });
+            if (!desired.Contains(PlatformFilters[index].Name, StringComparer.OrdinalIgnoreCase))
+                PlatformFilters.RemoveAt(index);
         }
 
+        for (var index = 0; index < desired.Count; index++)
+        {
+            var name = desired[index];
+            var count = string.Equals(name, AllPlatforms, StringComparison.Ordinal)
+                ? Games.Count
+                : Games.Count(g => string.Equals(g.Platform, name, StringComparison.OrdinalIgnoreCase));
+
+            if (index < PlatformFilters.Count &&
+                string.Equals(PlatformFilters[index].Name, name, StringComparison.OrdinalIgnoreCase))
+            {
+                PlatformFilters[index].Count = count;
+                continue;
+            }
+
+            var existing = PlatformFilters.FirstOrDefault(item =>
+                string.Equals(item.Name, name, StringComparison.OrdinalIgnoreCase));
+            if (existing != null)
+            {
+                PlatformFilters.Move(PlatformFilters.IndexOf(existing), index);
+                existing.Count = count;
+            }
+            else
+            {
+                PlatformFilters.Insert(index, new PlatformFilterItem(name) { Count = count });
+            }
+        }
+
+        var current = SelectedPlatform;
         _syncingPlatformFilter = true;
         SelectedPlatformFilter = PlatformFilters
             .FirstOrDefault(item => string.Equals(item.Name, current, StringComparison.OrdinalIgnoreCase))
@@ -778,7 +805,6 @@ public partial class MainViewModel : ObservableObject
     private void ClearFilters()
     {
         SearchText = "";
-        SelectedPlatform = AllPlatforms;
         SelectedStatus = AllStatuses;
         SelectedTag = AllTags;
         SelectedRegion = AllRegions;
