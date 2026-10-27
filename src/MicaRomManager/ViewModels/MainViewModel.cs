@@ -612,6 +612,11 @@ public partial class MainViewModel : ObservableObject
         }
 
         var main = games[0];
+        var answer = MessageBox.Show(
+            $"把选中的 {games.Count} 个条目合并为多碟游戏？\n\n第一行「{main.Title}」作为主条目，其余 {games.Count - 1} 条记录会被删除（ROM 文件本身不动）。",
+            "合并为多碟游戏", MessageBoxButton.YesNo, MessageBoxImage.Question);
+        if (answer != MessageBoxResult.Yes) return;
+
         var discs = new List<string>(main.Discs);
         foreach (var other in games.Skip(1))
         {
