@@ -39,6 +39,12 @@ public partial class AiAssistantView : UserControl
             _ = _viewModel.ConfirmAsync(message);
     }
 
+    private void Shuffle_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement { DataContext: AiChatMessage message } && _viewModel != null)
+            _ = _viewModel.ShuffleAsync(message);
+    }
+
     private void Cancel_Click(object sender, RoutedEventArgs e)
     {
         if (sender is FrameworkElement { DataContext: AiChatMessage message })

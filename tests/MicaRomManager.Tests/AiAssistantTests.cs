@@ -110,6 +110,32 @@ public class AiAssistantTests
     }
 
     [Fact]
+    public async Task LaunchGame_WithoutIdReturnsThreeButtonSuggestion()
+    {
+        var host = new FakeHost(new[]
+        {
+            new Game { Id = 1, Title = "002", Platform = "GBA", Status = GameStatus.NotPlayed },
+            new Game { Id = 2, Title = "洛克人X4", Platform = "PlayStation", Status = GameStatus.NotPlayed },
+            new Game { Id = 3, Title = "超级银河战士", Platform = "SNES", Status = GameStatus.Playing },
+        });
+
+        var result = await new AiToolExecutor().ExecuteAsync(
+            Tool("launch_game", "{}"), host, CancellationToken.None);
+
+        Assert.NotNull(result.Pending);
+        Assert.True(result.Pending!.IsLaunchSuggestion);
+        Assert.NotNull(result.Pending.AlternativeAsync);
+        Assert.DoesNotContain("002", result.Pending.Summary);
+
+        await result.Pending.ExecuteAsync();
+        Assert.Equal(1, host.LaunchCalls);
+
+        var alternative = await result.Pending.AlternativeAsync!();
+        Assert.NotNull(alternative);
+        Assert.NotEqual(result.Pending.Summary, alternative!.Summary);
+    }
+
+    [Fact]
     public async Task AssistantService_RunsToolThenReturnsFinalText()
     {
         var host = new FakeHost(new[]
@@ -220,6 +246,7 @@ public class AiAssistantTests
         public List<Game> Games { get; }
         public int UpdateCalls { get; private set; }
         public int DeleteCalls { get; private set; }
+        public int LaunchCalls { get; private set; }
         public bool LastRecycleFlag { get; private set; }
         public AiQueryFilter? LastFilter { get; private set; }
         public string LastWindow { get; private set; } = "";
@@ -256,6 +283,7 @@ public class AiAssistantTests
 
         public bool LaunchGame(long id, int discIndex, out string message)
         {
+            LaunchCalls++;
             message = "ok";
             return true;
         }

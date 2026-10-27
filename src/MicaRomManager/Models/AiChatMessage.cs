@@ -17,8 +17,8 @@ public partial class AiChatMessage : ObservableObject
 {
     public AiChatKind Kind { get; init; }
     public DateTime Time { get; init; } = DateTime.Now;
-    public AiPendingAction? Pending { get; init; }
 
+    [ObservableProperty] private AiPendingAction? pending;
     [ObservableProperty] private string text = "";
     [ObservableProperty] private bool isResolved;
 

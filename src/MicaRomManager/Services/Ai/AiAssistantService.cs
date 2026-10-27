@@ -52,6 +52,20 @@ public sealed class AiAssistantService
         return await RunLoopAsync(host, token);
     }
 
+    /// <summary>启动推荐等无需模型继续总结的操作：只回填 tool 结果，不再发起一轮请求。</summary>
+    public void ResolvePending(string executionResult)
+    {
+        if (_pendingToolCallId == null) return;
+
+        AddHistory(new AiChatMessage
+        {
+            Role = "tool",
+            ToolCallId = _pendingToolCallId,
+            Content = executionResult,
+        });
+        _pendingToolCallId = null;
+    }
+
     public void CancelPending()
     {
         if (_pendingToolCallId == null) return;
@@ -161,12 +175,13 @@ public sealed class AiAssistantService
             规则：
             1. 始终用简体中文回答，语气简洁直接。
             2. 需要读取游戏库或操作应用时，必须调用提供的工具，不要只口头答应。
-            3. 所有写操作（改元数据、改设置、启动、发送、删除、保存设备配置）都会生成确认卡片；在用户确认前，不得声称已经执行。
-            4. 删除类操作必须先说明后果：只删记录，还是把文件移到回收站。
-            5. 游戏咨询可以结合 get_game 返回的元数据和你的知识回答「好不好玩/介绍一下/这是啥游戏」；不确定的信息要明确说明，不要编造年份、发行商或开发商。
-            6. 不确定游戏 id 时，先用 query_games 查询，不要猜。
-            7. 永远不要读取、输出或索要 API Key。
-            8. 回答保持简短；需要展示多个游戏时最多列 10 条。
+            3. 所有写操作（改元数据、改设置、发送、删除、保存设备配置）都会生成确认卡片；在用户确认前，不得声称已经执行。
+            4. 启动游戏不需要额外确认：用户说「随便推荐一个/不知道玩什么」时，直接调用 launch_game 且不传 game_id，不要先在文字里反复询问；界面会显示「启动 / 换一个 / 算了」，由用户自己决定。
+            5. 删除类操作必须先说明后果：只删记录，还是把文件移到回收站。
+            6. 游戏咨询可以结合 get_game 返回的元数据和你的知识回答「好不好玩/介绍一下/这是啥游戏」；不确定的信息要明确说明，不要编造年份、发行商或开发商。
+            7. 不确定游戏 id 时，先用 query_games 查询，不要猜。
+            8. 永远不要读取、输出或索要 API Key。
+            9. 回答保持简短；需要展示多个游戏时最多列 10 条。
             """;
     }
 }

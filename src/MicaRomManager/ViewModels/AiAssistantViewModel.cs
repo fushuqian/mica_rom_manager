@@ -130,6 +130,12 @@ public partial class AiAssistantViewModel : ObservableObject
                 Text = "已执行：" + Shorten(execution, 140),
             });
 
+            if (pending.IsLaunchSuggestion)
+            {
+                _service.ResolvePending(execution);
+                return;
+            }
+
             var result = await _service.CompletePendingAsync(execution, _host, _cts.Token);
             HandleResult(result);
         }
@@ -150,6 +156,29 @@ public partial class AiAssistantViewModel : ObservableObject
             _cts?.Dispose();
             _cts = null;
             SaveHistory();
+        }
+    }
+
+    /// <summary>「换一个」：本地换一个候选，不再请求模型。</summary>
+    public async Task ShuffleAsync(AiChatItem message)
+    {
+        if (message.Pending?.AlternativeAsync == null || message.IsResolved || IsBusy) return;
+
+        try
+        {
+            var next = await message.Pending.AlternativeAsync();
+            if (next == null)
+            {
+                Add(new AiChatItem { Kind = AiChatKind.Tool, Text = "没有其它可选的游戏了。" });
+                return;
+            }
+
+            message.Pending = next;
+            message.Text = next.Title;
+        }
+        catch (Exception ex)
+        {
+            AddError($"换一个失败：{ex.Message}");
         }
     }
 

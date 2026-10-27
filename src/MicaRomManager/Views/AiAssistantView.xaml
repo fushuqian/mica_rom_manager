@@ -79,8 +79,44 @@
                                         </StackPanel>
                                         <TextBlock Text="{Binding Pending.Summary}" TextWrapping="Wrap"
                                                    Margin="0,6,0,0" Foreground="{StaticResource TextSecondaryBrush}" />
-                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0"
-                                                    Visibility="{Binding ShowPendingButtons, Converter={StaticResource BoolToVis}}">
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0">
+                                            <StackPanel.Style>
+                                                <Style TargetType="StackPanel">
+                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                    <Style.Triggers>
+                                                        <MultiDataTrigger>
+                                                            <MultiDataTrigger.Conditions>
+                                                                <Condition Binding="{Binding ShowPendingButtons}" Value="True" />
+                                                                <Condition Binding="{Binding Pending.IsLaunchSuggestion}" Value="True" />
+                                                            </MultiDataTrigger.Conditions>
+                                                            <Setter Property="Visibility" Value="Visible" />
+                                                        </MultiDataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </StackPanel.Style>
+                                            <Button Content="算了" Click="Cancel_Click"
+                                                    Style="{StaticResource SecondaryButtonStyle}" FontSize="12" Padding="10,4" />
+                                            <Button Content="换一个" Click="Shuffle_Click" Margin="6,0,0,0"
+                                                    Style="{StaticResource SecondaryButtonStyle}" FontSize="12" Padding="10,4" />
+                                            <Button Content="启动" Click="Confirm_Click" Margin="6,0,0,0"
+                                                    Style="{StaticResource PrimaryButtonStyle}" FontSize="12" Padding="12,4" />
+                                        </StackPanel>
+
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0">
+                                            <StackPanel.Style>
+                                                <Style TargetType="StackPanel">
+                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                    <Style.Triggers>
+                                                        <MultiDataTrigger>
+                                                            <MultiDataTrigger.Conditions>
+                                                                <Condition Binding="{Binding ShowPendingButtons}" Value="True" />
+                                                                <Condition Binding="{Binding Pending.IsLaunchSuggestion}" Value="False" />
+                                                            </MultiDataTrigger.Conditions>
+                                                            <Setter Property="Visibility" Value="Visible" />
+                                                        </MultiDataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </StackPanel.Style>
                                             <Button Content="取消" Click="Cancel_Click"
                                                     Style="{StaticResource SecondaryButtonStyle}" FontSize="12" Padding="10,4" />
                                             <Button Content="确认执行" Click="Confirm_Click" Margin="6,0,0,0"

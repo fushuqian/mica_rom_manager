@@ -8,6 +8,8 @@
 - `JsonElement?` 用 `if (x == null) return` 之后编译器不会自动收窄可空结构体，后续要显式 `.Value`。
 - 主窗口右侧面板用固定像素列 + GridSplitter；开关时同时改两个 ColumnDefinition 宽度（分隔条列与助手列），并把状态存 `ui.assistant_open`。
 - `ScrollViewer` 里放 `ItemsControl` 做聊天流，集合变化后用 `Dispatcher.BeginInvoke(..., DispatcherPriority.Background)` 调 `ScrollToEnd()`，否则布局未完成会滚不到底。
+- 启动推荐是独立卡片类型（启动/换一个/算了），不套用通用「确认执行」；「换一个」本地随机切换，不重新请求模型，避免额外等待和费用。
+- 库里大量 GBA 条目标题是纯数字（002、003…）且元数据空白；随机推荐要先排除纯数字标题，并优先未玩/在玩、文件存在的游戏。
 
 ## 2026-10-27（AI 接入）
 

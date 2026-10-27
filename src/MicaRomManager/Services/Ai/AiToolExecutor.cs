@@ -319,22 +319,68 @@ public sealed class AiToolExecutor
     {
         var root = Args(call);
         var id = Int(root, "game_id");
-        if (id == null) return Error(call, "缺少 game_id。");
         var discIndex = Math.Max(0, Int(root, "disc_index") ?? 0);
 
-        var game = host.AllGames.FirstOrDefault(item => item.Id == id.Value);
-        if (game == null) return Error(call, "没有找到指定游戏。");
+        var game = id is int gameId
+            ? host.AllGames.FirstOrDefault(item => item.Id == gameId)
+            : PickLaunchCandidate(host, null);
+        if (game == null) return Error(call, "库里没有可启动的游戏。");
 
-        return Pending(call, new AiPendingAction
+        return Pending(call, BuildLaunchAction(host, game, discIndex));
+    }
+
+    /// <summary>启动推荐：优先有名字、未玩/在玩、文件存在的游戏。</summary>
+    private static Game? PickLaunchCandidate(IAiAppHost host, long? excludeId)
+    {
+        var pool = host.FilteredGames.Count > 0 ? host.FilteredGames : host.AllGames;
+        var candidates = pool
+            .Where(game => game.Id != excludeId && !game.IsMissing)
+            .ToList();
+        if (candidates.Count == 0) return null;
+
+        var named = candidates
+            .Where(game => !string.IsNullOrWhiteSpace(game.Title)
+                           && !System.Text.RegularExpressions.Regex.IsMatch(game.Title.Trim(), @"^\d+$"))
+            .ToList();
+        if (named.Count == 0) named = candidates;
+
+        var preferred = named
+            .Where(game => game.Status is GameStatus.NotPlayed or GameStatus.Playing)
+            .ToList();
+        if (preferred.Count > 0) named = preferred;
+
+        return named[Random.Shared.Next(named.Count)];
+    }
+
+    private static AiPendingAction BuildLaunchAction(IAiAppHost host, Game game, int discIndex)
+    {
+        var discs = game.Discs.Count;
+        var index = discs == 0 ? 0 : Math.Clamp(discIndex, 0, discs - 1);
+        var details = new List<string> { game.Platform };
+        if (game.ReleaseYear is int year) details.Add(year.ToString());
+        details.Add(game.Status);
+        if (game.Rating > 0) details.Add($"{game.Rating} 星");
+        if (game.IsMultiDisc) details.Add($"第 {index + 1}/{discs} 碟");
+
+        var summary = $"{game.Title}\n{string.Join(" · ", details.Where(item => !string.IsNullOrWhiteSpace(item)))}";
+        if (!string.IsNullOrWhiteSpace(game.Tags)) summary += $"\n标签：{game.Tags}";
+
+        return new AiPendingAction
         {
             Title = "启动游戏",
-            Summary = $"将启动「{game.Title}」" + (game.IsMultiDisc ? $"（第 {discIndex + 1} 碟）" : ""),
+            Summary = summary,
+            IsLaunchSuggestion = true,
+            AlternativeAsync = () =>
+            {
+                var next = PickLaunchCandidate(host, game.Id);
+                return Task.FromResult(next == null ? null : BuildLaunchAction(host, next, 0));
+            },
             ExecuteAsync = () =>
             {
-                var ok = host.LaunchGame(id.Value, discIndex, out var message);
+                var ok = host.LaunchGame(game.Id, index, out var message);
                 return Task.FromResult(JsonSerializer.Serialize(new { ok, message }, JsonOptions));
             },
-        });
+        };
     }
 
     private static AiToolExecution SendGames(AiToolCall call, IAiAppHost host)
