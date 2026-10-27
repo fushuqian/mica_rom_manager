@@ -1,5 +1,14 @@
 # 经验记录（MEMORIES）
 
+## 2026-10-27（AI 助手）
+
+- 服务层的 `AiChatMessage` 与 UI 展示模型 `MicaRomManager.Models.AiChatMessage` 同名，引用两个命名空间会歧义；ViewModel 里用 `using AiChatItem = ...` 别名，测试里用 `AiWireMessage` 别名。
+- OpenAI 工具调用一轮里如果有多个 `tool_calls`，必须在下一轮请求前给**每个** call id 补 tool 消息；遇到待确认操作时，后续未执行的 call 也要回一条「未执行」占位，否则历史不合法。
+- 写操作不要在工具执行时直接落库；只返回 PendingAction，让 UI 确认后再执行，再把执行结果作为 tool 消息喂回模型继续总结。
+- `JsonElement?` 用 `if (x == null) return` 之后编译器不会自动收窄可空结构体，后续要显式 `.Value`。
+- 主窗口右侧面板用固定像素列 + GridSplitter；开关时同时改两个 ColumnDefinition 宽度（分隔条列与助手列），并把状态存 `ui.assistant_open`。
+- `ScrollViewer` 里放 `ItemsControl` 做聊天流，集合变化后用 `Dispatcher.BeginInvoke(..., DispatcherPriority.Background)` 调 `ScrollToEnd()`，否则布局未完成会滚不到底。
+
 ## 2026-10-27（AI 接入）
 
 - 含 JSON 的提示词用 `$$"""..."""` 原始插值字符串：字面量花括号直接写，插值表达式用 `{{...}}`；用单个 `$` 会把 JSON 的 `{` 当成插值起始而编译失败。

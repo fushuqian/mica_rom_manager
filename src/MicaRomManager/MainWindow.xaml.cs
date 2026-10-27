@@ -18,14 +18,19 @@ namespace MicaRomManager;
 public partial class MainWindow : Window
 {
     private readonly MainViewModel _viewModel;
+    private readonly AiAssistantViewModel _assistantViewModel;
 
     private const string ViewStateKey = "list_view_state";
+    private const string AssistantOpenKey = "ui.assistant_open";
 
     public MainWindow()
     {
         InitializeComponent();
         _viewModel = new MainViewModel();
         DataContext = _viewModel;
+        _assistantViewModel = new AiAssistantViewModel(_viewModel);
+        AssistantPanel.DataContext = _assistantViewModel;
+        AssistantPanel.CloseRequested += (_, _) => SetAssistantOpen(false);
         Loaded += OnLoaded;
         Closing += (_, _) => SaveViewState();
     }
@@ -33,8 +38,32 @@ public partial class MainWindow : Window
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
         RestoreViewState();
+        RestoreAssistantState();
         SearchBox.Focus();
         Dispatcher.BeginInvoke(CheckPortableLibrary, DispatcherPriority.ApplicationIdle);
+    }
+
+    private void RestoreAssistantState() =>
+        SetAssistantOpen(AppServices.Settings.GetBool(AssistantOpenKey), persist: false);
+
+    private void ToggleAssistant_Click(object sender, RoutedEventArgs e) =>
+        SetAssistantOpen(AssistantColumn.Width.Value < 1);
+
+    private void SetAssistantOpen(bool open, bool persist = true)
+    {
+        AssistantColumn.Width = new GridLength(open ? 370 : 0);
+        AssistantSplitterColumn.Width = new GridLength(open ? 6 : 0);
+        AssistantPanel.Visibility = open ? Visibility.Visible : Visibility.Collapsed;
+        AssistantSplitter.Visibility = open ? Visibility.Visible : Visibility.Collapsed;
+
+        if (persist) AppServices.Settings.Set(AssistantOpenKey, open.ToString());
+
+        if (!open) return;
+        Dispatcher.BeginInvoke(() =>
+        {
+            AssistantPanel.FocusInput();
+            AssistantPanel.Focus();
+        }, DispatcherPriority.Input);
     }
 
     /// <summary>便携模式下每次启动检查库目录，找不到时让用户重新指定或重建。</summary>

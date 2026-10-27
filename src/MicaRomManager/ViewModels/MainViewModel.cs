@@ -30,7 +30,7 @@ public partial class PlatformFilterItem : ObservableObject
     [ObservableProperty] private int count;
 }
 
-public partial class MainViewModel : ObservableObject
+public partial class MainViewModel : ObservableObject, IAiAppHost
 {
     public const string AllPlatforms = "全部平台";
     public const string AllStatuses = "全部状态";
@@ -718,9 +718,10 @@ public partial class MainViewModel : ObservableObject
     }
 
     /// <summary>把受控查询计划映射到现有筛选条件。</summary>
-    public void ApplyAiFilter(AiQueryPlan plan)
+    public void ApplyAiFilter(AiQueryPlan plan) => ApplyQueryFilter(plan.Filter);
+
+    public void ApplyQueryFilter(AiQueryFilter filter)
     {
-        var filter = plan.Filter;
         _aiGenre = filter.Genre;
         _aiPublisher = filter.Publisher;
         _aiYearMin = filter.YearMin;
@@ -1158,6 +1159,155 @@ public partial class MainViewModel : ObservableObject
         _aiYearMin = null;
         _aiYearMax = null;
         _aiNotFavorite = false;
+    }
+
+    // ---------- AI 助手宿主能力 ----------
+
+    public IReadOnlyList<Game> AllGames => Games;
+
+    IReadOnlyList<Game> IAiAppHost.SelectedGames => SelectedGames;
+
+    public IReadOnlyList<Game> FilteredGames => GamesView.Cast<Game>().ToList();
+
+    public string ConnectedDevice => DeviceConnection?.Summary ?? "";
+
+    public void ApplyLibraryFilter(AiQueryFilter filter) => ApplyQueryFilter(filter);
+
+    public void RefreshLibrary()
+    {
+        RefreshLookups();
+        TotalCount = Games.Count;
+        ApplyFilter();
+        LastRefreshText = $"上次刷新：{DateTime.Now:HH:mm:ss}";
+    }
+
+    public int UpdateGames(IReadOnlyList<long> ids, GamePatch patch)
+    {
+        if (!patch.HasAny) return 0;
+
+        var targets = Games.Where(game => ids.Contains(game.Id)).ToList();
+        foreach (var game in targets)
+        {
+            patch.ApplyTo(game);
+            AppServices.GameRepo.Update(game);
+        }
+
+        RefreshLibrary();
+        StatusMessage = $"AI 已更新 {targets.Count} 条游戏信息";
+        return targets.Count;
+    }
+
+    public int DeleteGames(IReadOnlyList<long> ids, bool recycleFiles)
+    {
+        var targets = Games.Where(game => ids.Contains(game.Id)).ToList();
+        foreach (var game in targets)
+        {
+            if (recycleFiles)
+                foreach (var disc in game.Discs)
+                    FileRecycleBin.MoveToRecycleBin(disc);
+
+            AppServices.GameRepo.Delete(game.Id);
+            Games.Remove(game);
+        }
+
+        TotalCount = Games.Count;
+        RefreshLibrary();
+        SetSelectedGames(Array.Empty<Game>());
+        StatusMessage = recycleFiles
+            ? $"AI 已移到回收站并移除 {targets.Count} 条记录"
+            : $"AI 已从库中移除 {targets.Count} 条记录";
+        return targets.Count;
+    }
+
+    public bool LaunchGame(long id, int discIndex, out string message)
+    {
+        message = "";
+        var game = Games.FirstOrDefault(item => item.Id == id);
+        if (game == null)
+        {
+            message = "没有找到该游戏。";
+            return false;
+        }
+
+        var emulator = EmulatorResolver.Resolve(game, Emulators.ToList(), AppServices.EmulatorRepo);
+        if (emulator == null)
+        {
+            message = $"还没有为平台「{game.Platform}」配置模拟器。";
+            return false;
+        }
+
+        var discs = game.Discs;
+        if (discIndex < 0 || discIndex >= discs.Count)
+        {
+            message = $"碟片序号 {discIndex + 1} 超出范围（共 {discs.Count} 碟）。";
+            return false;
+        }
+
+        if (!AppServices.Launcher.TryLaunch(game, emulator, discs[discIndex], out message))
+            return false;
+
+        StatusMessage = $"AI 已用「{emulator.Name}」启动「{game.Title}」";
+        return true;
+    }
+
+    public string SendGames(IReadOnlyList<long> ids)
+    {
+        if (DeviceConnection == null)
+            return "还没有连接设备，请先点击工具栏「连接到设备」。";
+
+        var games = Games.Where(game => ids.Contains(game.Id)).ToList();
+        if (games.Count == 0) return "没有找到要发送的游戏。";
+
+        AppServices.SendQueue.Enqueue(games, DeviceConnection);
+        ShowTaskWindow();
+        StatusMessage = $"AI 已加入发送队列：{games.Count} 个游戏";
+        return $"已加入发送队列：{games.Count} 个游戏。";
+    }
+
+    public string GetSetting(string key) => AppServices.Settings.Get(key) ?? "";
+
+    public void SetSetting(string key, string value)
+    {
+        AppServices.Settings.Set(key, value);
+        if (key is NetworkClientProvider.ModeKey or NetworkClientProvider.AddressKey)
+            AppServices.RebuildNetwork();
+
+        StatusMessage = $"AI 已修改设置：{key}";
+    }
+
+    public void OpenWindow(string window)
+    {
+        switch (window.Trim().ToLowerInvariant())
+        {
+            case "settings":
+            case "device_settings":
+                OpenSettings();
+                break;
+            case "import":
+                ImportCommand.Execute(null);
+                break;
+            case "share":
+                ShareSelectedCommand.Execute(null);
+                break;
+            case "task_list":
+                OpenTaskListCommand.Execute(null);
+                break;
+            case "connect_device":
+                ConnectDeviceCommand.Execute(null);
+                break;
+            case "scrape":
+                ScrapeCommand.Execute(null);
+                break;
+            case "ai_tags":
+                AiTagsCommand.Execute(null);
+                break;
+            case "ai_translate":
+                AiTranslateCommand.Execute(null);
+                break;
+            case "recommend":
+                RecommendCommand.Execute(null);
+                break;
+        }
     }
 
     [RelayCommand]

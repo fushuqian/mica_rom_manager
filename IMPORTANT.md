@@ -31,3 +31,4 @@
 
 - GitHub Releases API：`https://api.github.com/repos/{owner}/{repo}/releases/latest`，免费，未认证限流 60 次/小时，仅在用户点击时调用。
 - AI：OpenAI 兼容 `/chat/completions`，用户自行填写 BaseUrl / API Key / 模型（设置 → AI）。Key 只存本地 `settings` 表（`ai.api_key`），不写入仓库、文档或日志；日志只记主机、模型与状态码。
+- AI 助手聊天记录：`data\ai-chat.json`（只含 user/assistant 文本，最多 100 条），清空聊天时删除。

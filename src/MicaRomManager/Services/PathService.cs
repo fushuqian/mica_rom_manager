@@ -13,6 +13,7 @@ public sealed class PathService
     public string DownloadsDir => Path.Combine(DataDir, "downloads");
     public string BackupsDir => Path.Combine(EmulatorsDir, ".backup");
     public string DevicesDir => Path.Combine(DataDir, "devices");
+    public string AiChatPath => Path.Combine(DataDir, "ai-chat.json");
 
     public static string TemplatesPath => Path.Combine(AppContext.BaseDirectory, "Resources", "EmulatorTemplates.json");
     public static string DeviceProfilesPath => Path.Combine(AppContext.BaseDirectory, "Resources", "DeviceProfiles.json");

@@ -1,0 +1,156 @@
+<UserControl x:Class="MicaRomManager.Views.AiAssistantView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             FontFamily="{StaticResource AppFontFamily}"
+             FontSize="13"
+             Background="{StaticResource WindowBackgroundBrush}">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0" Background="{StaticResource SurfaceBrush}"
+                BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1" Padding="10,8">
+            <DockPanel>
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                    <Button Content="清空" Command="{Binding ClearCommand}" Style="{StaticResource ToolButtonStyle}"
+                            FontSize="12" Padding="8,4" />
+                    <Button Content="收起" Click="Close_Click" Style="{StaticResource ToolButtonStyle}"
+                            FontSize="12" Padding="8,4" Margin="0" />
+                </StackPanel>
+                <StackPanel>
+                    <TextBlock Text="AI 助手" FontWeight="SemiBold" FontSize="14" />
+                    <TextBlock Text="{Binding ModelText}" FontSize="11"
+                               Foreground="{StaticResource TextSecondaryBrush}" />
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <Grid Grid.Row="1">
+            <ScrollViewer x:Name="MessageScroll" VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled" Padding="8,6">
+                <ItemsControl ItemsSource="{Binding Messages}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Margin="0,5">
+                                <Border Visibility="{Binding IsUser, Converter={StaticResource BoolToVis}}"
+                                        Background="{StaticResource AccentBrush}" CornerRadius="8"
+                                        Padding="10,7" MaxWidth="300" HorizontalAlignment="Right">
+                                    <TextBlock Text="{Binding Text}" Foreground="White" TextWrapping="Wrap" />
+                                </Border>
+
+                                <Border Visibility="{Binding IsAssistant, Converter={StaticResource BoolToVis}}"
+                                        Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource BorderBrush}"
+                                        BorderThickness="1" CornerRadius="8" Padding="10,7"
+                                        MaxWidth="340" HorizontalAlignment="Left">
+                                    <TextBlock Text="{Binding Text}" TextWrapping="Wrap" />
+                                </Border>
+
+                                <TextBlock Visibility="{Binding IsTool, Converter={StaticResource BoolToVis}}"
+                                           Text="{Binding Text}" FontSize="11" TextWrapping="Wrap"
+                                           Foreground="{StaticResource TextSecondaryBrush}"
+                                           HorizontalAlignment="Left" Margin="2,2,0,0" />
+
+                                <TextBlock Visibility="{Binding IsError, Converter={StaticResource BoolToVis}}"
+                                           Text="{Binding Text}" TextWrapping="Wrap"
+                                           Foreground="{StaticResource DangerBrush}" Margin="2,2,0,0" />
+
+                                <Border Visibility="{Binding IsPending, Converter={StaticResource BoolToVis}}"
+                                        Background="{StaticResource SurfaceBrush}" BorderThickness="1"
+                                        CornerRadius="8" Padding="10" Margin="0,2">
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Pending.IsDestructive}" Value="True">
+                                                    <Setter Property="BorderBrush" Value="{StaticResource DangerBrush}" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                    <StackPanel>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="危险操作" FontSize="11" FontWeight="SemiBold"
+                                                       Foreground="{StaticResource DangerBrush}" Margin="0,0,6,0"
+                                                       Visibility="{Binding Pending.IsDestructive, Converter={StaticResource BoolToVis}}" />
+                                            <TextBlock Text="{Binding Pending.Title}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                        </StackPanel>
+                                        <TextBlock Text="{Binding Pending.Summary}" TextWrapping="Wrap"
+                                                   Margin="0,6,0,0" Foreground="{StaticResource TextSecondaryBrush}" />
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0"
+                                                    Visibility="{Binding ShowPendingButtons, Converter={StaticResource BoolToVis}}">
+                                            <Button Content="取消" Click="Cancel_Click"
+                                                    Style="{StaticResource SecondaryButtonStyle}" FontSize="12" Padding="10,4" />
+                                            <Button Content="确认执行" Click="Confirm_Click" Margin="6,0,0,0"
+                                                    Style="{StaticResource PrimaryButtonStyle}" FontSize="12" Padding="10,4" />
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+
+            <StackPanel Margin="16,20,16,0" VerticalAlignment="Top">
+                <StackPanel.Style>
+                    <Style TargetType="StackPanel">
+                        <Setter Property="Visibility" Value="Collapsed" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding HasMessages}" Value="False">
+                                <Setter Property="Visibility" Value="Visible" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </StackPanel.Style>
+                <TextBlock Text="可以让我筛选游戏、改元数据、介绍游戏、识别设备或修改设置。"
+                           TextWrapping="Wrap" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,10" />
+                <ItemsControl ItemsSource="{Binding Suggestions}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Button Content="{Binding}" Tag="{Binding}" Click="Suggestion_Click"
+                                    Style="{StaticResource SecondaryButtonStyle}" FontSize="12"
+                                    Padding="10,5" Margin="0,0,6,6" />
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </Grid>
+
+        <Border Grid.Row="2" Background="{StaticResource SurfaceBrush}"
+                BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0" Padding="8">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <TextBox x:Name="InputBox" Grid.Row="0" MinHeight="64" MaxHeight="110" AcceptsReturn="True"
+                         TextWrapping="Wrap" VerticalContentAlignment="Top" VerticalScrollBarVisibility="Auto"
+                         PreviewKeyDown="Input_PreviewKeyDown"
+                         Text="{Binding Input, UpdateSourceTrigger=PropertyChanged}"
+                         ToolTip="Enter 发送，Shift+Enter 换行" />
+
+                <DockPanel Grid.Row="1" Margin="0,6,0,0">
+                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                        <Button Content="停止" Command="{Binding StopCommand}"
+                                Visibility="{Binding IsBusy, Converter={StaticResource BoolToVis}}"
+                                Style="{StaticResource SecondaryButtonStyle}" FontSize="12" Padding="10,5" />
+                        <Button Content="发送" Command="{Binding SendCommand}" IsEnabled="{Binding CanSend}"
+                                Style="{StaticResource PrimaryButtonStyle}" FontSize="12" Padding="12,5"
+                                Margin="6,0,0,0" />
+                    </StackPanel>
+                    <TextBlock Text="{Binding StatusText}" VerticalAlignment="Center" FontSize="11"
+                               Foreground="{StaticResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis" />
+                </DockPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>
