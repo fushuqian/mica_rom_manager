@@ -26,6 +26,12 @@
                 BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1" Padding="12,8">
             <DockPanel>
                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                    <TextBlock Text="{Binding ConnectionText}" VerticalAlignment="Center" Margin="0,0,8,0"
+                               Foreground="{StaticResource TextSecondaryBrush}" MaxWidth="280"
+                               TextTrimming="CharacterEllipsis" />
+                    <Button Content="断开" Command="{Binding DisconnectDeviceCommand}"
+                            Style="{StaticResource ToolButtonStyle}"
+                            Visibility="{Binding HasConnection, Converter={StaticResource BoolToVis}}" />
                     <Button Command="{Binding OpenSettingsCommand}" Style="{StaticResource ToolButtonStyle}" Margin="0">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="&#xE713;" FontFamily="Segoe MDL2 Assets" FontSize="14" Margin="0,0,6,0" VerticalAlignment="Center" />
@@ -34,7 +40,7 @@
                     </Button>
                 </StackPanel>
 
-                <StackPanel Orientation="Horizontal">
+                <WrapPanel>
                     <TextBlock Text="MICA ROM MANAGER" FontWeight="SemiBold" FontSize="14" VerticalAlignment="Center"
                                Margin="0,0,18,0" Foreground="{StaticResource AccentBrush}" />
                     <Button Command="{Binding ImportCommand}" Style="{StaticResource ToolButtonStyle}">
@@ -67,10 +73,22 @@
                             <TextBlock Text="分享打包" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
+                    <Button Command="{Binding ConnectDeviceCommand}" Style="{StaticResource ToolButtonStyle}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE703;" FontFamily="Segoe MDL2 Assets" FontSize="14" Margin="0,0,6,0" VerticalAlignment="Center" />
+                            <TextBlock Text="{Binding ConnectButtonText}" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
                     <Button Command="{Binding SendSelectedCommand}" Style="{StaticResource ToolButtonStyle}">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="&#xE8B5;" FontFamily="Segoe MDL2 Assets" FontSize="14" Margin="0,0,6,0" VerticalAlignment="Center" />
-                            <TextBlock Text="发送到设备" VerticalAlignment="Center" />
+                            <TextBlock Text="发送" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <Button Command="{Binding OpenTaskListCommand}" Style="{StaticResource ToolButtonStyle}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE9D5;" FontFamily="Segoe MDL2 Assets" FontSize="14" Margin="0,0,6,0" VerticalAlignment="Center" />
+                            <TextBlock Text="任务列表" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
                     <Button Command="{Binding OpenSelectedFolderCommand}" Style="{StaticResource ToolButtonStyle}">
@@ -85,7 +103,7 @@
                             <TextBlock Text="刷新" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
-                </StackPanel>
+                </WrapPanel>
             </DockPanel>
         </Border>
 
@@ -180,6 +198,7 @@
                     <Separator />
                     <MenuItem Header="分享打包…" Command="{Binding ShareSelectedCommand}" />
                     <MenuItem Header="发送到设备…" Command="{Binding SendSelectedCommand}" />
+                    <MenuItem Header="断开设备连接" Command="{Binding DisconnectDeviceCommand}" />
                     <MenuItem Header="打开所在文件夹" Command="{Binding OpenSelectedFolderCommand}" />
                     <MenuItem Header="复制文件路径" Command="{Binding CopySelectedPathCommand}" />
                     <MenuItem Header="设置封面…" Command="{Binding SetCoverCommand}" />

@@ -2,6 +2,8 @@
 
 ## 2026-10-27
 
+- 发送任务队列的「最后一批完成后停队列」和「新任务入队时启动队列」要在同一把锁里判断 IsRunning，处理完再检查队列是否为空，否则收尾与新任务并发时会跑出两个消费循环。
+- 大文件复制进度用 1MB 缓冲直接读写并在回调里节流（约 150ms 一次），既能看到字节级进度，也不会刷爆 UI；每游戏任务的百分比按累计字节算。
 - 跨盘发送时目标路径必须校验在盘根之内，模板里的 `..` 段也要清洗掉；单文件失败只计数+警告，不能中断整批。
 - 设备配置合并优先级：同 Id 用户 `data\devices\*.json` 覆盖内置 `Resources\DeviceProfiles.json`；删掉覆盖文件即恢复内置。
 - TrimUI Smart Pro 的 SD 卡目录规则可看 `Emus\<系统>\config.json` 的 `rompath` 与 `extlist`：`Roms/FC`、`Roms/SFC`、`Roms/PS`、`Roms/MD` 等；`PSBIOS` 是 BIOS 目录、`FFMPEG` 是播放器，不能当游戏平台映射。

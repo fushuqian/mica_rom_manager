@@ -9,6 +9,7 @@ using CommunityToolkit.Mvvm.Input;
 using MicaRomManager.Data;
 using MicaRomManager.Models;
 using MicaRomManager.Services;
+using MicaRomManager.Services.Sending;
 using MicaRomManager.Views;
 using Microsoft.Win32;
 
@@ -64,16 +65,26 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty] private bool isBusy;
     [ObservableProperty] private string statusMessage = "就绪";
     [ObservableProperty] private Game? selectedGame;
+    [ObservableProperty] private DeviceConnection? deviceConnection;
     [ObservableProperty] private int totalCount;
     [ObservableProperty] private int filteredCount;
     [ObservableProperty] private string lastRefreshText = "";
 
     private bool _syncingPlatformFilter;
+    private SendTaskWindow? _taskWindow;
 
     public List<Game> SelectedGames { get; private set; } = new();
 
     public string CountText => $"共 {TotalCount} 款 / 已筛选 {FilteredCount} 款";
     public string DataPathText => $"数据：{AppServices.Paths.DbPath}";
+
+    public bool HasConnection => DeviceConnection != null;
+
+    public string ConnectButtonText => HasConnection ? "更换设备" : "连接到设备";
+
+    public string ConnectionText => DeviceConnection == null
+        ? "未连接设备"
+        : $"已连接：{DeviceConnection.Summary}（{DeviceConnection.PolicyText}）";
 
     public MainViewModel()
     {
@@ -81,6 +92,7 @@ public partial class MainViewModel : ObservableObject
         GamesView.Filter = FilterGame;
 
         AppServices.Launcher.SessionEnded += OnSessionEnded;
+        AppServices.SendQueue.AllCompleted += OnSendQueueCompleted;
         LoadEmulators();
         LoadGames();
     }
@@ -684,6 +696,29 @@ public partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private void ConnectDevice()
+    {
+        if (ShowConnectDialog()) StatusMessage = $"已连接：{DeviceConnection!.Summary}";
+    }
+
+    private bool ShowConnectDialog()
+    {
+        var window = new ConnectDeviceWindow { Owner = Application.Current?.MainWindow };
+        if (window.ShowDialog() != true || window.Connection == null) return false;
+
+        DeviceConnection = window.Connection;
+        return true;
+    }
+
+    [RelayCommand]
+    private void DisconnectDevice()
+    {
+        if (DeviceConnection == null) return;
+        DeviceConnection = null;
+        StatusMessage = "已断开设备连接";
+    }
+
+    [RelayCommand]
     private void SendSelected()
     {
         var games = SelectedGames.ToList();
@@ -694,9 +729,41 @@ public partial class MainViewModel : ObservableObject
             return;
         }
 
-        var window = new DeviceSendWindow(games) { Owner = Application.Current?.MainWindow };
-        window.ShowDialog();
-        StatusMessage = window.Sent ? "已发送到设备" : "已取消发送";
+        if (DeviceConnection == null && !ShowConnectDialog()) return;
+
+        AppServices.SendQueue.Enqueue(games, DeviceConnection!);
+        ShowTaskWindow();
+        StatusMessage = $"已加入发送队列：{games.Count} 个游戏";
+    }
+
+    [RelayCommand]
+    private void OpenTaskList() => ShowTaskWindow();
+
+    private void ShowTaskWindow()
+    {
+        if (_taskWindow == null)
+        {
+            _taskWindow = new SendTaskWindow { Owner = Application.Current?.MainWindow };
+            _taskWindow.Closed += (_, _) => _taskWindow = null;
+        }
+
+        if (!_taskWindow.IsVisible) _taskWindow.Show();
+        _taskWindow.Activate();
+    }
+
+    private void OnSendQueueCompleted(SendQueueSummary summary)
+    {
+        if (summary.Games == 0) return;
+
+        StatusMessage = $"发送任务完成：复制 {summary.Copied}，跳过 {summary.Skipped}，失败 {summary.Failed}";
+        MessageBox.Show(StatusMessage, "发送任务完成", MessageBoxButton.OK, MessageBoxImage.Information);
+    }
+
+    partial void OnDeviceConnectionChanged(DeviceConnection? value)
+    {
+        OnPropertyChanged(nameof(HasConnection));
+        OnPropertyChanged(nameof(ConnectButtonText));
+        OnPropertyChanged(nameof(ConnectionText));
     }
 
     [RelayCommand]
