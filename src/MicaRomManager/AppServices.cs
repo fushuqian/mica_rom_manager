@@ -18,6 +18,7 @@ public static class AppServices
     public static PlatformRepository Platforms { get; private set; } = null!;
     public static NetworkClientProvider Network { get; private set; } = null!;
     public static AiChatClient Ai { get; private set; } = null!;
+    public static AiSearchService Search { get; private set; } = null!;
     public static CoverStore Covers { get; private set; } = null!;
     public static RomLauncher Launcher { get; private set; } = null!;
     public static EmulatorInstaller Installer { get; private set; } = null!;
@@ -36,6 +37,7 @@ public static class AppServices
         Platforms = new PlatformRepository(Db);
         Network = new NetworkClientProvider(Settings);
         Ai = new AiChatClient(Settings, Network);
+        Search = new AiSearchService();
         Covers = new CoverStore(Paths);
         Launcher = new RomLauncher(GameRepo);
         Installer = new EmulatorInstaller(Paths);

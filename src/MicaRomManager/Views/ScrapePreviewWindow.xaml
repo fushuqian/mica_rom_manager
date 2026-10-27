@@ -19,10 +19,13 @@
         <StackPanel Grid.Row="0" Margin="0,0,0,10">
             <TextBlock Style="{StaticResource SectionTitleStyle}" Text="刮削信息" />
             <TextBlock Foreground="{StaticResource TextSecondaryBrush}" Text="{Binding AiHint}" TextWrapping="Wrap" />
+            <TextBlock Margin="0,2,0,0" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}"
+                       Text="{Binding SearchHint}" TextWrapping="Wrap" />
         </StackPanel>
 
         <Grid Grid.Row="1" Margin="0,0,0,10">
             <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
@@ -31,13 +34,17 @@
 
             <CheckBox Grid.Column="0" Content="使用 AI 补全" IsChecked="{Binding UseAi}"
                       IsEnabled="{Binding AiConfigured}" ToolTip="只发送文件名、平台与现有标题，不上传 ROM" />
-            <ComboBox Grid.Column="1" Width="150" SelectedIndex="{Binding Overwrite, Converter={StaticResource BoolToIndexConverter}}">
+            <CheckBox Grid.Column="1" Content="联网搜索" IsChecked="{Binding UseSearch}"
+                      IsEnabled="{Binding CanUseSearch}" Margin="10,0,0,0"
+                      ToolTip="{Binding SearchHint}" />
+            <ComboBox Grid.Column="2" Width="150" Margin="10,0,0,0"
+                      SelectedIndex="{Binding Overwrite, Converter={StaticResource BoolToIndexConverter}}">
                 <ComboBoxItem Content="只补空字段" />
                 <ComboBoxItem Content="覆盖已有值" />
             </ComboBox>
-            <Button Grid.Column="2" Content="开始刮削" Command="{Binding StartCommand}"
+            <Button Grid.Column="3" Content="开始刮削" Margin="10,0,0,0" Command="{Binding StartCommand}"
                     Style="{StaticResource SecondaryButtonStyle}" IsEnabled="{Binding IsRunning, Converter={StaticResource InverseBoolConverter}}" />
-            <TextBlock Grid.Column="3" Margin="12,0,0,0" VerticalAlignment="Center"
+            <TextBlock Grid.Column="4" Margin="12,0,0,0" VerticalAlignment="Center"
                        Foreground="{StaticResource TextSecondaryBrush}" Text="{Binding ProgressText}"
                        TextTrimming="CharacterEllipsis" />
         </Grid>

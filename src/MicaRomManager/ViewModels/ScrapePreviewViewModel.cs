@@ -17,6 +17,7 @@ public partial class ScrapePreviewViewModel : ObservableObject
     public ObservableCollection<ScrapeResult> Rows { get; } = new();
 
     [ObservableProperty] private bool useAi;
+    [ObservableProperty] private bool useSearch;
     [ObservableProperty] private bool overwrite;
     [ObservableProperty] private bool isRunning;
     [ObservableProperty] private string progressText = "";
@@ -24,6 +25,27 @@ public partial class ScrapePreviewViewModel : ObservableObject
     [ObservableProperty] private int applyCount;
 
     public bool AiConfigured => AppServices.Ai.Options.IsConfigured;
+    public bool SearchAvailable => AppServices.Search.CanSearch;
+    public bool CanUseSearch => UseAi && SearchAvailable;
+
+    partial void OnUseAiChanged(bool value)
+    {
+        OnPropertyChanged(nameof(CanUseSearch));
+        if (!value) UseSearch = false;
+    }
+
+    public string SearchHint
+    {
+        get
+        {
+            if (!AiConfigured) return "还没有配置 AI。";
+            if (!AiSearchOptions.IsDeepSeekEndpoint(AiOptions.Load(AppServices.Settings).BaseUrl))
+                return "联网搜索需要 DeepSeek 官方端点（api.deepseek.com）。";
+            if (!AiSearchOptions.Load(AppServices.Settings).Enabled)
+                return "联网搜索未启用，可到 设置 → AI 打开。";
+            return "联网搜索使用 DeepSeek Search API，按成功请求计费。";
+        }
+    }
 
     public string AiHint => AiConfigured
         ? $"已配置模型「{AppServices.Ai.Options.Model}」，AI 只接收文件名、平台与现有标题等文本。"
@@ -33,6 +55,7 @@ public partial class ScrapePreviewViewModel : ObservableObject
     {
         _games = games;
         UseAi = AiConfigured;
+        UseSearch = SearchAvailable;
     }
 
     public async Task RunAsync()
@@ -66,7 +89,7 @@ public partial class ScrapePreviewViewModel : ObservableObject
 
         try
         {
-            var results = await _service.ScrapeAsync(_games, UseAi, Overwrite, progress, _cts.Token);
+            var results = await _service.ScrapeAsync(_games, UseAi, UseSearch, Overwrite, progress, _cts.Token);
             foreach (var result in results) Rows.Add(result);
             ApplyCount = results.Count(r => r.Apply && !r.HasError);
             ProgressText = $"完成：{results.Count} 条候选，其中 {ApplyCount} 条待应用。";

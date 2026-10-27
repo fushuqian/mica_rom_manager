@@ -11,6 +11,7 @@ public sealed class ScraperService
     public async Task<List<ScrapeResult>> ScrapeAsync(
         IReadOnlyList<Game> games,
         bool useAi,
+        bool useSearch,
         bool overwrite,
         IProgress<ScrapeProgress>? progress,
         CancellationToken token)
@@ -33,7 +34,7 @@ public sealed class ScraperService
                 {
                     try
                     {
-                        ai = await provider.ScrapeAsync(game, token);
+                        ai = await provider.ScrapeAsync(game, useSearch, token);
                     }
                     catch (OperationCanceledException)
                     {

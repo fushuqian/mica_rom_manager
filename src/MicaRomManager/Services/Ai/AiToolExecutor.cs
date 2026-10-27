@@ -42,6 +42,7 @@ public sealed class AiToolExecutor
                 "recommend_games" => Recommend(call, host),
                 "get_settings" => GetSettings(call, host),
                 "list_drives" => ListDrives(call),
+                "web_search" => await WebSearchAsync(call, token),
                 "scan_device_tree" => await ScanDeviceTreeAsync(call, token),
                 "update_games" => UpdateGames(call, host),
                 "delete_games" => DeleteGames(call, host),
@@ -226,6 +227,29 @@ public sealed class AiToolExecutor
         }
 
         return Ok(call, new { ok = true, drives });
+    }
+
+    private static async Task<AiToolExecution> WebSearchAsync(AiToolCall call, CancellationToken token)
+    {
+        var root = Args(call);
+        var query = Str(root, "query");
+        if (query.Length == 0) return Error(call, "缺少搜索关键词。");
+
+        var count = Math.Clamp(Int(root, "count") ?? 5, 1, 8);
+        var search = await AppServices.Search.SearchAsync(query, count, token);
+        if (!search.Success) return Error(call, search.Error);
+
+        var results = search.Results.Select(item => new
+        {
+            title = item.Title,
+            url = item.Url,
+            site = item.SiteName,
+            date = item.Date,
+            snippet = item.Snippet,
+            summary = item.Summary.Length <= 600 ? item.Summary : item.Summary[..600],
+        }).ToList();
+
+        return Ok(call, new { ok = true, query, results });
     }
 
     private static async Task<AiToolExecution> ScanDeviceTreeAsync(AiToolCall call, CancellationToken token)

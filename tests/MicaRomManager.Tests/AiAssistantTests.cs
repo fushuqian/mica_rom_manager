@@ -14,6 +14,7 @@ public class AiAssistantTests
         var names = AiToolRegistry.All.Select(tool => tool.Name).ToList();
 
         Assert.Contains("query_games", names);
+        Assert.Contains("web_search", names);
         Assert.Contains("update_games", names);
         Assert.Contains("delete_games", names);
         Assert.Contains("save_device_profile", names);

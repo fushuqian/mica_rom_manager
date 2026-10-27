@@ -1,3 +1,4 @@
+using System.IO;
 using System.Text.Json.Serialization;
 using MicaRomManager.Data;
 using MicaRomManager.Models;
@@ -8,7 +9,7 @@ namespace MicaRomManager.Services.Scraping;
 /// <summary>用 OpenAI 兼容接口补全单条游戏元数据；只发送文本，不上传 ROM。</summary>
 public sealed class AiMetadataProvider
 {
-    public async Task<ScrapeResult> ScrapeAsync(Game game, CancellationToken token)
+    public async Task<ScrapeResult> ScrapeAsync(Game game, bool useSearch, CancellationToken token)
     {
         var result = new ScrapeResult { GameId = game.Id, Source = "AI" };
         if (!AppServices.Ai.Options.IsConfigured)
@@ -17,10 +18,38 @@ public sealed class AiMetadataProvider
             return result;
         }
 
+        var searchContext = "";
+        if (useSearch)
+        {
+            if (!AppServices.Search.CanSearch)
+            {
+                result.Source = "AI（搜索不可用）";
+            }
+            else
+            {
+                var search = await AppServices.Search.SearchAsync(
+                    BuildSearchQuery(game), null, token);
+                if (!search.Success)
+                {
+                    result.Source = "AI（搜索失败）";
+                }
+                else if (search.Results.Count == 0)
+                {
+                    result.Source = "AI（搜索无结果）";
+                }
+                else
+                {
+                    searchContext = AiSearchService.BuildContext(search.Results);
+                    result.Source = "AI+搜索";
+                }
+            }
+        }
+
         var prompt = AiPrompts.MetadataUser(game,
             AppServices.Lookups.List(LookupRepository.Region),
             AppServices.Lookups.List(LookupRepository.Language),
-            AppServices.Lookups.List(LookupRepository.Genre));
+            AppServices.Lookups.List(LookupRepository.Genre),
+            searchContext);
 
         var response = await AppServices.Ai.CompleteAsync(AiPrompts.MetadataSystem, prompt, token);
         if (!response.Success)
@@ -51,6 +80,16 @@ public sealed class AiMetadataProvider
             result.Error = "模型没有返回可用内容。";
 
         return result;
+    }
+
+    private static string BuildSearchQuery(Game game)
+    {
+        var name = game.Title.Trim();
+        if (name.Length == 0 || System.Text.RegularExpressions.Regex.IsMatch(name, @"^\d+$"))
+            name = Path.GetFileNameWithoutExtension(game.RomPath);
+
+        var query = $"{name} {game.Platform} 游戏 发售年份 发行商 开发商".Trim();
+        return query.Length <= 120 ? query : query[..120];
     }
 
     private static string Clean(string? value, int maxLength = 120)

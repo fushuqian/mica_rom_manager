@@ -11,6 +11,9 @@
 - 启动推荐是独立卡片类型（启动/换一个/算了），不套用通用「确认执行」；「换一个」本地随机切换，不重新请求模型，避免额外等待和费用。
 - 「随便推荐一个」必须从**全部游戏**里随机，不能用 `FilteredGames`（否则会被当前筛选限制）；只有用户明确要求按条件推荐时才走筛选。
 - 库里大量 GBA 条目标题是纯数字（002、003…）且元数据空白；随机推荐要先排除纯数字标题，并优先未玩/在玩、文件存在的游戏。
+- DeepSeek 官方联网搜索用 `POST https://api.deepseek.com/v1/tools/search`（Bearer 同一个 API Key），请求 `{query,count,need_content}`，结果有 `snippet/summary/site_name/date`；按成功请求计费，不是按 token。`need_content=false` 时用 `summary` 喂模型足够。
+- 搜索只在 BaseUrl 为 `api.deepseek.com` 时可用；别用 `Contains("deepseek")` 粗略判断，统一走 `AiSearchOptions.IsDeepSeekEndpoint`。
+- 刮削开启搜索时，单条 = 1 次搜索 + 1 次模型；先搜索再拼进提示词，搜索失败不能阻断 AI 兜底。
 
 ## 2026-10-27（AI 接入）
 

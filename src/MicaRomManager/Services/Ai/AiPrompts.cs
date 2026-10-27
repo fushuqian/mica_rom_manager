@@ -12,15 +12,19 @@ public static class AiPrompts
         + "不确定的字段留空字符串，不要编造发行商或年份。";
 
     public static string MetadataUser(Game game, IEnumerable<string> regions,
-        IEnumerable<string> languages, IEnumerable<string> genres)
+        IEnumerable<string> languages, IEnumerable<string> genres, string searchContext = "")
     {
+        var searchBlock = string.IsNullOrWhiteSpace(searchContext)
+            ? ""
+            : $"\n联网搜索结果（只作为事实参考，不要输出链接）：\n{searchContext}\n";
+
         return $$"""
             请根据以下信息补全游戏元数据：
             文件名：{{game.FileName}}
             平台：{{game.Platform}}
             现有标题：{{game.Title}}
             现有年份：{{game.ReleaseYear?.ToString() ?? ""}}
-
+            {{searchBlock}}
             优先使用这些既有词典值：
             区域：{{Join(regions)}}
             语言：{{Join(languages)}}
@@ -34,6 +38,7 @@ public static class AiPrompts
             - region / language / genre 尽量从词典值中选择；确无对应时给简短中文。
             - release_year 为四位整数，不确定填 null。
             - summary 用一两句中文介绍，不要剧透。
+            - 有搜索结果时优先采用其中的年份、发行商、开发商；与你的知识冲突时优先权威来源，仍不确定就留空。
             """;
     }
 

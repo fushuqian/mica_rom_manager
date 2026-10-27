@@ -231,6 +231,9 @@
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
                     <TextBlock Grid.Row="0" Grid.Column="0" Text="预设" Style="{StaticResource FieldLabelStyle}" />
@@ -268,18 +271,33 @@
                     <TextBox x:Name="AiBatchLimitBox" Grid.Row="5" Grid.Column="1" Width="120" HorizontalAlignment="Left"
                              Margin="0,0,0,12" ToolTip="1–200 条；超过时请分批处理" />
 
-                    <StackPanel Grid.Row="6" Grid.Column="1" Orientation="Horizontal" Margin="0,4,0,0">
+                    <TextBlock Grid.Row="6" Grid.Column="0" Text="联网搜索" Style="{StaticResource FieldLabelStyle}" />
+                    <StackPanel Grid.Row="6" Grid.Column="1" Margin="0,0,0,12">
+                        <CheckBox x:Name="AiSearchEnabledCheck" Content="允许 AI 联网搜索（刮削 / 助手）"
+                                  ToolTip="使用 DeepSeek 官方 Search API，复用上面的 API Key" />
+                    </StackPanel>
+
+                    <TextBlock Grid.Row="7" Grid.Column="0" Text="搜索结果条数" Style="{StaticResource FieldLabelStyle}" />
+                    <TextBox x:Name="AiSearchMaxBox" Grid.Row="7" Grid.Column="1" Width="120" HorizontalAlignment="Left"
+                             Margin="0,0,0,12" ToolTip="1–10 条；条数不影响单次计费" />
+
+                    <StackPanel Grid.Row="8" Grid.Column="1" Orientation="Horizontal" Margin="0,4,0,0">
                         <Button Content="保存 AI 设置" Width="130" Style="{StaticResource PrimaryButtonStyle}"
                                 Click="SaveAi_Click" />
                         <Button x:Name="AiTestButton" Content="测试连接" Margin="8,0,0,0"
                                 Style="{StaticResource SecondaryButtonStyle}" Click="TestAi_Click" />
+                        <Button x:Name="AiSearchTestButton" Content="测试搜索" Margin="8,0,0,0"
+                                Style="{StaticResource SecondaryButtonStyle}" Click="TestSearch_Click" />
                         <TextBlock x:Name="AiTestText" Margin="12,0,0,0" VerticalAlignment="Center"
                                    Foreground="{StaticResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis" />
                     </StackPanel>
 
-                    <TextBlock Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="3" Margin="0,16,0,0"
+                    <TextBlock Grid.Row="9" Grid.Column="0" Grid.ColumnSpan="3" Margin="0,16,0,0"
                                Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap"
                                Text="说明：API Key 只保存在本机数据库；AI 只接收游戏标题、文件名、平台等文本信息，不上传 ROM、封面或存档。未配置时相关按钮会置灰或只做本地解析。" />
+                    <TextBlock Grid.Row="10" Grid.Column="0" Grid.ColumnSpan="3" Margin="0,6,0,0"
+                               Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap"
+                               Text="联网搜索：使用 DeepSeek 官方 Search API，复用同一个 API Key 和 https://api.deepseek.com/v1 端点；其他 BaseUrl 暂不支持。按成功请求计费（官方定价约 $0.75 / 1000 次，以账单为准）。" />
                 </Grid>
             </TabItem>
 

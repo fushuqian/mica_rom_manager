@@ -689,6 +689,10 @@ public partial class SettingsWindow : Window
         AiTimeoutBox.Text = options.TimeoutSeconds.ToString();
         AiBatchLimitBox.Text = options.BatchLimit.ToString();
         AiPresetCombo.SelectedIndex = 0;
+
+        var search = AiSearchOptions.Load(AppServices.Settings);
+        AiSearchEnabledCheck.IsChecked = search.Enabled;
+        AiSearchMaxBox.Text = search.MaxResults.ToString();
         _loadingAi = false;
     }
 
@@ -757,11 +761,20 @@ public partial class SettingsWindow : Window
             return false;
         }
 
+        if (!int.TryParse(AiSearchMaxBox.Text.Trim(), out var searchLimit) || searchLimit is < 1 or > 10)
+        {
+            MessageBox.Show("搜索结果条数必须是 1–10 之间的整数。", "AI 设置",
+                MessageBoxButton.OK, MessageBoxImage.Warning);
+            return false;
+        }
+
         AppServices.Settings.Set(AiOptions.BaseUrlKey, baseUrl);
         AppServices.Settings.Set(AiOptions.ApiKeyKey, CurrentAiKey());
         AppServices.Settings.Set(AiOptions.ModelKey, AiModelBox.Text.Trim());
         AppServices.Settings.Set(AiOptions.TimeoutKey, timeout.ToString());
         AppServices.Settings.Set(AiOptions.BatchLimitKey, limit.ToString());
+        AppServices.Settings.Set(AiSearchOptions.EnabledKey, (AiSearchEnabledCheck.IsChecked == true).ToString());
+        AppServices.Settings.Set(AiSearchOptions.MaxResultsKey, searchLimit.ToString());
 
         if (showMessage)
             MessageBox.Show("AI 设置已保存。", "AI 设置", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -770,6 +783,39 @@ public partial class SettingsWindow : Window
     }
 
     private void SaveAi_Click(object sender, RoutedEventArgs e) => SaveAiSettings(true);
+
+    private async void TestSearch_Click(object sender, RoutedEventArgs e)
+    {
+        if (!SaveAiSettings(false)) return;
+
+        if (!AppServices.Search.CanSearch)
+        {
+            AiTestText.Text = "搜索不可用：请确认已勾选联网搜索、BaseUrl 为 https://api.deepseek.com/v1、API Key 已填写。";
+            return;
+        }
+
+        AiSearchTestButton.IsEnabled = false;
+        AiTestText.Text = "正在测试搜索…";
+        try
+        {
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(40));
+            var result = await AppServices.Search.SearchAsync("超级银河战士 SNES 游戏 发售年份", 3, cts.Token);
+            AiTestText.Text = !result.Success
+                ? $"搜索失败：{result.Error}"
+                : result.Results.Count == 0
+                    ? "搜索正常，但没有返回结果。"
+                    : $"搜索正常：{result.Results[0].Title}"
+                      + (result.Results[0].SiteName.Length == 0 ? "" : $"（{result.Results[0].SiteName}）");
+        }
+        catch (Exception ex)
+        {
+            AiTestText.Text = $"搜索失败：{ex.Message}";
+        }
+        finally
+        {
+            AiSearchTestButton.IsEnabled = true;
+        }
+    }
 
     private async void TestAi_Click(object sender, RoutedEventArgs e)
     {

@@ -78,6 +78,16 @@ public static class AiToolRegistry
         },
         new AiToolDefinition
         {
+            Name = "web_search",
+            Description = "联网搜索游戏资料。库内信息不足、需要年份/发行商/开发商，或用户问游戏评价时使用；需要用户在 设置 → AI 启用联网搜索（DeepSeek 官方端点）。",
+            Parameters = Schema(new Dictionary<string, object>
+            {
+                ["query"] = String("搜索关键词，最多 128 字，例如「超级银河战士 SNES 发售年份 发行商」"),
+                ["count"] = Integer("返回条数 1-8，默认 5"),
+            }, "query"),
+        },
+        new AiToolDefinition
+        {
             Name = "scan_device_tree",
             Description = "只读扫描指定盘的目录结构，只返回目录名与扩展名统计，不返回文件名或文件内容。",
             Parameters = Schema(new Dictionary<string, object>
