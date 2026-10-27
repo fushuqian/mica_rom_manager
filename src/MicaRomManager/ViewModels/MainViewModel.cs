@@ -684,6 +684,22 @@ public partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private void SendSelected()
+    {
+        var games = SelectedGames.ToList();
+        if (games.Count == 0)
+        {
+            MessageBox.Show("请先在列表中选中要发送的游戏（可按住 Ctrl / Shift 多选）。",
+                "发送到设备", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        var window = new DeviceSendWindow(games) { Owner = Application.Current?.MainWindow };
+        window.ShowDialog();
+        StatusMessage = window.Sent ? "已发送到设备" : "已取消发送";
+    }
+
+    [RelayCommand]
     private void OpenSelectedFolder()
     {
         var path = SelectedGame?.RomPath;

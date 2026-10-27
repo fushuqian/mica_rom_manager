@@ -1,0 +1,144 @@
+<UserControl x:Class="MicaRomManager.Views.DeviceSettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             FontFamily="{StaticResource AppFontFamily}"
+             FontSize="13">
+    <Grid Margin="16">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="250" />
+            <ColumnDefinition Width="16" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <Grid Grid.Column="0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <TextBlock Grid.Row="0" Text="设备列表" Style="{StaticResource SectionTitleStyle}" Margin="0,0,0,6" />
+            <ListBox Grid.Row="1" ItemsSource="{Binding Profiles}"
+                     SelectedItem="{Binding SelectedProfile, Mode=TwoWay}">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Margin="2,4">
+                            <TextBlock Text="{Binding Display}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="{Binding KindDisplay}" FontSize="11"
+                                           Foreground="{StaticResource TextSecondaryBrush}" />
+                                <TextBlock Text="{Binding SourceDisplay}" FontSize="11" Margin="8,0,0,0"
+                                           Foreground="{StaticResource TextSecondaryBrush}" />
+                            </StackPanel>
+                        </StackPanel>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+
+            <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,8,0,0">
+                <Button Content="新增" Width="76" Style="{StaticResource SecondaryButtonStyle}"
+                        Command="{Binding NewProfileCommand}" />
+                <Button Content="刷新" Margin="8,0,0,0" Style="{StaticResource SecondaryButtonStyle}"
+                        Command="{Binding RefreshCommand}" />
+            </StackPanel>
+        </Grid>
+
+        <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <TextBlock Style="{StaticResource SectionTitleStyle}"
+                           Text="{Binding SelectedProfile.Name, FallbackValue=（未选择设备）, TargetNullValue=（未选择设备）}" />
+
+                <Grid Margin="0,8,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="82" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="名称" Style="{StaticResource FieldLabelStyle}" />
+                    <TextBox Grid.Row="0" Grid.Column="1" Margin="0,0,0,8"
+                             Text="{Binding SelectedProfile.Name, UpdateSourceTrigger=PropertyChanged}" />
+
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="品牌 / 型号" Style="{StaticResource FieldLabelStyle}" />
+                    <Grid Grid.Row="1" Grid.Column="1" Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="8" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <TextBox Grid.Column="0" Text="{Binding SelectedProfile.Brand, UpdateSourceTrigger=PropertyChanged}" />
+                        <TextBox Grid.Column="2" Text="{Binding SelectedProfile.Model, UpdateSourceTrigger=PropertyChanged}" />
+                    </Grid>
+
+                    <TextBlock Grid.Row="2" Grid.Column="0" Text="传输方式" Style="{StaticResource FieldLabelStyle}" />
+                    <ComboBox Grid.Row="2" Grid.Column="1" Width="240" HorizontalAlignment="Left" MinHeight="28"
+                              Margin="0,0,0,8" SelectedValuePath="Tag"
+                              SelectedValue="{Binding SelectedProfile.Transport, Mode=TwoWay}">
+                        <ComboBoxItem Content="盘符设备" Tag="drive" />
+                        <ComboBoxItem Content="Android MTP（暂未支持）" Tag="mtp" />
+                    </ComboBox>
+
+                    <TextBlock Grid.Row="3" Grid.Column="0" Text="盘内根目录" Style="{StaticResource FieldLabelStyle}" />
+                    <TextBox Grid.Row="3" Grid.Column="1" Width="240" HorizontalAlignment="Left" Margin="0,0,0,8"
+                             Text="{Binding SelectedProfile.RootFolder, UpdateSourceTrigger=PropertyChanged}" />
+
+                    <TextBlock Grid.Row="4" Grid.Column="0" Text="目录模板" Style="{StaticResource FieldLabelStyle}" />
+                    <StackPanel Grid.Row="4" Grid.Column="1" Margin="0,0,0,8">
+                        <TextBox x:Name="FolderTemplateBox"
+                                 Text="{Binding SelectedProfile.FolderTemplate, UpdateSourceTrigger=PropertyChanged}" />
+                        <TextBlock Margin="0,4,0,0" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap"
+                                   Text="可用占位符：{root} 盘根+根目录，{platform} 平台映射目录，{title} 游戏标题，{year} 年份。例如 {root}/{platform} 或 {root}/{platform}/{title}。" />
+                    </StackPanel>
+
+                    <TextBlock Grid.Row="5" Grid.Column="0" Text="平台映射" Style="{StaticResource FieldLabelStyle}"
+                               VerticalAlignment="Top" Margin="0,4,0,0" />
+                    <StackPanel Grid.Row="5" Grid.Column="1">
+                        <DataGrid ItemsSource="{Binding PlatformFolders}"
+                                  SelectedItem="{Binding SelectedFolderRow, Mode=TwoWay}"
+                                  IsReadOnly="False" CanUserAddRows="True" RowHeight="26"
+                                  MaxHeight="260" AutoGenerateColumns="False"
+                                  Style="{StaticResource AppDataGridStyle}">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="平台名" Binding="{Binding Platform, UpdateSourceTrigger=PropertyChanged}"
+                                                    Width="*" ElementStyle="{StaticResource DataGridTextStyle}" />
+                                <DataGridTextColumn Header="设备目录名" Binding="{Binding Folder, UpdateSourceTrigger=PropertyChanged}"
+                                                    Width="*" ElementStyle="{StaticResource DataGridTextStyle}" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                        <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                            <Button Content="删除选中行" Style="{StaticResource SecondaryButtonStyle}"
+                                    Command="{Binding RemoveFolderRowCommand}" />
+                            <CheckBox Content="允许发送未映射的平台（会按平台原名建目录）" Margin="12,0,0,0"
+                                      VerticalAlignment="Center"
+                                      IsChecked="{Binding SelectedProfile.AllowUnmappedPlatforms}" />
+                        </StackPanel>
+                    </StackPanel>
+                </Grid>
+
+                <TextBlock Text="备注" Style="{StaticResource FieldLabelStyle}" Margin="0,12,0,4" />
+                <TextBox Height="64" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"
+                         VerticalContentAlignment="Top"
+                         Text="{Binding SelectedProfile.Notes, UpdateSourceTrigger=PropertyChanged}" />
+
+                <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                    <Button Content="保存" Width="88" Style="{StaticResource PrimaryButtonStyle}"
+                            Command="{Binding SaveProfileCommand}" />
+                    <Button Content="删除" Width="88" Style="{StaticResource SecondaryButtonStyle}" Margin="8,0,0,0"
+                            Command="{Binding DeleteProfileCommand}" />
+                </StackPanel>
+
+                <TextBlock Margin="0,10,0,0" TextWrapping="Wrap" Foreground="{StaticResource TextSecondaryBrush}"
+                           Text="内置配置保存在 Resources\DeviceProfiles.json；想自定义可直接把 JSON 放到 data\devices\，文件名随意，一个文件一台设备。修改内置配置保存时会生成同 Id 的自定义覆盖，删掉覆盖即恢复内置。" />
+                <TextBlock Margin="0,8,0,0" TextWrapping="Wrap" Foreground="{StaticResource TextSecondaryBrush}"
+                           Text="{Binding StatusMessage}" />
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

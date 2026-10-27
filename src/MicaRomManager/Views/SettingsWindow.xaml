@@ -211,6 +211,10 @@
                 </Grid>
             </TabItem>
 
+            <TabItem Header="设备">
+                <views:DeviceSettingsView />
+            </TabItem>
+
             <TabItem Header="数据维护">
                 <StackPanel Margin="16">
                     <TextBlock Style="{StaticResource SectionTitleStyle}" Text="数据库与数据" />

@@ -12,8 +12,10 @@ public sealed class PathService
     public string LogsDir => Path.Combine(DataDir, "logs");
     public string DownloadsDir => Path.Combine(DataDir, "downloads");
     public string BackupsDir => Path.Combine(EmulatorsDir, ".backup");
+    public string DevicesDir => Path.Combine(DataDir, "devices");
 
     public static string TemplatesPath => Path.Combine(AppContext.BaseDirectory, "Resources", "EmulatorTemplates.json");
+    public static string DeviceProfilesPath => Path.Combine(AppContext.BaseDirectory, "Resources", "DeviceProfiles.json");
 
     public PathService()
     {
@@ -29,6 +31,7 @@ public sealed class PathService
         Directory.CreateDirectory(LogsDir);
         Directory.CreateDirectory(DownloadsDir);
         Directory.CreateDirectory(BackupsDir);
+        Directory.CreateDirectory(DevicesDir);
     }
 
     private static bool IsWritable(string directory)

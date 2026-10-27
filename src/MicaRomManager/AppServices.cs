@@ -1,5 +1,6 @@
 using MicaRomManager.Data;
 using MicaRomManager.Services;
+using MicaRomManager.Services.Devices;
 
 namespace MicaRomManager;
 
@@ -18,6 +19,7 @@ public static class AppServices
     public static RomLauncher Launcher { get; private set; } = null!;
     public static EmulatorInstaller Installer { get; private set; } = null!;
     public static EmulatorUpdater Updater { get; private set; } = null!;
+    public static DeviceProfileStore DeviceProfiles { get; private set; } = null!;
 
     public static void Initialize()
     {
@@ -33,6 +35,7 @@ public static class AppServices
         Launcher = new RomLauncher(GameRepo);
         Installer = new EmulatorInstaller(Paths);
         Updater = new EmulatorUpdater(Network);
+        DeviceProfiles = new DeviceProfileStore(Paths.DevicesDir, PathService.DeviceProfilesPath);
 
         // 旧库里的绝对路径统一规范化为 %DATA% 相对形式（幂等）
         try

@@ -2,6 +2,9 @@
 
 ## 2026-10-27
 
+- 跨盘发送时目标路径必须校验在盘根之内，模板里的 `..` 段也要清洗掉；单文件失败只计数+警告，不能中断整批。
+- 设备配置合并优先级：同 Id 用户 `data\devices\*.json` 覆盖内置 `Resources\DeviceProfiles.json`；删掉覆盖文件即恢复内置。
+- TrimUI Smart Pro 的 SD 卡目录规则可看 `Emus\<系统>\config.json` 的 `rompath` 与 `extlist`：`Roms/FC`、`Roms/SFC`、`Roms/PS`、`Roms/MD` 等；`PSBIOS` 是 BIOS 目录、`FFMPEG` 是播放器，不能当游戏平台映射。
 - 「特注」是独立字段，不是备注/标签的别名；整理文件名顺序固定为 `标题 [Disc-n] (区域)(语言)(特注).扩展名`，新增字段要同步 schema、仓储、编辑窗口与整理逻辑。
 - DataGrid 行内编辑时不能直接 `ICollectionView.Refresh()`，否则切格会抛「AddNew 或 EditItem 事务过程中不允许 Refresh」；ApplyFilter 要先判断 `IEditableCollectionView.IsEditingItem`，挂起刷新并在 RowEditEnding / CurrentCellChanged 后补做。
 - 左侧平台列表刷新不要 `Clear()` 后重建：选中项会被绑定写成 null，视觉上像筛选被重置。改为按名字增量增删/移动并更新计数，保持项目对象不变，选中状态自然保留；「清除筛选」也不应改 `SelectedPlatform`。
