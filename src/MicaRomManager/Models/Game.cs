@@ -22,6 +22,8 @@ public partial class Game : ObservableObject
     [ObservableProperty] private string genre = "";
     [ObservableProperty] private string region = "";
     [ObservableProperty] private string language = "";
+    /// <summary>特别标注，整理文件名时放在语言后面，如「汉化版」。</summary>
+    [ObservableProperty] private string specialNote = "";
     /// <summary>ROM 内容指纹（SHA256；大文件为 fast: 采样指纹）。</summary>
     [ObservableProperty] private string romHash = "";
     /// <summary>多碟游戏的附加碟片路径，换行分隔（第一碟仍是 RomPath）。</summary>
@@ -123,6 +125,7 @@ public partial class Game : ObservableObject
         Genre = other.Genre;
         Region = other.Region;
         Language = other.Language;
+        SpecialNote = other.SpecialNote;
         ReleaseYear = other.ReleaseYear;
         Publisher = other.Publisher;
         Developer = other.Developer;

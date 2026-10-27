@@ -160,6 +160,13 @@ public sealed class Database
             cmd.CommandText = SchemaV10;
             cmd.ExecuteNonQuery();
         }
+
+        if (version < 11)
+        {
+            using var cmd = connection.CreateCommand();
+            cmd.CommandText = SchemaV11;
+            cmd.ExecuteNonQuery();
+        }
     }
 
     /// <summary>把库里已有的标签拆成独立词条写入字典。</summary>
@@ -189,6 +196,11 @@ public sealed class Database
             insert.ExecuteNonQuery();
         }
     }
+
+    private const string SchemaV11 = """
+        ALTER TABLE games ADD COLUMN special_note TEXT NOT NULL DEFAULT '';
+        PRAGMA user_version = 11;
+        """;
 
     private const string SchemaV10 = """
         ALTER TABLE games ADD COLUMN rating INTEGER NOT NULL DEFAULT 0;

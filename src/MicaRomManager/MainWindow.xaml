@@ -255,6 +255,8 @@
                         </DataTemplate>
                     </DataGridTemplateColumn.CellEditingTemplate>
                 </DataGridTemplateColumn>
+                <DataGridTextColumn Header="特注" Binding="{Binding SpecialNote}" Width="96"
+                                    ElementStyle="{StaticResource DataGridTextStyle}" />
                 <DataGridTextColumn Header="类型" Binding="{Binding Genre}" Width="90"
                                     ElementStyle="{StaticResource DataGridTextStyle}" />
                 <DataGridTextColumn Header="年份" Binding="{Binding ReleaseYear}" Width="64"

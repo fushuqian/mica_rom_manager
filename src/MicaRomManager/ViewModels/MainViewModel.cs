@@ -596,6 +596,7 @@ public partial class MainViewModel : ObservableObject
                 Genre = game.Genre,
                 Region = game.Region,
                 Language = game.Language,
+                SpecialNote = game.SpecialNote,
                 ReleaseYear = game.ReleaseYear,
                 Publisher = game.Publisher,
                 Developer = game.Developer,

@@ -42,6 +42,20 @@ public class GameRepositoryTests : IDisposable
     }
 
     [Fact]
+    public void SpecialNote_RoundTrips()
+    {
+        var game = new Game
+        {
+            Title = "D",
+            RomPath = Path.Combine(_dir, "d.chd"),
+            SpecialNote = "汉化版",
+        };
+        _games.Insert(game);
+
+        Assert.Equal("汉化版", _games.ListAll().Single().SpecialNote);
+    }
+
+    [Fact]
     public void AddPlayStats_MarksNotPlayedAsPlaying()
     {
         var game = new Game { Title = "B", RomPath = Path.Combine(_dir, "b.chd") };

@@ -16,8 +16,8 @@ public static class LibraryOrganizer
     private const int MaxTitleLength = 150;
 
     /// <summary>
-    /// 生成目标文件名：多碟才带 Disc 号；区域/语言各自非空才带括号。
-    /// 例：新鬼武者 Disc-1 (欧版)(英语).chd
+    /// 生成目标文件名：多碟才带 Disc 号；区域/语言/特注各自非空才带括号，特注排在语言后。
+    /// 例：新鬼武者 Disc-1 (欧版)(英语)(汉化版).chd
     /// </summary>
     public static string BuildFileName(Game game, int discIndex, string sourcePath)
     {
@@ -31,9 +31,11 @@ public static class LibraryOrganizer
 
         var region = JoinValues(game.Region);
         var language = JoinValues(game.Language);
+        var specialNote = JoinValues(game.SpecialNote);
         var suffix = "";
         if (region.Length > 0) suffix += $"({region})";
         if (language.Length > 0) suffix += $"({language})";
+        if (specialNote.Length > 0) suffix += $"({specialNote})";
         if (suffix.Length > 0) builder.Append(' ').Append(suffix);
 
         return builder + Path.GetExtension(sourcePath);

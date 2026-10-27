@@ -68,6 +68,33 @@ public class LibraryOrganizerTests : IDisposable
     }
 
     [Fact]
+    public void BuildFileName_AppendsSpecialNoteAfterLanguage()
+    {
+        var game = NewGame("新鬼武者", "欧版", "英语");
+        game.SpecialNote = "汉化版";
+
+        Assert.Equal("新鬼武者 (欧版)(英语)(汉化版).chd", LibraryOrganizer.BuildFileName(game, 0, game.RomPath));
+    }
+
+    [Fact]
+    public void BuildFileName_SpecialNoteWithoutRegionOrLanguage()
+    {
+        var game = NewGame("新鬼武者");
+        game.SpecialNote = "修改版";
+
+        Assert.Equal("新鬼武者 (修改版).chd", LibraryOrganizer.BuildFileName(game, 0, game.RomPath));
+    }
+
+    [Fact]
+    public void BuildFileName_SanitizesSpecialNote()
+    {
+        var game = NewGame("新鬼武者", "欧版", "英语");
+        game.SpecialNote = "汉化:版";
+
+        Assert.Equal("新鬼武者 (欧版)(英语)(汉化_版).chd", LibraryOrganizer.BuildFileName(game, 0, game.RomPath));
+    }
+
+    [Fact]
     public void BuildFileName_JoinsMultipleValuesWithComma()
     {
         var game = NewGame("新鬼武者", "", "简体中文,英语");

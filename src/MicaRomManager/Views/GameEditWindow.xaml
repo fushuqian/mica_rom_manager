@@ -143,6 +143,10 @@
                           Margin="0,0,0,10"
                           ItemsSource="{Binding RatingOptions}" DisplayMemberPath="Text"
                           SelectedValuePath="Value" SelectedValue="{Binding Model.Rating, Mode=TwoWay}" />
+                <TextBlock Grid.Row="12" Grid.Column="2" Text="特注" Style="{StaticResource FieldLabelStyle}" />
+                <TextBox Grid.Row="12" Grid.Column="3" Margin="0,0,0,10"
+                         Text="{Binding Model.SpecialNote, UpdateSourceTrigger=PropertyChanged}"
+                         ToolTip="特别标注，整理文件名时放在语言后面，如 (汉化版)" />
 
                 <TextBlock Grid.Row="13" Grid.Column="1" Grid.ColumnSpan="3" Text="{Binding Error}"
                            Foreground="{StaticResource DangerBrush}" TextWrapping="Wrap" />
