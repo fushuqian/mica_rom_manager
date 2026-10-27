@@ -22,10 +22,79 @@ public partial class SettingsWindow : Window
         LoadAiSettings();
         LoadLookupKinds();
         LoadPlatforms();
+        LoadPrompts();
         DataDirText.Text = AppServices.Paths.DataDir;
 
         var version = Assembly.GetExecutingAssembly().GetName().Version;
         VersionText.Text = $"版本 {version?.ToString(3) ?? "0.1.0"}";
+    }
+
+    private AiPromptDefinition? _currentPrompt;
+
+    private void LoadPrompts()
+    {
+        PromptList.ItemsSource = AiPromptCatalog.Definitions;
+        PromptList.DisplayMemberPath = "Name";
+        PromptList.SelectedIndex = 0;
+    }
+
+    private void PromptList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        _currentPrompt = PromptList.SelectedItem as AiPromptDefinition;
+        LoadPromptEditor();
+    }
+
+    private void LoadPromptEditor()
+    {
+        if (_currentPrompt == null) return;
+
+        PromptTitleText.Text = _currentPrompt.Name;
+        PromptDescText.Text = _currentPrompt.Description;
+        PromptVarsText.Text = _currentPrompt.Variables.Length == 0
+            ? ""
+            : $"可用变量：{_currentPrompt.Variables}（写错或删掉的变量会原样保留）";
+        PromptSystemBox.Text = AiPromptCatalog.SystemFor(_currentPrompt.Id);
+        PromptUserBox.Text = AiPromptCatalog.UserFor(_currentPrompt.Id);
+
+        var hasUserTemplate = _currentPrompt.DefaultUser.Length > 0;
+        PromptUserLabel.Visibility = hasUserTemplate ? Visibility.Visible : Visibility.Collapsed;
+        PromptUserBox.Visibility = hasUserTemplate ? Visibility.Visible : Visibility.Collapsed;
+        PromptUserLabelRow.Height = hasUserTemplate ? GridLength.Auto : new GridLength(0);
+        PromptUserBoxRow.Height = hasUserTemplate ? new GridLength(1, GridUnitType.Star) : new GridLength(0);
+
+        PromptStatusText.Text = AiPromptCatalog.IsCustomized(_currentPrompt.Id)
+            ? "已自定义。保存后下次 AI 调用生效"
+            : "使用内置默认。保存后下次 AI 调用生效";
+    }
+
+    private void PromptSave_Click(object sender, RoutedEventArgs e)
+    {
+        if (_currentPrompt == null) return;
+
+        AiPromptCatalog.Save(_currentPrompt.Id, PromptSystemBox.Text, PromptUserBox.Text);
+        PromptStatusText.Text = "已保存，下次 AI 调用生效";
+    }
+
+    private void PromptReset_Click(object sender, RoutedEventArgs e)
+    {
+        if (_currentPrompt == null) return;
+
+        AiPromptCatalog.Reset(_currentPrompt.Id);
+        LoadPromptEditor();
+        PromptStatusText.Text = "已恢复内置默认";
+    }
+
+    private void PromptResetAll_Click(object sender, RoutedEventArgs e)
+    {
+        var answer = MessageBox.Show("把所有提示词都恢复为内置默认？", "提示词",
+            MessageBoxButton.YesNo, MessageBoxImage.Question);
+        if (answer != MessageBoxResult.Yes) return;
+
+        foreach (var definition in AiPromptCatalog.Definitions)
+            AiPromptCatalog.Reset(definition.Id);
+
+        LoadPromptEditor();
+        PromptStatusText.Text = "全部提示词已恢复默认";
     }
 
     private void LoadGeneral()

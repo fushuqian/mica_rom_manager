@@ -301,6 +301,67 @@
                 </Grid>
             </TabItem>
 
+            <TabItem Header="提示词">
+                <Grid Margin="16">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="190" />
+                        <ColumnDefinition Width="16" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <ListBox x:Name="PromptList" Grid.Row="0" Grid.RowSpan="2" Grid.Column="0"
+                             SelectionChanged="PromptList_SelectionChanged" />
+
+                    <StackPanel Grid.Row="0" Grid.Column="2" Margin="0,0,0,10">
+                        <TextBlock x:Name="PromptTitleText" Style="{StaticResource SectionTitleStyle}"
+                                   Text="选择左侧提示词" />
+                        <TextBlock x:Name="PromptDescText" Foreground="{StaticResource TextSecondaryBrush}"
+                                   TextWrapping="Wrap" Margin="0,2,0,0" />
+                        <TextBlock x:Name="PromptVarsText" Foreground="{StaticResource TextSecondaryBrush}"
+                                   TextWrapping="Wrap" Margin="0,4,0,0" FontSize="11" />
+                    </StackPanel>
+
+                    <Grid Grid.Row="1" Grid.Column="2">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition x:Name="PromptUserLabelRow" Height="Auto" />
+                            <RowDefinition x:Name="PromptUserBoxRow" Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0" Text="系统提示词" FontWeight="SemiBold" Margin="0,0,0,4" />
+                        <TextBox x:Name="PromptSystemBox" Grid.Row="1" AcceptsReturn="True" TextWrapping="Wrap"
+                                 VerticalScrollBarVisibility="Auto" VerticalContentAlignment="Top"
+                                 FontFamily="Consolas" FontSize="12" Padding="6" Margin="0,0,0,10" />
+
+                        <TextBlock x:Name="PromptUserLabel" Grid.Row="2" Text="用户模板" FontWeight="SemiBold"
+                                   Margin="0,0,0,4" />
+                        <TextBox x:Name="PromptUserBox" Grid.Row="3" AcceptsReturn="True" TextWrapping="Wrap"
+                                 VerticalScrollBarVisibility="Auto" VerticalContentAlignment="Top"
+                                 FontFamily="Consolas" FontSize="12" Padding="6" Margin="0,0,0,10" />
+
+                        <DockPanel Grid.Row="4">
+                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Margin="8,0,0,0">
+                                <Button Content="恢复当前默认" Style="{StaticResource SecondaryButtonStyle}"
+                                        Click="PromptReset_Click" />
+                                <Button Content="全部恢复默认" Style="{StaticResource SecondaryButtonStyle}"
+                                        Margin="8,0,0,0" Click="PromptResetAll_Click" />
+                                <Button Content="保存提示词" Style="{StaticResource PrimaryButtonStyle}"
+                                        Margin="8,0,0,0" Click="PromptSave_Click" />
+                            </StackPanel>
+                            <TextBlock x:Name="PromptStatusText" VerticalAlignment="Center"
+                                       Foreground="{StaticResource TextSecondaryBrush}"
+                                       TextTrimming="CharacterEllipsis" TextWrapping="Wrap" />
+                        </DockPanel>
+                    </Grid>
+                </Grid>
+            </TabItem>
+
             <TabItem Header="数据维护">
                 <StackPanel Margin="16">
                     <TextBlock Style="{StaticResource SectionTitleStyle}" Text="数据库与数据" />
