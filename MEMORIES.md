@@ -1,5 +1,16 @@
 # 经验记录（MEMORIES）
 
+## 2026-10-27（AI 接入）
+
+- 含 JSON 的提示词用 `$$"""..."""` 原始插值字符串：字面量花括号直接写，插值表达式用 `{{...}}`；用单个 `$` 会把 JSON 的 `{` 当成插值起始而编译失败。
+- `AiChatClient` 每次调用从 `settings` 读最新配置；代理变更统一走 `AppServices.RebuildNetwork()`，那里要同时重建 `Ai` 客户端。
+- 兼容各端点时不要依赖 `response_format`；要求模型输出 JSON，再用 `AiJson` 去围栏、取首尾花括号容错解析。
+- `DeviceProfile` 是普通类、没有属性通知；用 AI 建议刷新表单时，要整体替换 `Profiles` 里的对象并重新赋值 `SelectedProfile`，不能只改字段。
+- `Window.GetWindow(vm)` 只接受 `DependencyObject`；在 ViewModel 里找 Owner 用 `Application.Current.Windows.OfType<SettingsWindow>()`。
+- `DriveInfo` 只接受盘根；扫描任意目录做测试或识别时先 `Path.GetPathRoot(fullPath)`。
+- AI 设备识别只上传目录名与扩展名统计，不上传文件名；扫描限制 3 层 / 400 个目录，单目录最多统计 2000 个文件，避免卡死。
+- 自然语言操作不生成 SQL：只接受受控 JSON 白名单（set_status / toggle_favorite / add_tag / remove_tag），校验后作用于当前筛选结果。
+
 ## 2026-10-27
 
 - 发送任务队列的「最后一批完成后停队列」和「新任务入队时启动队列」要在同一把锁里判断 IsRunning，处理完再检查队列是否为空，否则收尾与新任务并发时会跑出两个消费循环。

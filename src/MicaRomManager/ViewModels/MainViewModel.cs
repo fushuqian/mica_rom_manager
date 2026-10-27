@@ -9,6 +9,7 @@ using CommunityToolkit.Mvvm.Input;
 using MicaRomManager.Data;
 using MicaRomManager.Models;
 using MicaRomManager.Services;
+using MicaRomManager.Services.Ai;
 using MicaRomManager.Services.Sending;
 using MicaRomManager.Views;
 using Microsoft.Win32;
@@ -72,6 +73,13 @@ public partial class MainViewModel : ObservableObject
 
     private bool _syncingPlatformFilter;
     private SendTaskWindow? _taskWindow;
+
+    // AI 查询产生的临时条件（仅本次会话有效，清除筛选时一并重置）
+    private string _aiGenre = "";
+    private string _aiPublisher = "";
+    private int? _aiYearMin;
+    private int? _aiYearMax;
+    private bool _aiNotFavorite;
 
     public List<Game> SelectedGames { get; private set; } = new();
 
@@ -152,6 +160,13 @@ public partial class MainViewModel : ObservableObject
         if (item is not Game game) return false;
         if (OnlyFavorites && !game.Favorite) return false;
         if (OnlyMissing && !game.IsMissing) return false;
+        if (_aiNotFavorite && game.Favorite) return false;
+        if (_aiGenre.Length > 0 && !string.Equals(game.Genre, _aiGenre, StringComparison.OrdinalIgnoreCase))
+            return false;
+        if (_aiPublisher.Length > 0 && !string.Equals(game.Publisher, _aiPublisher, StringComparison.OrdinalIgnoreCase))
+            return false;
+        if (_aiYearMin is int minYear && (game.ReleaseYear ?? int.MinValue) < minYear) return false;
+        if (_aiYearMax is int maxYear && (game.ReleaseYear ?? int.MaxValue) > maxYear) return false;
         if (!string.IsNullOrEmpty(SelectedPlatform) && SelectedPlatform != AllPlatforms &&
             !string.Equals(game.Platform, SelectedPlatform, StringComparison.OrdinalIgnoreCase)) return false;
         if (SelectedStatus != AllStatuses &&
@@ -565,6 +580,244 @@ public partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private void AiQuery()
+    {
+        if (!AppServices.Ai.Options.IsConfigured)
+        {
+            var answer = MessageBox.Show("还没有配置 AI。\n\n现在打开设置 → AI 配置？",
+                "AI 查询", MessageBoxButton.YesNo, MessageBoxImage.Information);
+            if (answer == MessageBoxResult.Yes) OpenSettings();
+            return;
+        }
+
+        var window = new AiQueryWindow(Games.ToList()) { Owner = Application.Current?.MainWindow };
+        if (window.ShowDialog() != true || window.Plan == null)
+        {
+            StatusMessage = "已取消 AI 查询";
+            return;
+        }
+
+        ApplyAiFilter(window.Plan);
+        if (window.Plan.Intent == "action")
+        {
+            var affected = ExecuteAiAction(window.Plan);
+            StatusMessage = $"AI 操作完成：影响 {affected} 条";
+        }
+        else
+        {
+            StatusMessage = $"AI 查询已应用：筛选出 {FilteredCount} 条";
+        }
+    }
+
+    [RelayCommand]
+    private void AiTags()
+    {
+        var games = SelectedGames.ToList();
+        if (games.Count == 0)
+        {
+            MessageBox.Show("请先在列表中选中要生成标签的游戏（可按住 Ctrl / Shift 多选）。",
+                "AI 标签", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        if (!AppServices.Ai.Options.IsConfigured)
+        {
+            var answer = MessageBox.Show("还没有配置 AI。\n\n现在打开设置 → AI 配置？",
+                "AI 标签", MessageBoxButton.YesNo, MessageBoxImage.Information);
+            if (answer == MessageBoxResult.Yes) OpenSettings();
+            return;
+        }
+
+        var options = AiOptions.Load(AppServices.Settings);
+        if (games.Count > options.BatchLimit)
+        {
+            MessageBox.Show($"已选 {games.Count} 条，超过单次批量上限 {options.BatchLimit} 条。请分批处理。",
+                "AI 标签", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        var window = new AiTagPreviewWindow(games) { Owner = Application.Current?.MainWindow };
+        if (window.ShowDialog() != true)
+        {
+            StatusMessage = "已取消 AI 标签";
+            return;
+        }
+
+        RefreshLookups();
+        ApplyFilter();
+        StatusMessage = $"已应用 {window.AppliedCount} 条标签建议";
+    }
+
+    [RelayCommand]
+    private void AiTranslate()
+    {
+        var games = SelectedGames.ToList();
+        if (games.Count == 0)
+        {
+            MessageBox.Show("请先在列表中选中要翻译标题的游戏（可按住 Ctrl / Shift 多选）。",
+                "AI 标题翻译", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        if (!AppServices.Ai.Options.IsConfigured)
+        {
+            var answer = MessageBox.Show("还没有配置 AI。\n\n现在打开设置 → AI 配置？",
+                "AI 标题翻译", MessageBoxButton.YesNo, MessageBoxImage.Information);
+            if (answer == MessageBoxResult.Yes) OpenSettings();
+            return;
+        }
+
+        var options = AiOptions.Load(AppServices.Settings);
+        if (games.Count > options.BatchLimit)
+        {
+            MessageBox.Show($"已选 {games.Count} 条，超过单次批量上限 {options.BatchLimit} 条。请分批处理。",
+                "AI 标题翻译", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        var window = new AiRenamePreviewWindow(games) { Owner = Application.Current?.MainWindow };
+        if (window.ShowDialog() != true)
+        {
+            StatusMessage = "已取消标题翻译";
+            return;
+        }
+
+        RefreshLookups();
+        ApplyFilter();
+        StatusMessage = $"已改写 {window.AppliedTitles} 条标题"
+                        + (window.RenamedFiles > 0 ? $"，重命名 {window.RenamedFiles} 个文件" : "")
+                        + (window.FailedFiles > 0 ? $"，失败 {window.FailedFiles} 个" : "");
+    }
+
+    [RelayCommand]
+    private void Recommend()
+    {
+        if (Games.Count == 0)
+        {
+            MessageBox.Show("游戏库还是空的，先导入游戏吧。", "推荐游戏",
+                MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        var seed = SelectedGame
+                   ?? Games.FirstOrDefault(g => g.Status == GameStatus.Playing)
+                   ?? Games.FirstOrDefault(g => g.Status == GameStatus.NotPlayed)
+                   ?? Games.FirstOrDefault();
+
+        var window = new RecommendWindow(seed, Games.ToList()) { Owner = Application.Current?.MainWindow };
+        if (window.ShowDialog() != true || window.SelectedRecommendation == null)
+        {
+            StatusMessage = "已关闭推荐";
+            return;
+        }
+
+        var game = window.SelectedRecommendation.Game;
+        SearchText = game.Title;
+        ApplyFilter();
+        StatusMessage = $"已定位推荐游戏：{game.Title}";
+    }
+
+    /// <summary>把受控查询计划映射到现有筛选条件。</summary>
+    public void ApplyAiFilter(AiQueryPlan plan)
+    {
+        var filter = plan.Filter;
+        _aiGenre = filter.Genre;
+        _aiPublisher = filter.Publisher;
+        _aiYearMin = filter.YearMin;
+        _aiYearMax = filter.YearMax;
+        _aiNotFavorite = filter.Favorite == false;
+
+        OnlyFavorites = filter.Favorite == true;
+        OnlyMissing = filter.OnlyMissing;
+        SelectedPlatform = string.IsNullOrWhiteSpace(filter.Platform) ? AllPlatforms : filter.Platform;
+        SelectedStatus = string.IsNullOrWhiteSpace(filter.Status) ? AllStatuses : filter.Status;
+        SelectedRegion = string.IsNullOrWhiteSpace(filter.Region) ? AllRegions : filter.Region;
+        SelectedLanguage = string.IsNullOrWhiteSpace(filter.Language) ? AllLanguages : filter.Language;
+        SelectedDeveloper = string.IsNullOrWhiteSpace(filter.Developer) ? AllDevelopers : filter.Developer;
+        SelectedTag = string.IsNullOrWhiteSpace(filter.Tag) ? AllTags : filter.Tag;
+        SearchText = filter.Keyword;
+        ApplyFilter();
+    }
+
+    /// <summary>只对当前筛选结果执行白名单操作。</summary>
+    public int ExecuteAiAction(AiQueryPlan plan)
+    {
+        var action = plan.Action;
+        if (action == null) return 0;
+
+        var targets = GamesView.Cast<Game>().ToList();
+        foreach (var game in targets)
+        {
+            switch (action.Type)
+            {
+                case "set_status":
+                    game.Status = action.Value;
+                    break;
+                case "toggle_favorite":
+                    game.Favorite = !game.Favorite;
+                    break;
+                case "add_tag":
+                    game.Tags = ChangeTags(game.Tags, action.Value, add: true);
+                    break;
+                case "remove_tag":
+                    game.Tags = ChangeTags(game.Tags, action.Value, add: false);
+                    break;
+                default:
+                    continue;
+            }
+
+            AppServices.GameRepo.Update(game);
+        }
+
+        RefreshLookups();
+        ApplyFilter();
+        return targets.Count;
+    }
+
+    private static string ChangeTags(string tags, string tag, bool add)
+    {
+        var list = SplitTags(tags).ToList();
+        if (add)
+        {
+            if (!list.Contains(tag, StringComparer.OrdinalIgnoreCase)) list.Add(tag);
+        }
+        else
+        {
+            list.RemoveAll(item => string.Equals(item, tag, StringComparison.OrdinalIgnoreCase));
+        }
+
+        return string.Join(",", list);
+    }
+
+    [RelayCommand]
+    private void Scrape()
+    {
+        var games = SelectedGames.ToList();
+        if (games.Count == 0)
+        {
+            MessageBox.Show("请先在列表中选中要刮削的游戏（可按住 Ctrl / Shift 多选）。",
+                "AI 刮削", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        if (games.Count > 10 && MessageBox.Show(
+                $"已选 {games.Count} 条，刮削可能产生较多 AI 请求与费用。\n\n是否继续？",
+                "AI 刮削", MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
+            return;
+
+        var window = new ScrapePreviewWindow(games) { Owner = Application.Current?.MainWindow };
+        if (window.ShowDialog() != true)
+        {
+            StatusMessage = "已取消刮削";
+            return;
+        }
+
+        RefreshLookups();
+        ApplyFilter();
+        StatusMessage = $"已应用 {window.AppliedCount} 条刮削结果";
+    }
+
+    [RelayCommand]
     private void LaunchSelected()
     {
         var game = SelectedGame;
@@ -900,6 +1153,11 @@ public partial class MainViewModel : ObservableObject
         SelectedDeveloper = AllDevelopers;
         OnlyFavorites = false;
         OnlyMissing = false;
+        _aiGenre = "";
+        _aiPublisher = "";
+        _aiYearMin = null;
+        _aiYearMax = null;
+        _aiNotFavorite = false;
     }
 
     [RelayCommand]

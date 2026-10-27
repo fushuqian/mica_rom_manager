@@ -35,11 +35,22 @@
                 </ListBox.ItemTemplate>
             </ListBox>
 
-            <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,8,0,0">
-                <Button Content="新增" Width="76" Style="{StaticResource SecondaryButtonStyle}"
-                        Command="{Binding NewProfileCommand}" />
-                <Button Content="刷新" Margin="8,0,0,0" Style="{StaticResource SecondaryButtonStyle}"
-                        Command="{Binding RefreshCommand}" />
+            <StackPanel Grid.Row="2" Margin="0,8,0,0">
+                <TextBlock Text="AI 识别目录结构" FontWeight="SemiBold" Margin="0,0,0,4" />
+                <ComboBox ItemsSource="{Binding Drives}" SelectedItem="{Binding SelectedDrive, Mode=TwoWay}"
+                          DisplayMemberPath="Display" MinHeight="28" />
+                <Button Content="AI 识别该盘结构…" Margin="0,6,0,0" Style="{StaticResource SecondaryButtonStyle}"
+                        Command="{Binding AiProfileCommand}"
+                        IsEnabled="{Binding AiBusy, Converter={StaticResource InverseBoolConverter}}"
+                        ToolTip="只读扫描目录名与扩展名，不上传文件名或文件内容" />
+                <TextBlock Text="{Binding AiStatus}" Margin="0,4,0,0" TextWrapping="Wrap" FontSize="11"
+                           Foreground="{StaticResource TextSecondaryBrush}" />
+                <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                    <Button Content="新增" Width="76" Style="{StaticResource SecondaryButtonStyle}"
+                            Command="{Binding NewProfileCommand}" />
+                    <Button Content="刷新" Margin="8,0,0,0" Style="{StaticResource SecondaryButtonStyle}"
+                            Command="{Binding RefreshCommand}" />
+                </StackPanel>
             </StackPanel>
         </Grid>
 

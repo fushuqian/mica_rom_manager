@@ -6,6 +6,7 @@ using System.Windows.Controls;
 using MicaRomManager.Data;
 using MicaRomManager.Models;
 using MicaRomManager.Services;
+using MicaRomManager.Services.Ai;
 using Microsoft.Win32;
 
 namespace MicaRomManager.Views;
@@ -18,6 +19,7 @@ public partial class SettingsWindow : Window
     {
         InitializeComponent();
         LoadGeneral();
+        LoadAiSettings();
         LoadLookupKinds();
         LoadPlatforms();
         DataDirText.Text = AppServices.Paths.DataDir;
@@ -672,5 +674,131 @@ public partial class SettingsWindow : Window
 
         foreach (var game in missing) AppServices.GameRepo.Delete(game.Id);
         MaintenanceStatus.Text = $"已清理 {missing.Count} 条失效记录。";
+    }
+
+    private bool _loadingAi;
+
+    private void LoadAiSettings()
+    {
+        _loadingAi = true;
+        var options = AiOptions.Load(AppServices.Settings);
+        AiBaseUrlBox.Text = options.BaseUrl;
+        AiApiKeyBox.Password = options.ApiKey;
+        AiApiKeyPlainBox.Text = options.ApiKey;
+        AiModelBox.Text = options.Model;
+        AiTimeoutBox.Text = options.TimeoutSeconds.ToString();
+        AiBatchLimitBox.Text = options.BatchLimit.ToString();
+        AiPresetCombo.SelectedIndex = 0;
+        _loadingAi = false;
+    }
+
+    private void AiPreset_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        if (_loadingAi || AiBaseUrlBox == null || AiModelBox == null) return;
+
+        var (url, model) = AiPresetCombo.SelectedIndex switch
+        {
+            1 => ("https://api.deepseek.com/v1", "deepseek-chat"),
+            2 => ("https://api.moonshot.cn/v1", "moonshot-v1-8k"),
+            3 => ("https://api.openai.com/v1", "gpt-4o-mini"),
+            _ => ("", ""),
+        };
+
+        if (url.Length == 0) return;
+        AiBaseUrlBox.Text = url;
+        AiModelBox.Text = model;
+    }
+
+    private void AiShowKey_Changed(object sender, RoutedEventArgs e)
+    {
+        if (AiShowKeyCheck == null) return;
+
+        if (AiShowKeyCheck.IsChecked == true)
+        {
+            AiApiKeyPlainBox.Text = AiApiKeyBox.Password;
+            AiApiKeyPlainBox.Visibility = Visibility.Visible;
+            AiApiKeyBox.Visibility = Visibility.Collapsed;
+        }
+        else
+        {
+            AiApiKeyBox.Password = AiApiKeyPlainBox.Text;
+            AiApiKeyPlainBox.Visibility = Visibility.Collapsed;
+            AiApiKeyBox.Visibility = Visibility.Visible;
+        }
+    }
+
+    private string CurrentAiKey() => AiShowKeyCheck.IsChecked == true
+        ? AiApiKeyPlainBox.Text.Trim()
+        : AiApiKeyBox.Password.Trim();
+
+    private bool SaveAiSettings(bool showMessage)
+    {
+        var baseUrl = AiBaseUrlBox.Text.Trim().TrimEnd('/');
+        if (baseUrl.Length > 0 &&
+            (!Uri.TryCreate(baseUrl, UriKind.Absolute, out var uri)
+             || (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps)))
+        {
+            MessageBox.Show("BaseUrl 必须是 http:// 或 https:// 开头的完整地址。", "AI 设置",
+                MessageBoxButton.OK, MessageBoxImage.Warning);
+            return false;
+        }
+
+        if (!int.TryParse(AiTimeoutBox.Text.Trim(), out var timeout) || timeout is < 10 or > 600)
+        {
+            MessageBox.Show("超时必须是 10–600 之间的整数秒。", "AI 设置",
+                MessageBoxButton.OK, MessageBoxImage.Warning);
+            return false;
+        }
+
+        if (!int.TryParse(AiBatchLimitBox.Text.Trim(), out var limit) || limit is < 1 or > 200)
+        {
+            MessageBox.Show("单次批量上限必须是 1–200 之间的整数。", "AI 设置",
+                MessageBoxButton.OK, MessageBoxImage.Warning);
+            return false;
+        }
+
+        AppServices.Settings.Set(AiOptions.BaseUrlKey, baseUrl);
+        AppServices.Settings.Set(AiOptions.ApiKeyKey, CurrentAiKey());
+        AppServices.Settings.Set(AiOptions.ModelKey, AiModelBox.Text.Trim());
+        AppServices.Settings.Set(AiOptions.TimeoutKey, timeout.ToString());
+        AppServices.Settings.Set(AiOptions.BatchLimitKey, limit.ToString());
+
+        if (showMessage)
+            MessageBox.Show("AI 设置已保存。", "AI 设置", MessageBoxButton.OK, MessageBoxImage.Information);
+
+        return true;
+    }
+
+    private void SaveAi_Click(object sender, RoutedEventArgs e) => SaveAiSettings(true);
+
+    private async void TestAi_Click(object sender, RoutedEventArgs e)
+    {
+        if (!SaveAiSettings(false)) return;
+
+        var options = AiOptions.Load(AppServices.Settings);
+        if (!options.IsConfigured)
+        {
+            AiTestText.Text = "请先填写 BaseUrl、API Key 与模型名。";
+            return;
+        }
+
+        AiTestButton.IsEnabled = false;
+        AiTestText.Text = "正在测试…";
+        try
+        {
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(options.TimeoutSeconds + 5));
+            var result = await AppServices.Ai.CompleteAsync("你是连接测试助手。", "只回复 OK", cts.Token);
+            AiTestText.Text = result.Success
+                ? $"连接正常（{result.Elapsed.TotalSeconds:0.0} 秒）：{AiJson.Snippet(result.Content, 60)}"
+                : $"测试失败：{result.Error}";
+        }
+        catch (Exception ex)
+        {
+            AiTestText.Text = $"测试失败：{ex.Message}";
+        }
+        finally
+        {
+            AiTestButton.IsEnabled = true;
+        }
     }
 }

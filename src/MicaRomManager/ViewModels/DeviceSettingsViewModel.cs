@@ -5,6 +5,8 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MicaRomManager.Models;
 using MicaRomManager.Services;
+using MicaRomManager.Services.Devices;
+using MicaRomManager.Views;
 
 namespace MicaRomManager.ViewModels;
 
@@ -14,18 +16,49 @@ public sealed class PlatformFolderRow
     public string Folder { get; set; } = "";
 }
 
+public sealed record DriveChoice(string Root, string Display);
+
 public partial class DeviceSettingsViewModel : ObservableObject
 {
     public ObservableCollection<DeviceProfile> Profiles { get; } = new();
     public ObservableCollection<PlatformFolderRow> PlatformFolders { get; } = new();
+    public ObservableCollection<DriveChoice> Drives { get; } = new();
 
     [ObservableProperty] private DeviceProfile? selectedProfile;
     [ObservableProperty] private PlatformFolderRow? selectedFolderRow;
     [ObservableProperty] private string statusMessage = "";
+    [ObservableProperty] private DriveChoice? selectedDrive;
+    [ObservableProperty] private bool aiBusy;
+    [ObservableProperty] private string aiStatus = "";
 
     public DeviceSettingsViewModel()
     {
+        LoadDrives();
         Reload(null);
+    }
+
+    private void LoadDrives()
+    {
+        Drives.Clear();
+        foreach (var drive in DriveInfo.GetDrives())
+        {
+            if (!drive.IsReady) continue;
+
+            string label;
+            try
+            {
+                label = drive.VolumeLabel;
+            }
+            catch
+            {
+                label = "";
+            }
+
+            var display = $"{drive.Name}{(string.IsNullOrWhiteSpace(label) ? "" : " " + label)}";
+            Drives.Add(new DriveChoice(drive.RootDirectory.FullName, display));
+        }
+
+        SelectedDrive = Drives.FirstOrDefault();
     }
 
     private void Reload(string? selectId)
@@ -134,6 +167,103 @@ public partial class DeviceSettingsViewModel : ObservableObject
         var removed = AppServices.DeviceProfiles.Delete(profile);
         StatusMessage = removed ? $"已删除「{profile.Name}」。" : "没有找到可删除的自定义配置文件。";
         Reload(null);
+    }
+
+    [RelayCommand]
+    private async Task AiProfileAsync()
+    {
+        if (AiBusy) return;
+        if (SelectedDrive == null)
+        {
+            AiStatus = "请先选择要识别的盘符。";
+            return;
+        }
+
+        if (!AppServices.Ai.Options.IsConfigured)
+        {
+            AiStatus = "还没有配置 AI，请先到 设置 → AI 填写 BaseUrl、API Key 和模型。";
+            return;
+        }
+
+        AiBusy = true;
+        AiStatus = "正在扫描目录…";
+        using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(3));
+
+        try
+        {
+            var progress = new Progress<string>(message => AiStatus = message);
+            var summary = await DriveTreeScanner.ScanAsync(SelectedDrive.Root, progress, cts.Token);
+            AiStatus = $"扫描完成（{summary.Nodes.Count} 个目录），正在请求 AI 分析…";
+
+            var result = await new AiDeviceProfiler().ProfileAsync(summary, cts.Token);
+            if (!result.CanApply)
+            {
+                AiStatus = result.Error;
+                var warnings = result.Warnings.Count == 0
+                    ? ""
+                    : "\n\n" + string.Join("\n", result.Warnings);
+                MessageBox.Show(result.Error + warnings, "AI 识别设备结构",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            var window = new AiDeviceProfileWindow(summary, result)
+            {
+                Owner = Application.Current?.Windows.OfType<SettingsWindow>().FirstOrDefault()
+                        ?? Application.Current?.MainWindow,
+            };
+            if (window.ShowDialog() != true || window.Profile == null)
+            {
+                AiStatus = "已取消。";
+                return;
+            }
+
+            ApplyAiProfile(window.Profile);
+            AiStatus = "已填充建议配置，请核对后点「保存」。";
+        }
+        catch (OperationCanceledException)
+        {
+            AiStatus = "已取消。";
+        }
+        catch (Exception ex)
+        {
+            AiStatus = $"识别失败：{ex.Message}";
+        }
+        finally
+        {
+            AiBusy = false;
+        }
+    }
+
+    /// <summary>用建议值替换当前表单对象，触发绑定刷新；仍由用户点「保存」落盘。</summary>
+    private void ApplyAiProfile(DeviceProfile source)
+    {
+        var existing = SelectedProfile;
+        var profile = new DeviceProfile
+        {
+            Id = existing?.Id ?? "",
+            Name = source.Name,
+            Brand = source.Brand,
+            Model = source.Model,
+            Transport = "drive",
+            RootFolder = source.RootFolder,
+            FolderTemplate = source.FolderTemplate,
+            AllowUnmappedPlatforms = source.AllowUnmappedPlatforms,
+            PlatformFolders = new Dictionary<string, string>(source.PlatformFolders, StringComparer.OrdinalIgnoreCase),
+            Notes = source.Notes,
+            IsBuiltIn = existing?.IsBuiltIn ?? false,
+        };
+
+        if (existing == null)
+        {
+            Profiles.Add(profile);
+        }
+        else
+        {
+            Profiles[Profiles.IndexOf(existing)] = profile;
+        }
+
+        SelectedProfile = profile;
     }
 
     [RelayCommand]

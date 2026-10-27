@@ -57,7 +57,8 @@ public sealed class NetworkClientProvider
         return int.TryParse(text[(separator + 1)..].Trim(), out port) && port is >= 1 and <= 65535;
     }
 
-    private HttpClient CreateClient(TimeSpan timeout)
+    /// <summary>按当前代理设置创建 HttpClient，供 AI 等模块复用。</summary>
+    public HttpClient CreateClient(TimeSpan timeout)
     {
         var handler = new HttpClientHandler
         {

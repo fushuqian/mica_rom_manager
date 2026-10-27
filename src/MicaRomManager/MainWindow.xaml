@@ -46,19 +46,7 @@
                     <Button Command="{Binding ImportCommand}" Style="{StaticResource ToolButtonStyle}">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="&#xE8E5;" FontFamily="Segoe MDL2 Assets" FontSize="14" Margin="0,0,6,0" VerticalAlignment="Center" />
-                            <TextBlock Text="导入…" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Button>
-                    <Button Command="{Binding NewGameCommand}" Style="{StaticResource ToolButtonStyle}">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="&#xE710;" FontFamily="Segoe MDL2 Assets" FontSize="14" Margin="0,0,6,0" VerticalAlignment="Center" />
-                            <TextBlock Text="新建条目" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Button>
-                    <Button Command="{Binding BatchEditCommand}" Style="{StaticResource ToolButtonStyle}">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="&#xE70F;" FontFamily="Segoe MDL2 Assets" FontSize="14" Margin="0,0,6,0" VerticalAlignment="Center" />
-                            <TextBlock Text="批量编辑" VerticalAlignment="Center" />
+                            <TextBlock Text="导入游戏" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
                     <Button Command="{Binding LaunchSelectedCommand}" Style="{StaticResource ToolButtonStyle}">
@@ -73,34 +61,40 @@
                             <TextBlock Text="分享打包" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
+                    <Button Command="{Binding ScrapeCommand}" Style="{StaticResource ToolButtonStyle}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE8B6;" FontFamily="Segoe MDL2 Assets" FontSize="14" Margin="0,0,6,0" VerticalAlignment="Center" />
+                            <TextBlock Text="AI 刮削" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <Button Command="{Binding AiTagsCommand}" Style="{StaticResource ToolButtonStyle}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE8EC;" FontFamily="Segoe MDL2 Assets" FontSize="14" Margin="0,0,6,0" VerticalAlignment="Center" />
+                            <TextBlock Text="AI 标签" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <Button Command="{Binding AiTranslateCommand}" Style="{StaticResource ToolButtonStyle}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE8C1;" FontFamily="Segoe MDL2 Assets" FontSize="14" Margin="0,0,6,0" VerticalAlignment="Center" />
+                            <TextBlock Text="AI 翻译" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <Button Command="{Binding RecommendCommand}" Style="{StaticResource ToolButtonStyle}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE735;" FontFamily="Segoe MDL2 Assets" FontSize="14" Margin="0,0,6,0" VerticalAlignment="Center" />
+                            <TextBlock Text="推荐" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
                     <Button Command="{Binding ConnectDeviceCommand}" Style="{StaticResource ToolButtonStyle}">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="&#xE703;" FontFamily="Segoe MDL2 Assets" FontSize="14" Margin="0,0,6,0" VerticalAlignment="Center" />
                             <TextBlock Text="{Binding ConnectButtonText}" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
-                    <Button Command="{Binding SendSelectedCommand}" Style="{StaticResource ToolButtonStyle}">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="&#xE8B5;" FontFamily="Segoe MDL2 Assets" FontSize="14" Margin="0,0,6,0" VerticalAlignment="Center" />
-                            <TextBlock Text="发送" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Button>
                     <Button Command="{Binding OpenTaskListCommand}" Style="{StaticResource ToolButtonStyle}">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="&#xE9D5;" FontFamily="Segoe MDL2 Assets" FontSize="14" Margin="0,0,6,0" VerticalAlignment="Center" />
                             <TextBlock Text="任务列表" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Button>
-                    <Button Command="{Binding OpenSelectedFolderCommand}" Style="{StaticResource ToolButtonStyle}">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="&#xE8B7;" FontFamily="Segoe MDL2 Assets" FontSize="14" Margin="0,0,6,0" VerticalAlignment="Center" />
-                            <TextBlock Text="打开目录" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Button>
-                    <Button Command="{Binding RefreshStatusCommand}" Style="{StaticResource ToolButtonStyle}">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="&#xE72C;" FontFamily="Segoe MDL2 Assets" FontSize="14" Margin="0,0,6,0" VerticalAlignment="Center" />
-                            <TextBlock Text="刷新" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
                 </WrapPanel>
@@ -151,50 +145,59 @@
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
 
-                        <WrapPanel Grid.Column="0" Margin="0,0,12,0" VerticalAlignment="Top">
-                            <ComboBox Style="{StaticResource ToolbarComboBoxStyle}" Width="104"
-                                      ItemsSource="{Binding Statuses}" SelectedItem="{Binding SelectedStatus}" />
-                            <ComboBox Style="{StaticResource ToolbarComboBoxStyle}" Width="104"
-                                      ItemsSource="{Binding RegionFilters}" SelectedItem="{Binding SelectedRegion}"
-                                      ToolTip="区域" />
-                            <ComboBox Style="{StaticResource ToolbarComboBoxStyle}" Width="104"
-                                      ItemsSource="{Binding LanguageFilters}" SelectedItem="{Binding SelectedLanguage}"
-                                      ToolTip="语言" />
-                            <ComboBox Style="{StaticResource ToolbarComboBoxStyle}" Width="120"
-                                      ItemsSource="{Binding DeveloperFilters}" SelectedItem="{Binding SelectedDeveloper}"
-                                      ToolTip="开发商" />
-                            <ComboBox Style="{StaticResource ToolbarComboBoxStyle}" Width="110"
-                                      ItemsSource="{Binding Tags}" SelectedItem="{Binding SelectedTag}" />
-                            <CheckBox x:Name="EditModeToggle" Content="编辑模式" IsChecked="False"
-                                      Checked="OnEditModeChanged" Unchecked="OnEditModeChanged"
-                                      ToolTip="开启后可直接在列表里修改单元格内容，回车或点击其他格即保存" />
-                            <CheckBox Content="仅收藏" IsChecked="{Binding OnlyFavorites}" />
-                            <CheckBox Content="仅缺失文件" IsChecked="{Binding OnlyMissing}" />
-                            <Button Content="清除筛选" Style="{StaticResource ToolButtonStyle}"
-                                    Command="{Binding ClearFiltersCommand}" />
-                        </WrapPanel>
+                        <StackPanel Grid.Column="0" Margin="0,0,12,0" VerticalAlignment="Top">
+                            <WrapPanel>
+                                <ComboBox Style="{StaticResource ToolbarComboBoxStyle}" Width="104"
+                                          ItemsSource="{Binding Statuses}" SelectedItem="{Binding SelectedStatus}" />
+                                <ComboBox Style="{StaticResource ToolbarComboBoxStyle}" Width="104"
+                                          ItemsSource="{Binding RegionFilters}" SelectedItem="{Binding SelectedRegion}"
+                                          ToolTip="区域" />
+                                <ComboBox Style="{StaticResource ToolbarComboBoxStyle}" Width="104"
+                                          ItemsSource="{Binding LanguageFilters}" SelectedItem="{Binding SelectedLanguage}"
+                                          ToolTip="语言" />
+                                <ComboBox Style="{StaticResource ToolbarComboBoxStyle}" Width="120"
+                                          ItemsSource="{Binding DeveloperFilters}" SelectedItem="{Binding SelectedDeveloper}"
+                                          ToolTip="开发商" />
+                                <ComboBox Style="{StaticResource ToolbarComboBoxStyle}" Width="110"
+                                          ItemsSource="{Binding Tags}" SelectedItem="{Binding SelectedTag}" />
+                            </WrapPanel>
+                            <WrapPanel Margin="0,6,0,0">
+                                <CheckBox x:Name="EditModeToggle" Content="编辑模式" IsChecked="False"
+                                          Checked="OnEditModeChanged" Unchecked="OnEditModeChanged"
+                                          ToolTip="开启后可直接在列表里修改单元格内容，回车或点击其他格即保存" />
+                                <CheckBox Content="仅收藏" IsChecked="{Binding OnlyFavorites}" />
+                                <CheckBox Content="仅缺失文件" IsChecked="{Binding OnlyMissing}" />
+                                <Button Content="清除筛选" Style="{StaticResource ToolButtonStyle}"
+                                        Command="{Binding ClearFiltersCommand}" />
+                            </WrapPanel>
+                        </StackPanel>
 
                         <StackPanel Grid.Column="1" HorizontalAlignment="Right">
-                            <Grid Width="240" Height="30">
-                                <TextBox x:Name="SearchBox" Height="30" Padding="8,0"
-                                         VerticalContentAlignment="Center"
-                                         Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged, Delay=150}"
-                                         ToolTip="搜索标题、文件名、路径、标签、开发商（Ctrl+F）" />
-                                <TextBlock Text="输入游戏名进行搜索" Margin="9,0,0,0" IsHitTestVisible="False"
-                                           VerticalAlignment="Center"
-                                           Foreground="{StaticResource TextSecondaryBrush}">
-                                    <TextBlock.Style>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="Visibility" Value="Collapsed" />
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding Text, ElementName=SearchBox}" Value="">
-                                                    <Setter Property="Visibility" Value="Visible" />
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </TextBlock.Style>
-                                </TextBlock>
-                            </Grid>
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                <Grid Width="240" Height="30">
+                                    <TextBox x:Name="SearchBox" Height="30" Padding="8,0"
+                                             VerticalContentAlignment="Center"
+                                             Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged, Delay=150}"
+                                             ToolTip="搜索标题、文件名、路径、标签、开发商（Ctrl+F）" />
+                                    <TextBlock Text="输入游戏名进行搜索" Margin="9,0,0,0" IsHitTestVisible="False"
+                                               VerticalAlignment="Center"
+                                               Foreground="{StaticResource TextSecondaryBrush}">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Text, ElementName=SearchBox}" Value="">
+                                                        <Setter Property="Visibility" Value="Visible" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </Grid>
+                                <Button Content="AI 查询" Command="{Binding AiQueryCommand}" Height="30"
+                                        Margin="6,0,0,0" Padding="10,0" Style="{StaticResource SecondaryButtonStyle}"
+                                        ToolTip="用自然语言筛选或修改游戏库" />
+                            </StackPanel>
                             <TextBlock Text="{Binding CountText}" HorizontalAlignment="Right" Margin="0,6,0,0"
                                        Foreground="{StaticResource TextSecondaryBrush}" />
                         </StackPanel>
@@ -217,6 +220,10 @@
                     <MenuItem Header="启动游戏" Command="{Binding LaunchSelectedCommand}" InputGestureText="Enter" />
                     <MenuItem Header="用指定模拟器启动" />
                     <MenuItem Header="编辑信息…" Command="{Binding EditSelectedCommand}" InputGestureText="F2" />
+                    <MenuItem Header="刮削信息…" Command="{Binding ScrapeCommand}" />
+                    <MenuItem Header="AI 标签…" Command="{Binding AiTagsCommand}" />
+                    <MenuItem Header="AI 标题翻译…" Command="{Binding AiTranslateCommand}" />
+                    <MenuItem Header="推荐游戏…" Command="{Binding RecommendCommand}" />
                     <MenuItem Header="批量编辑…" Command="{Binding BatchEditCommand}" />
                     <MenuItem Header="合并为多碟游戏（选中多行，首行为主条目）" Command="{Binding MergeSelectedCommand}" />
                     <MenuItem Header="拆分多碟…" Command="{Binding SplitMultiDiscCommand}" />

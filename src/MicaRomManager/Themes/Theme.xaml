@@ -9,6 +9,8 @@
     <helpers:CoverThumbnailConverter x:Key="CoverThumbnailConverter" />
     <helpers:StarGlyphConverter x:Key="StarGlyphConverter" />
     <helpers:StarBrushConverter x:Key="StarBrushConverter" />
+    <helpers:BoolToIndexConverter x:Key="BoolToIndexConverter" />
+    <helpers:InverseBoolConverter x:Key="InverseBoolConverter" />
     <BooleanToVisibilityConverter x:Key="BoolToVis" />
 
     <SolidColorBrush x:Key="WindowBackgroundBrush" Color="#F5F6F8" />

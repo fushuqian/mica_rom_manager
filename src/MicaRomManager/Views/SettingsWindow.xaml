@@ -215,6 +215,74 @@
                 <views:DeviceSettingsView />
             </TabItem>
 
+            <TabItem Header="AI">
+                <Grid Margin="16">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="130" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="预设" Style="{StaticResource FieldLabelStyle}" />
+                    <ComboBox x:Name="AiPresetCombo" Grid.Row="0" Grid.Column="1" Width="280" MinHeight="28"
+                              HorizontalAlignment="Left" Margin="0,0,0,12"
+                              SelectionChanged="AiPreset_Changed">
+                        <ComboBoxItem Content="自定义" />
+                        <ComboBoxItem Content="DeepSeek" />
+                        <ComboBoxItem Content="Kimi" />
+                        <ComboBoxItem Content="OpenAI" />
+                    </ComboBox>
+
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="BaseUrl" Style="{StaticResource FieldLabelStyle}" />
+                    <TextBox x:Name="AiBaseUrlBox" Grid.Row="1" Grid.Column="1" Margin="0,0,0,12"
+                             ToolTip="OpenAI 兼容端点，例如 https://api.deepseek.com/v1" />
+
+                    <TextBlock Grid.Row="2" Grid.Column="0" Text="API Key" Style="{StaticResource FieldLabelStyle}" />
+                    <Grid Grid.Row="2" Grid.Column="1" Margin="0,0,0,12">
+                        <PasswordBox x:Name="AiApiKeyBox" MinHeight="28" VerticalContentAlignment="Center"
+                                     Padding="6,4" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" />
+                        <TextBox x:Name="AiApiKeyPlainBox" Visibility="Collapsed" />
+                    </Grid>
+                    <CheckBox x:Name="AiShowKeyCheck" Grid.Row="2" Grid.Column="2" Content="显示" Margin="8,0,0,12"
+                              VerticalAlignment="Center" Checked="AiShowKey_Changed" Unchecked="AiShowKey_Changed" />
+
+                    <TextBlock Grid.Row="3" Grid.Column="0" Text="模型名" Style="{StaticResource FieldLabelStyle}" />
+                    <TextBox x:Name="AiModelBox" Grid.Row="3" Grid.Column="1" Margin="0,0,0,12"
+                             ToolTip="例如 deepseek-chat、gpt-4o-mini" />
+
+                    <TextBlock Grid.Row="4" Grid.Column="0" Text="超时（秒）" Style="{StaticResource FieldLabelStyle}" />
+                    <TextBox x:Name="AiTimeoutBox" Grid.Row="4" Grid.Column="1" Width="120" HorizontalAlignment="Left"
+                             Margin="0,0,0,12" ToolTip="10–600 秒" />
+
+                    <TextBlock Grid.Row="5" Grid.Column="0" Text="单次批量上限" Style="{StaticResource FieldLabelStyle}" />
+                    <TextBox x:Name="AiBatchLimitBox" Grid.Row="5" Grid.Column="1" Width="120" HorizontalAlignment="Left"
+                             Margin="0,0,0,12" ToolTip="1–200 条；超过时请分批处理" />
+
+                    <StackPanel Grid.Row="6" Grid.Column="1" Orientation="Horizontal" Margin="0,4,0,0">
+                        <Button Content="保存 AI 设置" Width="130" Style="{StaticResource PrimaryButtonStyle}"
+                                Click="SaveAi_Click" />
+                        <Button x:Name="AiTestButton" Content="测试连接" Margin="8,0,0,0"
+                                Style="{StaticResource SecondaryButtonStyle}" Click="TestAi_Click" />
+                        <TextBlock x:Name="AiTestText" Margin="12,0,0,0" VerticalAlignment="Center"
+                                   Foreground="{StaticResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis" />
+                    </StackPanel>
+
+                    <TextBlock Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="3" Margin="0,16,0,0"
+                               Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap"
+                               Text="说明：API Key 只保存在本机数据库；AI 只接收游戏标题、文件名、平台等文本信息，不上传 ROM、封面或存档。未配置时相关按钮会置灰或只做本地解析。" />
+                </Grid>
+            </TabItem>
+
             <TabItem Header="数据维护">
                 <StackPanel Margin="16">
                     <TextBlock Style="{StaticResource SectionTitleStyle}" Text="数据库与数据" />

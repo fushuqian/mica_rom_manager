@@ -1,5 +1,6 @@
 using MicaRomManager.Data;
 using MicaRomManager.Services;
+using MicaRomManager.Services.Ai;
 using MicaRomManager.Services.Devices;
 using MicaRomManager.Services.Sending;
 
@@ -16,6 +17,7 @@ public static class AppServices
     public static LookupRepository Lookups { get; private set; } = null!;
     public static PlatformRepository Platforms { get; private set; } = null!;
     public static NetworkClientProvider Network { get; private set; } = null!;
+    public static AiChatClient Ai { get; private set; } = null!;
     public static CoverStore Covers { get; private set; } = null!;
     public static RomLauncher Launcher { get; private set; } = null!;
     public static EmulatorInstaller Installer { get; private set; } = null!;
@@ -33,6 +35,7 @@ public static class AppServices
         Lookups = new LookupRepository(Db);
         Platforms = new PlatformRepository(Db);
         Network = new NetworkClientProvider(Settings);
+        Ai = new AiChatClient(Settings, Network);
         Covers = new CoverStore(Paths);
         Launcher = new RomLauncher(GameRepo);
         Installer = new EmulatorInstaller(Paths);
@@ -58,6 +61,7 @@ public static class AppServices
     public static void RebuildNetwork()
     {
         Network.Rebuild();
+        Ai.Rebuild();
         Updater = new EmulatorUpdater(Network);
     }
 }

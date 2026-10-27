@@ -69,6 +69,25 @@ public sealed class StarBrushConverter : IValueConverter
     }
 }
 
+/// <summary>bool → 0/1，用于「只补空 / 覆盖」下拉。</summary>
+public sealed class BoolToIndexConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture) =>
+        value is bool flag && flag ? 1 : 0;
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) =>
+        value is int index && index == 1;
+}
+
+public sealed class InverseBoolConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture) =>
+        value is not bool flag || !flag;
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) =>
+        value is not bool flag || !flag;
+}
+
 public static class PlatformCatalog
 {
     public static IReadOnlyList<string> Common { get; } = new[]
