@@ -145,13 +145,13 @@
 
                 <!-- 细筛 -->
                 <Border Grid.Row="0" Padding="0,0,0,8">
-                    <DockPanel>
-                        <TextBlock DockPanel.Dock="Right" VerticalAlignment="Center" Text="{Binding CountText}"
-                                   Foreground="{StaticResource TextSecondaryBrush}" Margin="12,0,0,0" />
-                        <WrapPanel>
-                            <TextBox x:Name="SearchBox" Width="220" Margin="0,0,8,4"
-                                     Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged, Delay=150}"
-                                     ToolTip="搜索标题、文件名、路径、标签、开发商（Ctrl+F）" />
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <WrapPanel Grid.Column="0" Margin="0,0,12,0" VerticalAlignment="Top">
                             <ComboBox Style="{StaticResource ToolbarComboBoxStyle}" Width="104"
                                       ItemsSource="{Binding Statuses}" SelectedItem="{Binding SelectedStatus}" />
                             <ComboBox Style="{StaticResource ToolbarComboBoxStyle}" Width="104"
@@ -173,7 +173,32 @@
                             <Button Content="清除筛选" Style="{StaticResource ToolButtonStyle}"
                                     Command="{Binding ClearFiltersCommand}" />
                         </WrapPanel>
-                    </DockPanel>
+
+                        <StackPanel Grid.Column="1" HorizontalAlignment="Right">
+                            <Grid Width="240" Height="30">
+                                <TextBox x:Name="SearchBox" Height="30" Padding="8,0"
+                                         VerticalContentAlignment="Center"
+                                         Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged, Delay=150}"
+                                         ToolTip="搜索标题、文件名、路径、标签、开发商（Ctrl+F）" />
+                                <TextBlock Text="输入游戏名进行搜索" Margin="9,0,0,0" IsHitTestVisible="False"
+                                           VerticalAlignment="Center"
+                                           Foreground="{StaticResource TextSecondaryBrush}">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Text, ElementName=SearchBox}" Value="">
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </Grid>
+                            <TextBlock Text="{Binding CountText}" HorizontalAlignment="Right" Margin="0,6,0,0"
+                                       Foreground="{StaticResource TextSecondaryBrush}" />
+                        </StackPanel>
+                    </Grid>
                 </Border>
 
         <!-- 游戏列表 -->
