@@ -11,12 +11,20 @@ public static class ArgsBuilder
         template.Contains("{core}", StringComparison.OrdinalIgnoreCase);
 
     /// <summary>
-    /// 平台未配置启动参数时的回退：优先沿用模拟器自带参数；RetroArch 类模拟器未带 {core} 时补默认模板。
+    /// 组合启动参数：模拟器默认参数为底，平台参数作为额外参数追加；平台留空则只用默认参数。
     /// </summary>
     public static string ResolveTemplate(string? platformTemplate, string? emulatorName, string? emulatorTemplate)
     {
-        if (!string.IsNullOrWhiteSpace(platformTemplate)) return platformTemplate.Trim();
+        var baseArgs = ResolveEmulatorTemplate(emulatorName, emulatorTemplate);
+        var extra = platformTemplate?.Trim() ?? "";
+        if (extra.Length == 0) return baseArgs;
+        if (baseArgs.Length == 0) return extra;
+        return $"{baseArgs} {extra}";
+    }
 
+    /// <summary>模拟器自身参数；RetroArch 未配置或缺少 {core} 时补默认模板。</summary>
+    private static string ResolveEmulatorTemplate(string? emulatorName, string? emulatorTemplate)
+    {
         var emulatorArgs = emulatorTemplate?.Trim() ?? "";
         if (RequiresCore(emulatorArgs)) return emulatorArgs;
 

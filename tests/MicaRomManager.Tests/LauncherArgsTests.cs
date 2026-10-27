@@ -50,10 +50,17 @@ public class LauncherArgsTests
     }
 
     [Fact]
-    public void ResolveTemplate_PrefersPlatformTemplate()
+    public void ResolveTemplate_AppendsPlatformExtraArgs()
     {
-        Assert.Equal("--fullscreen",
+        Assert.Equal("-L \"{core}\" \"{rom}\" --fullscreen",
             ArgsBuilder.ResolveTemplate("--fullscreen", "RetroArch", "-L \"{core}\" \"{rom}\""));
+    }
+
+    [Fact]
+    public void ResolveTemplate_AppendsExtraArgsToNonCoreEmulator()
+    {
+        Assert.Equal("\"{rom}\" --fullscreen",
+            ArgsBuilder.ResolveTemplate("--fullscreen", "Dolphin", "\"{rom}\""));
     }
 
     [Fact]

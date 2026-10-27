@@ -187,12 +187,12 @@
                         <TextBlock Margin="0,6,0,0" Foreground="{StaticResource TextSecondaryBrush}"
                                    TextWrapping="Wrap" MaxWidth="380"
                                    Text="扫描该平台子库时只识别这些扩展名；导入时用于自动识别平台。留空表示不限制。" />
-                        <TextBlock Text="启动参数" Style="{StaticResource FieldLabelStyle}" Margin="0,12,0,4" />
+                        <TextBlock Text="额外启动参数" Style="{StaticResource FieldLabelStyle}" Margin="0,12,0,4" />
                         <TextBox x:Name="PlatformArgsBox" Width="420" HorizontalAlignment="Left"
-                                 ToolTip="占位符：{rom} {romdir} {romname} {core}；选择 RetroArch 会自动填入 -L &quot;{core}&quot; &quot;{rom}&quot;，留空则按模拟器自带参数启动" />
+                                 ToolTip="可选，会追加在模拟器默认参数之后；占位符：{rom} {romdir} {romname} {core}；留空则只用模拟器默认参数" />
                         <TextBlock Margin="0,6,0,0" Foreground="{StaticResource TextSecondaryBrush}"
                                    TextWrapping="Wrap" MaxWidth="420"
-                                   Text="选择 RetroArch 等需要核心的模拟器时会自动填入默认参数，可自行修改；留空时按模拟器自带参数启动。{config} 已不再使用。" />
+                                   Text="这里只填额外参数（如 --fullscreen），程序会拼在模拟器默认参数后面；留空则完全使用模拟器默认参数。{config} 已不再使用。" />
                         <TextBlock Margin="0,6,0,0" Foreground="{StaticResource TextSecondaryBrush}"
                                    TextWrapping="Wrap" MaxWidth="360"
                                    Text="说明：启动游戏时会使用这里配置的默认模拟器、核心与启动参数。" />

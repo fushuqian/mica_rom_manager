@@ -13,7 +13,6 @@ namespace MicaRomManager.Views;
 public partial class SettingsWindow : Window
 {
     private List<Emulator> _emulators = new();
-    private string? _autoFilledArgs;
 
     public SettingsWindow()
     {
@@ -159,7 +158,6 @@ public partial class SettingsWindow : Window
             PlatformFolderBox.Text = "";
             PlatformFormatsBox.Text = "";
             PlatformArgsBox.Text = "";
-            _autoFilledArgs = null;
             return;
         }
 
@@ -167,26 +165,16 @@ public partial class SettingsWindow : Window
         PlatformFolderBox.Text = setting.Folder;
         PlatformFormatsBox.Text = setting.Formats;
         PlatformArgsBox.Text = setting.ArgsTemplate;
-        _autoFilledArgs = null;
         PlatformEmulatorCombo.SelectedItem = PlatformEmulatorCombo.Items
             .OfType<ComboBoxItem>()
             .FirstOrDefault(item => Equals(item.Tag, setting.EmulatorId));
 
         RefreshCorePanel(setting);
-        FillPlatformDefaultArgs();
     }
 
     private void PlatformEmulator_Changed(object sender, SelectionChangedEventArgs e)
     {
-        if (_autoFilledArgs != null &&
-            string.Equals(PlatformArgsBox.Text, _autoFilledArgs, StringComparison.Ordinal))
-        {
-            PlatformArgsBox.Text = "";
-            _autoFilledArgs = null;
-        }
-
         if (PlatformList.SelectedItem is PlatformSetting setting) RefreshCorePanel(setting);
-        FillPlatformDefaultArgs();
     }
 
     private Emulator? SelectedPlatformEmulator()
@@ -199,18 +187,6 @@ public partial class SettingsWindow : Window
         emulator != null &&
         (emulator.Name.Contains("RetroArch", StringComparison.OrdinalIgnoreCase)
          || ArgsBuilder.RequiresCore(emulator.ArgsTemplate));
-
-    /// <summary>选中 RetroArch 等需要核心的模拟器且平台参数为空时，自动填入默认启动参数。</summary>
-    private void FillPlatformDefaultArgs()
-    {
-        if (!string.IsNullOrWhiteSpace(PlatformArgsBox.Text)) return;
-
-        var emulator = SelectedPlatformEmulator();
-        if (!EmulatorNeedsCore(emulator)) return;
-
-        PlatformArgsBox.Text = ArgsBuilder.ResolveTemplate(null, emulator!.Name, emulator.ArgsTemplate);
-        _autoFilledArgs = PlatformArgsBox.Text;
-    }
 
     /// <summary>只有需要核心的模拟器（RetroArch 等）才显示核心下拉。</summary>
     private void RefreshCorePanel(PlatformSetting? setting)
