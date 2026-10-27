@@ -14,6 +14,8 @@
 - DeepSeek 官方联网搜索用 `POST https://api.deepseek.com/v1/tools/search`（Bearer 同一个 API Key），请求 `{query,count,need_content}`，结果有 `snippet/summary/site_name/date`；按成功请求计费，不是按 token。`need_content=false` 时用 `summary` 喂模型足够。
 - 搜索只在 BaseUrl 为 `api.deepseek.com` 时可用；别用 `Contains("deepseek")` 粗略判断，统一走 `AiSearchOptions.IsDeepSeekEndpoint`。
 - 刮削开启搜索时，单条 = 1 次搜索 + 1 次模型；先搜索再拼进提示词，搜索失败不能阻断 AI 兜底。
+- 助手写操作不要在文字里先问「要不要我…」再等用户答应；直接调用工具出确认卡片，用户不需要会点取消，否则同一件事要确认两遍。回答也不主动追问下一步。
+- 右键菜单里的 AI 入口收敛为一个「AI 问问」，点击时由 MainWindow 直接调助手 ViewModel（助手实例在窗口层，不在 MainViewModel）。
 
 ## 2026-10-27（AI 接入）
 
