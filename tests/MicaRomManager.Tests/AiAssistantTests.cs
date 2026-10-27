@@ -199,6 +199,28 @@ public class AiAssistantTests
     }
 
     [Fact]
+    public async Task AssistantService_PermissionAskIsNudgedIntoPendingCard()
+    {
+        var host = new FakeHost(new[]
+        {
+            new Game { Id = 1, Title = "银河战士", Platform = "SNES", ReleaseYear = 2009 },
+        });
+        var client = new FakeChatClient();
+        client.Results.Enqueue(new AiToolChatResult(true, "库内元数据有误：年份 2009。要我改正吗？", "",
+            new List<AiToolCall>(), 200, TimeSpan.Zero));
+        client.Results.Enqueue(ToolCallResult(Tool("update_games",
+            "{\"game_ids\":[1],\"fields\":{\"release_year\":2000}}")));
+
+        var service = new AiAssistantService(client);
+        var result = await service.SendAsync("介绍一下银河战士", host, CancellationToken.None);
+
+        Assert.NotNull(result.Pending);
+        Assert.Equal(2, client.Requests.Count);
+        Assert.DoesNotContain("要我改正吗", result.Text);
+        Assert.Contains("年份 2009", result.Text);
+    }
+
+    [Fact]
     public void ChatStore_SaveLoadAndClear()
     {
         var path = Path.Combine(Path.GetTempPath(), "mica-chat-" + Guid.NewGuid().ToString("N") + ".json");

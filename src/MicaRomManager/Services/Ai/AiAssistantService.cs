@@ -80,6 +80,8 @@ public sealed class AiAssistantService
 
     private async Task<AiTurnResult> RunLoopAsync(IAiAppHost host, CancellationToken token)
     {
+        var nudged = false;
+        var preface = "";
         for (var round = 0; round < MaxRounds; round++)
         {
             token.ThrowIfCancellationRequested();
@@ -104,7 +106,22 @@ public sealed class AiAssistantService
             });
 
             if (calls.Count == 0)
-                return new AiTurnResult(content, null, "");
+            {
+                // 模型又在文字里反问「要我改吗？」：补一轮提示，逼它直接出卡片，避免用户打字回答两遍。
+                if (!nudged && IsPermissionAsk(content))
+                {
+                    nudged = true;
+                    preface = content;
+                    AddHistory(new AiChatMessage
+                    {
+                        Role = "user",
+                        Content = "【系统提示】不要向我反问或征求同意。如果上面的回答涉及修改游戏、设置或发送，请立即调用对应工具生成确认卡片；否则直接给出结论，不要再问。",
+                    });
+                    continue;
+                }
+
+                return new AiTurnResult(MergePreface(preface, content), null, "");
+            }
 
             for (var index = 0; index < calls.Count; index++)
             {
@@ -124,7 +141,7 @@ public sealed class AiAssistantService
                         });
                     }
 
-                    return new AiTurnResult(content, execution.Pending, "");
+                    return new AiTurnResult(MergePreface(preface, content), execution.Pending, "");
                 }
 
                 AddHistory(new AiChatMessage
@@ -147,6 +164,51 @@ public sealed class AiAssistantService
         var cut = _history.Count - MaxHistory;
         var firstUser = _history.FindIndex(cut, item => item.Role == "user");
         if (firstUser > 0) _history.RemoveRange(0, firstUser);
+    }
+
+    private static readonly string[] PermissionMarkers =
+    {
+        "要我", "需要我", "要不要我", "需不需要我", "是否要我", "是否需要我", "需要帮你",
+    };
+
+    /// <summary>回答末尾是否在反问「要我…吗？」，这类反问会让用户不得不再打一次字。</summary>
+    private static bool IsPermissionAsk(string text)
+    {
+        var trimmed = text.TrimEnd();
+        if (trimmed.Length == 0) return false;
+        if (!trimmed.EndsWith('？') && !trimmed.EndsWith('?')) return false;
+
+        return PermissionMarkers.Any(marker => trimmed.Contains(marker, StringComparison.Ordinal));
+    }
+
+    /// <summary>把被拦下的反问句去掉，保留前面的分析内容，再与下一轮回复合并。</summary>
+    private static string MergePreface(string preface, string content)
+    {
+        if (preface.Length == 0) return content;
+
+        var kept = StripTrailingPermissionAsk(preface);
+        if (kept.Length == 0) return content;
+        return content.Length == 0 ? kept : kept + "\n\n" + content;
+    }
+
+    private static string StripTrailingPermissionAsk(string text)
+    {
+        var trimmed = text.TrimEnd();
+        if (!IsPermissionAsk(trimmed)) return trimmed;
+
+        var cut = -1;
+        for (var index = trimmed.Length - 2; index >= 0; index--)
+        {
+            if ("。！？!?；;\n".IndexOf(trimmed[index]) >= 0)
+            {
+                cut = index;
+                break;
+            }
+        }
+
+        if (cut < 0) return "";
+        var tail = trimmed[(cut + 1)..].Trim();
+        return IsPermissionAsk(tail) ? trimmed[..cut].TrimEnd() : trimmed;
     }
 
     private static string BuildSystemPrompt(IAiAppHost host)
@@ -175,7 +237,7 @@ public sealed class AiAssistantService
             规则：
             1. 始终用简体中文回答，语气简洁直接。
             2. 需要读取游戏库或操作应用时，必须调用提供的工具，不要只口头答应。
-            3. 写操作（改元数据、改设置、发送、删除、保存设备配置）直接调用对应工具生成确认卡片，不要在文字里先问「要不要我…」「需要我帮你…」再等用户答应；卡片本身带「取消」，用户不需要会自己取消。用户确认前不得声称已经执行。
+            3. 写操作（改元数据、改设置、发送、删除、保存设备配置）直接调用对应工具生成确认卡片，不要在文字里先问「要不要我…」「需要我帮你…」再等用户答应；介绍游戏时发现年份、发行商等元数据有误，也直接调用 update_games 生成修正卡片。卡片本身带「取消」，用户不需要会自己取消。用户确认前不得声称已经执行。
             4. 启动游戏不需要额外确认：用户说「随便推荐一个/不知道玩什么」时，直接调用 launch_game 且不传 game_id，由本地从全部游戏里随机挑一个（不受当前筛选影响）；不要先在文字里反复询问，界面会显示「启动 / 换一个 / 算了」。
             5. 删除类操作必须先说明后果：只删记录，还是把文件移到回收站。
             6. 游戏咨询可以结合 get_game 返回的元数据和你的知识回答「好不好玩/介绍一下/这是啥游戏」；不确定的信息要明确说明，不要编造年份、发行商或开发商。
@@ -183,6 +245,12 @@ public sealed class AiAssistantService
             8. 库内信息不足、需要年份/发行商/开发商或用户问游戏评价时，可调用 web_search；回答时说明来源站点名，不要粘贴长链接；搜索不到就明确说不确定。
             9. 永远不要读取、输出或索要 API Key。
             10. 回答保持简短：通常 1–3 句，不复述用户原话，不罗列多个方案，不主动追问「还要不要…」；一次只做用户要求的事。展示多个游戏时最多列 10 条。
+            11. 工具执行完成后只用一句话说明结果，不要再提「确认后」「已生成确认卡片」或重复卡片内容。
+
+            示例：
+            用户：介绍一下《生化危机 代号维罗妮卡》
+            正确：照常介绍游戏；发现库内年份/发行商有误时，直接调用 update_games 生成修正卡片，正文不要出现「要我改正吗？」。
+            错误：回答完游戏介绍后写「要我改正吗？」并停下等用户回复。
             """;
     }
 }
