@@ -63,6 +63,31 @@ public partial class AiAssistantViewModel : ObservableObject
         var text = Input.Trim();
         if (text.Length == 0 || IsBusy) return;
 
+        Input = "";
+        await SendTextAsync(text);
+    }
+
+    /// <summary>「AI 问问」：把游戏推进聊天框并直接向助手提问。</summary>
+    public async Task AskAboutAsync(Game game)
+    {
+        var title = string.IsNullOrWhiteSpace(game.Title) ? "这款游戏" : game.Title;
+        var text = $"介绍一下《{title}》这款游戏";
+
+        if (!AiConfigured || IsBusy || _service.HasPending)
+        {
+            Input = text;
+            if (!AiConfigured)
+                AddError("还没有配置 AI，请先到 设置 → AI 填写 BaseUrl、API Key 和模型。");
+            else
+                AddError(IsBusy ? "助手正在回复上一条消息，请稍后再试。" : "请先确认或取消上一条操作。");
+            return;
+        }
+
+        await SendTextAsync(text);
+    }
+
+    private async Task SendTextAsync(string text)
+    {
         if (!AiConfigured)
         {
             AddError("还没有配置 AI，请先到 设置 → AI 填写 BaseUrl、API Key 和模型。");
@@ -75,7 +100,6 @@ public partial class AiAssistantViewModel : ObservableObject
             return;
         }
 
-        Input = "";
         Add(new AiChatItem { Kind = AiChatKind.User, Text = text });
         SaveHistory();
 

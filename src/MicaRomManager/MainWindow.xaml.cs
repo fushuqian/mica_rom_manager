@@ -49,6 +49,21 @@ public partial class MainWindow : Window
     private void ToggleAssistant_Click(object sender, RoutedEventArgs e) =>
         SetAssistantOpen(AssistantColumn.Width.Value < 1);
 
+    /// <summary>右键「AI 问问」：把选中游戏推进助手并直接咨询。</summary>
+    private void AiAsk_Click(object sender, RoutedEventArgs e)
+    {
+        var game = _viewModel.SelectedGame;
+        if (game == null)
+        {
+            MessageBox.Show("请先在列表中选中一款游戏。", "AI 问问",
+                MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        SetAssistantOpen(true);
+        _ = _assistantViewModel.AskAboutAsync(game);
+    }
+
     private void SetAssistantOpen(bool open, bool persist = true)
     {
         AssistantColumn.Width = new GridLength(open ? 370 : 0);

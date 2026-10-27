@@ -98,7 +98,7 @@ public static class AiToolRegistry
         new AiToolDefinition
         {
             Name = "update_games",
-            Description = "批量修改游戏元数据、评分、状态、标签等。执行前会生成确认卡片，必须等用户确认。",
+            Description = "批量修改游戏元数据、评分、状态、标签等。调用后立即生成确认卡片，用户可确认或取消；不要在文字里再征求同意。",
             Parameters = Schema(new Dictionary<string, object>
             {
                 ["game_ids"] = IntArray("要修改的游戏 id 列表"),
@@ -128,7 +128,7 @@ public static class AiToolRegistry
         new AiToolDefinition
         {
             Name = "send_games",
-            Description = "把游戏加入发送队列；需要已连接设备，并向用户确认。",
+            Description = "把游戏加入发送队列；需要已连接设备。调用后立即生成确认卡片供用户确认或取消，不要在文字里再问。",
             Parameters = Schema(new Dictionary<string, object>
             {
                 ["game_ids"] = IntArray("要发送的游戏 id 列表"),
@@ -137,7 +137,7 @@ public static class AiToolRegistry
         new AiToolDefinition
         {
             Name = "set_settings",
-            Description = "修改允许的设置项；执行前生成确认卡片。API Key、库目录、便携开关不可修改。",
+            Description = "修改允许的设置项；调用后立即生成确认卡片，不要在文字里再征求同意。API Key、库目录、便携开关不可修改。",
             Parameters = Schema(new Dictionary<string, object>
             {
                 ["settings"] = new

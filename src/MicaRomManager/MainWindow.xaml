@@ -231,8 +231,22 @@
                     <MenuItem Header="用指定模拟器启动" />
                     <MenuItem Header="编辑信息…" Command="{Binding EditSelectedCommand}" InputGestureText="F2" />
                     <MenuItem Header="刮削信息…" Command="{Binding ScrapeCommand}" />
-                    <MenuItem Header="AI 标签…" Command="{Binding AiTagsCommand}" />
-                    <MenuItem Header="AI 标题翻译…" Command="{Binding AiTranslateCommand}" />
+                    <MenuItem Click="AiAsk_Click" ToolTip="把选中的游戏发送给右侧 AI 助手咨询">
+                        <MenuItem.Header>
+                            <StackPanel Orientation="Horizontal">
+                                <Border CornerRadius="3" Padding="4,1" Margin="0,0,6,0" VerticalAlignment="Center">
+                                    <Border.Background>
+                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                            <GradientStop Color="#7C4DFF" Offset="0" />
+                                            <GradientStop Color="#13B5FF" Offset="1" />
+                                        </LinearGradientBrush>
+                                    </Border.Background>
+                                    <TextBlock Text="AI" Foreground="White" FontSize="10" FontWeight="Bold" />
+                                </Border>
+                                <TextBlock Text="问问" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </MenuItem.Header>
+                    </MenuItem>
                     <MenuItem Header="推荐游戏…" Command="{Binding RecommendCommand}" />
                     <MenuItem Header="批量编辑…" Command="{Binding BatchEditCommand}" />
                     <MenuItem Header="合并为多碟游戏（选中多行，首行为主条目）" Command="{Binding MergeSelectedCommand}" />
