@@ -1,5 +1,16 @@
 # 经验记录（MEMORIES）
 
+## 2026-10-27（lite / Rust + Tauri 2）
+
+- Tauri 2 的 `reqwest` 要用 `default-features=false` + `rustls-tls` + `system-proxy`，否则 Windows 系统代理不生效；手动代理用 `Proxy::all`，直连用 `.no_proxy()`。
+- Rust 无纯实现 rar 解压库：7z 用 `sevenz-rust`；rar 只能调外部 `7z.exe`/`UnRAR.exe`，并给出「请手动解压后用从文件夹安装」提示。
+- 前端 `@tauri-apps/plugin-opener` 的 `opener:default` 只含 open-url/reveal-item-in-dir，`openPath` 必须额外加 `opener:allow-open-path` 权限，否则调用被拒。
+- 模拟器 `exe_path/core_path` 的相对语义仍与 WPF 一致：只展开 `%DATA%`，不拼程序目录；完整 exe 由 `resolve_exe_path` 结合安装目录计算。
+- SQLite 备份 `VACUUM INTO` 或 `wal_checkpoint` 后再复制，能避免 WAL 未落盘导致备份缺数据；恢复用 `ATTACH` + 版本校验 + 逐表 DELETE/INSERT。
+- Tauri dev 进程会锁住构建目录：`cargo clean`/`clippy` 会提示「Blocking waiting for file lock」，等 dev 退出或直接容忍等待即可。
+- `cargo fmt` 首次对全库生效会改很多换行；先提交前统一跑一次，之后保持 `--check` 干净。
+- 前端构建的 Svelte a11y 警告（`<div onclick>`）不影响产物；自绘右键菜单要接受该警告或用 `<button>`。
+
 ## 2026-10-27
 
 - 平台级启动参数为空时不能固定回退 `"{rom}"`：应沿用模拟器自带 `ArgsTemplate`；RetroArch 必须带 `-L "{core}" "{rom}"`，否则双击没有核心直接启动失败。平台设置里选 RetroArch 时自动补默认参数，后台解析也要有同样的兜底。

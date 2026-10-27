@@ -16,7 +16,8 @@
 
 ## 本项目约定
 
-- 技术栈：WPF / .NET 9 / SQLite（Microsoft.Data.Sqlite）/ CommunityToolkit.Mvvm。
+- `lite` 分支技术栈：Rust + Tauri 2 + Svelte 5 + TypeScript + SQLite（rusqlite），位于 `app/`；其余分支仍为 WPF / .NET 9。
 - 字体：系统已安装的 HarmonyOS Sans SC，回退 Microsoft YaHei UI，不嵌入字体。
 - 数据目录：优先程序目录 `data\`（便携），不可写时回退 `%LOCALAPPDATA%\MicaRomManager\`。
 - 删除 ROM 文件走回收站；「从库中移除」不动文件。
+- lite 版必须与 WPF 版共用同一 `mica.db`（schema v10），不得改表结构。

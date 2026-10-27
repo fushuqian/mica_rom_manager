@@ -10,3 +10,15 @@ obj/
 *.log
 TestResults/
 .vscode/
+
+# lite（Rust + Tauri）
+/app/node_modules/
+/app/dist/
+/app/src-tauri/target/
+/app/src-tauri/gen/
+/app/src-tauri/android/
+/app/src-tauri/ios/
+/app/src-tauri/icons/android/
+/app/src-tauri/icons/ios/
+/publish-lite/
+/devlog*.txt

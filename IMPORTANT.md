@@ -2,12 +2,23 @@
 
 ## 路径
 
-- 项目目录：`d:\Trae\MICA_ROM_MANAGER`
+- 项目目录：`d:\Syncthing\Trae\mica_rom_manager_lite`
+- lite（Rust + Tauri 2）工程：`app\`（前端 `app\web`，后端 `app\src-tauri`）
 - 解决方案：`MicaRomManager.sln`
-- 主程序：`src\MicaRomManager\MicaRomManager.csproj`（WPF，net9.0-windows）
-- 运行期数据（便携）：`<程序目录>\data\`，含 `mica.db`、`covers\`、`emulators\`、`exports\`、`logs\`
+- 主程序（WPF）：`src\MicaRomManager\MicaRomManager.csproj`（net9.0-windows）
+- 运行期数据（便携）：`<程序目录>\data\`，含 `mica.db`、`covers\`、`emulators\`、`downloads\`、`exports\`、`logs\`
 - 回退数据目录：`%LOCALAPPDATA%\MicaRomManager\`
 - 字体：`C:\Windows\Fonts\HarmonyOS_Sans_SC_Regular.ttf` / `_Bold.ttf`（系统已安装，直接引用）
+
+## lite 构建
+
+- 开发：`cd app\web; npm run tauri dev`（Vite 5173 + Rust 后端）
+- 前端构建：`cd app\web; npm run build`
+- 质量门：`cd app\src-tauri; cargo fmt --check; cargo clippy --all-targets -- -D warnings; cargo test --lib`
+- 发布：`cd app; npm run tauri build`，产物在 `app\src-tauri\target\release\`
+- 交付目录：`publish-lite\`（exe + `Resources\` + `data\`）
+- 测试旧库兼容：设置环境变量 `MICA_COMPAT_DB=<mica.db 路径>` 后运行 `cargo test --lib real_db_is_compatible`
+- 关键词：Rust 工具链为 msvc 1.99；7z 用 `sevenz-rust`，rar 依赖外部 7-Zip/WinRAR。
 
 ## 凭据
 
