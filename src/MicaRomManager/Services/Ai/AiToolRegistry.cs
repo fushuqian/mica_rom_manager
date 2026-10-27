@@ -108,7 +108,7 @@ public static class AiToolRegistry
         new AiToolDefinition
         {
             Name = "launch_game",
-            Description = "启动游戏。用户说「随便推荐一个/不知道玩什么」时不要传 game_id，由本地随机挑一个；界面会显示启动/换一个/算了，不需要再问是否启动。",
+            Description = "启动游戏。用户说「随便推荐一个/不知道玩什么」时不要传 game_id，由本地从全部游戏里随机挑一个（不受当前筛选影响）；界面会显示启动/换一个/算了，不需要再问是否启动。",
             Parameters = Schema(new Dictionary<string, object>
             {
                 ["game_id"] = Integer("游戏 id；不传则随机推荐一个"),

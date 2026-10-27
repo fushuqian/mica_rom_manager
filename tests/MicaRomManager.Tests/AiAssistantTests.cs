@@ -110,6 +110,21 @@ public class AiAssistantTests
     }
 
     [Fact]
+    public async Task LaunchGame_RandomUsesAllGamesNotFilteredList()
+    {
+        var numeric = new Game { Id = 1, Title = "002", Platform = "GBA", Status = GameStatus.NotPlayed };
+        var named = new Game { Id = 2, Title = "洛克人X4", Platform = "PlayStation", Status = GameStatus.NotPlayed };
+        var host = new FakeHost(new[] { numeric, named }) { FilteredOverride = new[] { numeric } };
+
+        var result = await new AiToolExecutor().ExecuteAsync(
+            Tool("launch_game", "{}"), host, CancellationToken.None);
+
+        Assert.NotNull(result.Pending);
+        Assert.Contains("洛克人X4", result.Pending!.Summary);
+        Assert.DoesNotContain("002", result.Pending.Summary);
+    }
+
+    [Fact]
     public async Task LaunchGame_WithoutIdReturnsThreeButtonSuggestion()
     {
         var host = new FakeHost(new[]
@@ -255,7 +270,8 @@ public class AiAssistantTests
         public FakeHost(IReadOnlyList<Game> games) => Games = games.ToList();
 
         public IReadOnlyList<Game> AllGames => Games;
-        public IReadOnlyList<Game> FilteredGames => Games;
+        public IReadOnlyList<Game>? FilteredOverride { get; init; }
+        public IReadOnlyList<Game> FilteredGames => FilteredOverride ?? Games;
         public Game? SelectedGame => Games.FirstOrDefault();
         public IReadOnlyList<Game> SelectedGames => Games.Take(1).ToList();
         public string ConnectedDevice => "测试设备";

@@ -329,11 +329,10 @@ public sealed class AiToolExecutor
         return Pending(call, BuildLaunchAction(host, game, discIndex));
     }
 
-    /// <summary>启动推荐：优先有名字、未玩/在玩、文件存在的游戏。</summary>
+    /// <summary>启动推荐：从全部游戏里随机，优先有名字、未玩/在玩、文件存在。</summary>
     private static Game? PickLaunchCandidate(IAiAppHost host, long? excludeId)
     {
-        var pool = host.FilteredGames.Count > 0 ? host.FilteredGames : host.AllGames;
-        var candidates = pool
+        var candidates = host.AllGames
             .Where(game => game.Id != excludeId && !game.IsMissing)
             .ToList();
         if (candidates.Count == 0) return null;
