@@ -4,6 +4,7 @@
 
 - 删除 `app/src-tauri/target`（21.7 GB）与 `app/dist`，释放约 21.7 GB 磁盘空间。
 - 保留源码、`app/node_modules`、`publish-lite` 交付包与 `toberemoved` 归档；恢复开发时重新构建即可。
+- 暂停原因：Rust + Tauri 模式开发难度高于 WPF 主版本、功能实现仍不够完全，且主版本 publish 产物仅 100 多 MB，轻量化重写性价比过低。计划先完成主版本功能，再评估重构。lite 分支冻结在 v0.14.0。
 
 ## 2026-10-28 lite 重新生成正式交付包
 

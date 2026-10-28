@@ -135,7 +135,9 @@
 ## Q-021 项目暂停与本地清理
 
 - 描述：老板要求 mica_rom_manager_lite 暂时停止开发，并清理本地构建缓存。
-- 状态：已完成 —— v0.14.0 正式包已生成并推送 GitHub（`47d767c`）；已删除 `app/src-tauri/target`（21.7 GB）与 `app/dist`；源码、`app/node_modules`、`publish-lite` 交付包、`toberemoved` 归档均保留。恢复开发只需 `npm install`（如需）后重新 `npm run tauri dev` / `build`。
+- 状态：已暂停 —— v0.14.0 正式包已生成并推送 GitHub（`47d767c`）；已删除 `app/src-tauri/target`（21.7 GB）与 `app/dist`；源码、`app/node_modules`、`publish-lite` 交付包、`toberemoved` 归档均保留。恢复开发只需 `npm install`（如需）后重新 `npm run tauri dev` / `build`。
+- 终止原因（老板确认）：Rust + Tauri 模式的开发难度高于 WPF 主版本，功能实现仍不够完全；主版本 publish 产物也只有 100 多 MB，为轻量化重写一套性价比过低。计划先完成主版本功能，之后再评估是否重构。
+- 分支状态：`lite` 冻结在 v0.14.0（`45f1e5f`），不再投入功能开发。
 - 优先级：中
 - 创建时间：2026-10-28
 - 更新时间：2026-10-28
