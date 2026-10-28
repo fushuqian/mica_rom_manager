@@ -13,11 +13,12 @@
 - `import_scan` / `import_apply` 返回结果新增 `cancelled` 字段；`maintenance_hash_missing` 由元组改为 `{computed, skipped, cancelled}`。
 - 服务层 `importer::scan` / `importer::apply` / `maintenance::hash_missing` 增加进度回调参数，单测使用空实现。
 - 仓库清理：WPF 主版本源码（`src/`、`tests/`、`MicaRomManager.sln`）移入 `toberemoved/wpf/`，lite 分支只保留 Rust + Tauri 代码。
+- `[lib] crate-type` 由 `staticlib + cdylib + rlib` 改为 `rlib`：unrar-rs 引入后 MinGW 链接 `cdylib` 报 `export ordinal too large`，导致 GNU 构建失败；桌面端不需要 cdylib/staticlib（仅移动端需要）。
 
 ### 测试
 
 - 新增 3 个单测：游戏增删改与指纹、分享包预览/估算/打包告警、从文件夹安装并收集 exe 候选。
-- 单测总数 9 → 12。
+- 单测总数 9 → 12；`cargo build --release` 通过，release 版窗口冒烟启动正常。
 
 ## 2026-10-28 lite 功能追平主版本
 

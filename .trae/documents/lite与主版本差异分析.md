@@ -108,7 +108,7 @@
 - **schema**：两版都为 v10，lite 的 `db/migrations.rs` 复刻 SchemaV1–V10，`user_version` 保持 10；WPF 打开 lite 写过的库没有结构风险。
 - **设置键**：`library.root`、`library.portable`、`library.import_mode`、`network.proxy.mode/address`、`list_view_state` 保持同名同结构，视图状态可互读。
 - **路径语义**：`%DATA%`、便携相对路径、模拟器 `exe_path/core_path` 只展开 `%DATA%` 的规则一致（`MEMORIES.md` 已知坑已继承）。
-- **可回退性**：lite 分支未改动 `src/`，随时可切回 main 用 WPF 版继续；风险主要在数据库并发与新增字段（目前没有新增）。
+- **可回退性**：WPF 源码仍在 `origin/main`，lite 分支已将其移入 `toberemoved/wpf/`；需要对照或回退时切回 main 即可。
 - **未验证项**：未实机跑 lite 的导入→启动→分享闭环，未做 1000 条性能与 200% DPI 复核（重构计划 M8 验收项）。
 
 ## 6. 后续建议（需老板确认后再排期，本次不执行）
@@ -126,21 +126,21 @@
 ## 7. 验证与复现方式
 
 ```powershell
-# 1. 确认 WPF 源码两分支完全一致（应无输出）
-git diff origin/main HEAD -- src tests MicaRomManager.sln
+# 1. WPF 源码已移入 toberemoved/wpf（lite 分支）
+git log --oneline --stat -1             # 应看到 src/tests/sln 的重命名
 
-# 2. 查看 lite 新增内容（应只新增 app/ 与文档）
+# 2. 查看 lite 版本差异
 git diff --stat origin/main HEAD
 
 # 3. 测试数量
-(Select-String -Path app/src-tauri/src/tests.rs -Pattern '#\[test\]').Count           # 9
-(Get-ChildItem tests -Recurse -Filter *.cs | Select-String -Pattern '\[Fact\]|\[Theory\]' | Measure-Object).Count  # 78
+(Select-String -Path app/src-tauri/src/tests.rs -Pattern '#\[test\]').Count           # 12
 
 # 4. 产物体积
 Get-ChildItem publish-lite\MicaRomManager.exe | Select-Object Length                   # 6,857,728
 
 # 5. lite 质量门（在 app/src-tauri 下）
-cargo fmt --check; cargo clippy --all-targets -- -D warnings; cargo test --lib
+cargo check --all-targets
+cargo test --lib --target x86_64-pc-windows-msvc   # GNU 工具链下测试 exe 起不来，见 MEMORIES
 ```
 
 ## 8. 假设与边界
@@ -148,3 +148,20 @@ cargo fmt --check; cargo clippy --all-targets -- -D warnings; cargo test --lib
 - 「主版本」按 `origin/main`（WPF v0.13.1）理解；若老板指的是其他分支/发布包，需要再校准。
 - 本分析只做静态对比，不代表 lite 已通过实机验收；性能、DPI、WebView2 兼容性均未实测。
 - 差异清单只记录**已从代码中确认**的项，未逐行审计全部业务逻辑（如启动参数边界、代理细节）。
+
+## 9. 追平结果（2026-10-28）
+
+| 原差异 | 状态 | 证据 |
+| --- | --- | --- |
+| 4.1 安装后不能选 exe | 已修 | 新增 `ExePickDialog.svelte`，`SettingsDialog.finishInstall` 按 0/1/多候选分流 |
+| 4.2 rar 依赖外部程序 | 已修 | `installer::extract_rar_builtin`（unrar-rs）优先，`extract_rar_external` 兜底 |
+| 4.3 缺「测试 GitHub 连接」 | 已修 | 命令 `network_test_github` + 常规页按钮 |
+| 4.4 长任务无进度、无取消 | 已修 | `progress.rs` 广播 `task://progress`/`task://done`，`cancel_task`；导入、补指纹、下载均支持中止 |
+| 4.5 测试基线变薄 | 已补 | 9 → 12 项，新增 games CRUD/指纹、sharer 预览与打包、installer 文件夹安装 |
+| 格式列排序 | 已修 | `grid.ts` 改为 `sortValue` 按扩展名，`canSort()` 统一判断 |
+| `maintenance_sync_tags` 死命令 | 已接 | 数据维护页「同步标签字典」 |
+| 双份代码 | 已清 | `src/`、`tests/`、`MicaRomManager.sln` → `toberemoved/wpf/` |
+| WebView2 依赖 | 无法消除 | Tauri 架构决定，仅能交付说明注明 |
+| 与 WPF 进程不能共存 | 无法消除 | SQLite 单写，属设计约束 |
+
+仍未完成：实机验收（导入→启动→分享闭环、1000 条性能、200% DPI）。

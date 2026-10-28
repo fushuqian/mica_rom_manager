@@ -5,6 +5,7 @@
 - 本机 GNU 工具链跑 `cargo test` 会在测试 exe 启动时报 `0xC0000139 STATUS_ENTRYPOINT_NOT_FOUND`（WebView2Loader / 运行库冲突），改用 `cargo test --lib --target x86_64-pc-windows-msvc` 即可正常跑通；构建仍保持 GNU 不动。
 - 长任务进度统一走 `task://progress`，节流 120ms；服务层用 `TaskReporter` trait 解耦，单测传 `NoopReporter`（`#[cfg(test)]`）。
 - 模态框会盖住底部状态栏，取消按钮必须放在模态框内部（导入向导、模拟器下载），状态栏只做进度文字展示。
+- Windows GNU 链接 `cdylib` 时，引入符号量大的库（如 unrar-rs）会报 `export ordinal too large: N`；桌面端把 `[lib] crate-type` 收窄为 `["rlib"]` 即可，`cargo check` 不会发现这类链接错误，必须跑一次 `cargo build`。
 
 ## 2026-10-28（lite 追平主版本）
 

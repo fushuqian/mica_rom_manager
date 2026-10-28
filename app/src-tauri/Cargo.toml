@@ -7,7 +7,9 @@ edition = "2021"
 
 [lib]
 name = "mica_rom_manager_lib"
-crate-type = ["staticlib", "cdylib", "rlib"]
+# 桌面端只需要 rlib；保留 cdylib/staticlib 会让 MinGW 链接时导出符号过多
+# （unrar-rs 引入后报 "export ordinal too large"）。
+crate-type = ["rlib"]
 
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
