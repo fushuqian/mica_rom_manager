@@ -1,5 +1,10 @@
 # 变更记录（CHANGELOG）
 
+## 2026-10-28 项目暂停，清理本地构建缓存
+
+- 删除 `app/src-tauri/target`（21.7 GB）与 `app/dist`，释放约 21.7 GB 磁盘空间。
+- 保留源码、`app/node_modules`、`publish-lite` 交付包与 `toberemoved` 归档；恢复开发时重新构建即可。
+
 ## 2026-10-28 lite 重新生成正式交付包
 
 - `npm run tauri build` 通过，产出 NSIS 安装包 `app/src-tauri/target/release/bundle/nsis/MicaRomManager_0.14.0_x64-setup.exe`（3.56 MB）。

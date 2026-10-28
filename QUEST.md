@@ -132,6 +132,14 @@
 - 创建时间：2026-10-27
 - 更新时间：2026-10-27
 
+## Q-021 项目暂停与本地清理
+
+- 描述：老板要求 mica_rom_manager_lite 暂时停止开发，并清理本地构建缓存。
+- 状态：已完成 —— v0.14.0 正式包已生成并推送 GitHub（`47d767c`）；已删除 `app/src-tauri/target`（21.7 GB）与 `app/dist`；源码、`app/node_modules`、`publish-lite` 交付包、`toberemoved` 归档均保留。恢复开发只需 `npm install`（如需）后重新 `npm run tauri dev` / `build`。
+- 优先级：中
+- 创建时间：2026-10-28
+- 更新时间：2026-10-28
+
 ## Q-020 lite 修完与主版本剩余差异
 
 - 描述：补齐 lite 与 WPF 主版本剩余差异：长任务进度事件与取消（导入/补指纹/下载）、接通 `maintenance_sync_tags` 前端入口、补充 importer/sharer/installer/db::games 单测。
