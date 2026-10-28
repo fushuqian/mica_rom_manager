@@ -1,5 +1,10 @@
 # 变更记录（CHANGELOG）
 
+## 2026-10-28 lite 重新生成正式交付包
+
+- `npm run tauri build` 通过，产出 NSIS 安装包 `app/src-tauri/target/release/bundle/nsis/MicaRomManager_0.14.0_x64-setup.exe`（3.56 MB）。
+- 便携版 `MicaRomManager.exe` 更新为 9,515,008 字节（14:43），已覆盖 `publish-lite/`；旧版备份至 `toberemoved/publish-lite-old/`。
+
 ## 2026-10-28 lite 补长任务进度、取消与测试基线
 
 ### 新增
