@@ -1,7 +1,8 @@
+use crate::progress::TaskGuard;
 use crate::services::maintenance;
 use crate::state::AppState;
 use crate::util::Res;
-use tauri::State;
+use tauri::{AppHandle, State};
 
 #[tauri::command]
 pub fn maintenance_stats(st: State<'_, AppState>) -> Res<maintenance::MaintenanceStats> {
@@ -9,8 +10,15 @@ pub fn maintenance_stats(st: State<'_, AppState>) -> Res<maintenance::Maintenanc
 }
 
 #[tauri::command]
-pub fn maintenance_hash_missing(st: State<'_, AppState>) -> Res<(i64, i64)> {
-    maintenance::hash_missing(&st)
+pub fn maintenance_hash_missing(
+    app: AppHandle,
+    st: State<'_, AppState>,
+) -> Res<maintenance::HashOutcome> {
+    let task = TaskGuard::new(&app, &st, "hash-missing");
+    let mut reporter = task.reporter();
+    let result = maintenance::hash_missing(&st, &mut reporter);
+    drop(task);
+    result
 }
 
 #[tauri::command]

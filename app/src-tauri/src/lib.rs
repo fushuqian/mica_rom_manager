@@ -3,6 +3,7 @@ mod db;
 mod models;
 mod paths;
 mod portable;
+mod progress;
 mod services;
 mod settings;
 mod state;
@@ -74,6 +75,7 @@ pub fn run() {
             commands::files::toggle_favorite,
             commands::import::import_scan,
             commands::import::import_apply,
+            commands::import::cancel_task,
             commands::import::platform_scan,
             commands::import::platform_organize,
             commands::import::import_supported_extensions,

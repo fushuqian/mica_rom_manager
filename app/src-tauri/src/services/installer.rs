@@ -104,7 +104,12 @@ pub async fn latest_release(st: &AppState, repo: &str) -> Res<ReleaseInfo> {
     })
 }
 
-pub async fn download_asset(st: &AppState, url: &str, file_name: &str) -> Res<String> {
+/// 发起下载并返回响应与本地目标路径，由调用方流式写入并报告进度。
+pub async fn start_download(
+    st: &AppState,
+    url: &str,
+    file_name: &str,
+) -> Res<(reqwest::Response, std::path::PathBuf)> {
     let client = client(st)?;
     let response = client
         .get(url)
@@ -123,13 +128,7 @@ pub async fn download_asset(st: &AppState, url: &str, file_name: &str) -> Res<St
         safe
     });
     std::fs::create_dir_all(&downloads).ok();
-
-    let bytes = response
-        .bytes()
-        .await
-        .map_err(|e| format!("读取下载内容失败：{e}"))?;
-    std::fs::write(&target, &bytes).map_err(|e| format!("保存下载文件失败：{e}"))?;
-    Ok(target.to_string_lossy().to_string())
+    Ok((response, target))
 }
 
 pub struct InstallResult {

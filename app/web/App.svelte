@@ -62,6 +62,9 @@
     store.statusMessage = text;
   }
 
+  type TaskProgress = { task: string; done: number; total: number; message: string; cancelled: boolean };
+  let taskProgress = $state<TaskProgress | null>(null);
+
   function primary(): Game | null {
     return store.selectedGames[0] ?? null;
   }
@@ -505,6 +508,13 @@
       void store.reloadGames();
     });
 
+    const unlistenProgress = listen<TaskProgress>("task://progress", (event) => {
+      taskProgress = event.payload;
+    });
+    const unlistenDone = listen<{ task: string }>("task://done", () => {
+      taskProgress = null;
+    });
+
     const beforeUnload = () => {
       void saveViewState();
     };
@@ -512,6 +522,8 @@
 
     return () => {
       void unlisten.then((fn) => fn());
+      void unlistenProgress.then((fn) => fn());
+      void unlistenDone.then((fn) => fn());
       window.removeEventListener("beforeunload", beforeUnload);
     };
   });
@@ -583,7 +595,7 @@
 
   <footer class="statusbar">
     <span class="path" title={dataPathText}>{dataPathText}</span>
-    <span class="message">{store.statusMessage}</span>
+    <span class="message">{taskProgress ? taskProgress.message : store.statusMessage}</span>
     {#if store.busy}<span class="progress"></span>{/if}
     <span class="refresh">{store.lastRefresh}</span>
   </footer>

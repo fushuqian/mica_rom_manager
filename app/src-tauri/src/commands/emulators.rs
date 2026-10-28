@@ -1,10 +1,11 @@
 use crate::db::emulators;
 use crate::models::Emulator;
+use crate::progress::{TaskGuard, TaskReporter};
 use crate::services::installer::{self, ReleaseInfo};
 use crate::state::AppState;
 use crate::util::Res;
 use serde::Serialize;
-use tauri::State;
+use tauri::{AppHandle, State};
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -122,9 +123,65 @@ pub fn emulator_test_launch(st: State<'_, AppState>, id: i64) -> Res<String> {
 
 #[tauri::command]
 pub async fn emulator_download_asset(
+    app: AppHandle,
     st: State<'_, AppState>,
     url: String,
     file_name: String,
 ) -> Res<String> {
-    installer::download_asset(&st, &url, &file_name).await
+    use std::io::Write;
+
+    let task = TaskGuard::new(&app, &st, "download");
+    let mut reporter = task.reporter();
+    let (mut response, target) = installer::start_download(&st, &url, &file_name).await?;
+    let total = response.content_length().unwrap_or(0) as usize;
+    let mut file = std::fs::File::create(&target).map_err(|e| format!("保存下载文件失败：{e}"))?;
+    let mut done = 0usize;
+    loop {
+        let chunk = match response.chunk().await {
+            Ok(Some(chunk)) => chunk,
+            Ok(None) => break,
+            Err(e) => {
+                drop(file);
+                let _ = std::fs::remove_file(&target);
+                drop(task);
+                return Err(format!("读取下载内容失败：{e}"));
+            }
+        };
+        file.write_all(&chunk)
+            .map_err(|e| format!("保存下载文件失败：{e}"))?;
+        done += chunk.len();
+        let message = format!(
+            "下载中 {} / {}",
+            format_size(done as i64),
+            if total > 0 {
+                format_size(total as i64)
+            } else {
+                "未知大小".to_string()
+            }
+        );
+        if reporter.tick(done, total, &message) {
+            drop(file);
+            let _ = std::fs::remove_file(&target);
+            drop(task);
+            return Err("已取消下载".into());
+        }
+    }
+    reporter.tick(done, if total == 0 { done } else { total }, "下载完成");
+    drop(task);
+    Ok(target.to_string_lossy().to_string())
+}
+
+fn format_size(bytes: i64) -> String {
+    const UNITS: [&str; 4] = ["B", "KB", "MB", "GB"];
+    let mut value = bytes as f64;
+    let mut unit = 0;
+    while value >= 1024.0 && unit < UNITS.len() - 1 {
+        value /= 1024.0;
+        unit += 1;
+    }
+    if unit == 0 {
+        format!("{} {}", bytes, UNITS[0])
+    } else {
+        format!("{:.1} {}", value, UNITS[unit])
+    }
 }

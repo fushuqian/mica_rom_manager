@@ -1,5 +1,11 @@
 # 经验记录（MEMORIES）
 
+## 2026-10-28（lite 长任务进度 / 测试环境）
+
+- 本机 GNU 工具链跑 `cargo test` 会在测试 exe 启动时报 `0xC0000139 STATUS_ENTRYPOINT_NOT_FOUND`（WebView2Loader / 运行库冲突），改用 `cargo test --lib --target x86_64-pc-windows-msvc` 即可正常跑通；构建仍保持 GNU 不动。
+- 长任务进度统一走 `task://progress`，节流 120ms；服务层用 `TaskReporter` trait 解耦，单测传 `NoopReporter`（`#[cfg(test)]`）。
+- 模态框会盖住底部状态栏，取消按钮必须放在模态框内部（导入向导、模拟器下载），状态栏只做进度文字展示。
+
 ## 2026-10-28（lite 追平主版本）
 
 - rar 解压可用 `unrar-rs`（RARLAB UnRAR 的纯 Rust 移植，0.14.x，仅解压）。默认特性带 `crypto-aws-lc` 需要 C 工具链，Windows GNU 工具链下要写 `default-features = false, features = ["crypto-rust"]`。API：`RarArchive::open(File)` → `by_index(i)` → `entry.unpack_in(dir)`。

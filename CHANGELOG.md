@@ -1,5 +1,24 @@
 # 变更记录（CHANGELOG）
 
+## 2026-10-28 lite 补长任务进度、取消与测试基线
+
+### 新增
+
+- 长任务进度事件：`task://progress` / `task://done`，覆盖导入扫描、导入入库、补算指纹、模拟器下载；状态栏实时显示「已扫描 N 个文件」「导入中 x/y」「下载中 12.3 MB / 45.6 MB」。
+- 任务取消：新命令 `cancel_task`；导入向导在忙碌时提供「中止任务」，模拟器下载提供「取消下载」。
+- 数据维护页新增「同步标签字典」按钮，接通原本未使用的 `maintenance_sync_tags`。
+
+### 变更
+
+- `import_scan` / `import_apply` 返回结果新增 `cancelled` 字段；`maintenance_hash_missing` 由元组改为 `{computed, skipped, cancelled}`。
+- 服务层 `importer::scan` / `importer::apply` / `maintenance::hash_missing` 增加进度回调参数，单测使用空实现。
+- 仓库清理：WPF 主版本源码（`src/`、`tests/`、`MicaRomManager.sln`）移入 `toberemoved/wpf/`，lite 分支只保留 Rust + Tauri 代码。
+
+### 测试
+
+- 新增 3 个单测：游戏增删改与指纹、分享包预览/估算/打包告警、从文件夹安装并收集 exe 候选。
+- 单测总数 9 → 12。
+
 ## 2026-10-28 lite 功能追平主版本
 
 ### 新增

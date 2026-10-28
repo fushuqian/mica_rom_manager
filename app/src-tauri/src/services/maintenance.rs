@@ -1,5 +1,6 @@
 use crate::db::{games, lookups};
 use crate::models::Game;
+use crate::progress::TaskReporter;
 use crate::services::hasher;
 use crate::state::AppState;
 use crate::util::Res;
@@ -44,28 +45,39 @@ pub fn stats(st: &AppState) -> Res<MaintenanceStats> {
     Ok(result)
 }
 
+#[derive(Debug, Clone, Serialize, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct HashOutcome {
+    pub computed: i64,
+    pub skipped: i64,
+    pub cancelled: bool,
+}
+
 /// 给所有缺失指纹且文件存在的记录补算指纹。
-pub fn hash_missing(st: &AppState) -> Res<(i64, i64)> {
+pub fn hash_missing(st: &AppState, reporter: &mut dyn TaskReporter) -> Res<HashOutcome> {
     let list = games::list_all(st)?;
-    let mut computed = 0i64;
-    let mut skipped = 0i64;
-    for game in list {
-        if !game.rom_hash.trim().is_empty() || game.rom_path.trim().is_empty() {
-            continue;
+    let total = list.len();
+    let mut outcome = HashOutcome::default();
+    for (index, game) in list.into_iter().enumerate() {
+        if game.rom_hash.trim().is_empty() && !game.rom_path.trim().is_empty() {
+            let path = st.expand(&game.rom_path);
+            if Path::new(&path).is_file() {
+                let hash = hasher::compute(&path);
+                if hash.is_empty() {
+                    outcome.skipped += 1;
+                } else {
+                    games::set_hash(st, game.id, &hash)?;
+                    outcome.computed += 1;
+                }
+            }
         }
-        let path = st.expand(&game.rom_path);
-        if !Path::new(&path).is_file() {
-            continue;
+        let message = format!("补算指纹 {}/{}：{}", index + 1, total, game.title);
+        if reporter.tick(index + 1, total, &message) {
+            outcome.cancelled = true;
+            break;
         }
-        let hash = hasher::compute(&path);
-        if hash.is_empty() {
-            skipped += 1;
-            continue;
-        }
-        games::set_hash(st, game.id, &hash)?;
-        computed += 1;
     }
-    Ok((computed, skipped))
+    Ok(outcome)
 }
 
 /// 移除所有碟片都不存在的记录（只删数据库记录）。

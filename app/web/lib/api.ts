@@ -100,6 +100,7 @@ export type ScanResult = {
   duplicateCount: number;
   excludedCount: number;
   formatSkippedCount: number;
+  cancelled?: boolean;
 };
 
 export type ImportItem = {
@@ -114,6 +115,7 @@ export type ImportOutcome = {
   imported: number;
   failed: number;
   messages: string[];
+  cancelled?: boolean;
 };
 
 export type PlatformScanOutcome = ScanResult & { removed: number; dir: string };
@@ -265,12 +267,14 @@ export const api = {
   importApply: (items: ImportItem[], mode: string) =>
     invoke<ImportOutcome>("import_apply", { items, mode }),
   importSupportedExtensions: () => invoke<string[]>("import_supported_extensions"),
+  cancelTask: () => invoke<void>("cancel_task"),
   platformScan: (name: string, formats: string | null) =>
     invoke<PlatformScanOutcome>("platform_scan", { name, formats }),
   platformOrganize: (name: string) => invoke<OrganizeOutcome>("platform_organize", { name }),
 
   maintenanceStats: () => invoke<MaintenanceStats>("maintenance_stats"),
-  maintenanceHashMissing: () => invoke<[number, number]>("maintenance_hash_missing"),
+  maintenanceHashMissing: () =>
+    invoke<{ computed: number; skipped: number; cancelled: boolean }>("maintenance_hash_missing"),
   maintenanceCleanMissing: () => invoke<number>("maintenance_clean_missing"),
   maintenanceExportCsv: (path: string) => invoke<number>("maintenance_export_csv", { path }),
   maintenanceBackupDb: (path: string) => invoke<void>("maintenance_backup_db", { path }),

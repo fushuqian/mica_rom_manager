@@ -1,5 +1,6 @@
 <script lang="ts">
   import { ask as askDialog, open as openDialog, save as saveDialog } from "@tauri-apps/plugin-dialog";
+  import { listen } from "@tauri-apps/api/event";
   import { openPath as openLocalPath, openUrl, revealItemInDir } from "@tauri-apps/plugin-opener";
   import { onMount } from "svelte";
   import EmulatorEditDialog from "./EmulatorEditDialog.svelte";
@@ -311,6 +312,15 @@
   }
 
   let updateInfo = $state<ReleaseInfo | null>(null);
+  let downloadProgress = $state<{ message: string; cancelled: boolean } | null>(null);
+
+  async function cancelDownload() {
+    try {
+      await api.cancelTask();
+    } catch (e) {
+      note("emulators", String(e));
+    }
+  }
 
   async function checkUpdate() {
     const emulator = currentEmulator();
@@ -604,8 +614,9 @@
     busy = true;
     note("maintenance", "正在补算指纹…");
     try {
-      const [computed, skipped] = await api.maintenanceHashMissing();
-      note("maintenance", `指纹补算完成：${computed} 条，跳过 ${skipped} 条。`);
+      const outcome = await api.maintenanceHashMissing();
+      const prefix = outcome.cancelled ? "已取消，指纹补算到一半：" : "指纹补算完成：";
+      note("maintenance", `${prefix}${outcome.computed} 条，跳过 ${outcome.skipped} 条。`);
       await loadStats();
       onDataChanged();
     } catch (e) {
@@ -615,7 +626,35 @@
     }
   }
 
+  async function syncTags() {
+    if (busy) return;
+    busy = true;
+    try {
+      await api.maintenanceSyncTags();
+      await store.reloadLookups();
+      note("maintenance", "已把库内标签同步到字典库。");
+    } catch (e) {
+      note("maintenance", String(e));
+    } finally {
+      busy = false;
+    }
+  }
+
   onMount(() => {
+    const unlistenProgress = listen<{ task: string; message: string; cancelled: boolean }>(
+      "task://progress",
+      (event) => {
+        if (event.payload.task !== "download") return;
+        downloadProgress = {
+          message: event.payload.message,
+          cancelled: event.payload.cancelled,
+        };
+      }
+    );
+    const unlistenDone = listen<{ task: string }>("task://done", (event) => {
+      if (event.payload.task === "download") downloadProgress = null;
+    });
+
     void (async () => {
       try {
         await loadGeneral();
@@ -627,6 +666,11 @@
         note("general", String(e));
       }
     })();
+
+    return () => {
+      void unlistenProgress.then((fn) => fn());
+      void unlistenDone.then((fn) => fn());
+    };
   });
 </script>
 
@@ -786,6 +830,12 @@
         </div>
         <div class="pane-foot">
           <span class="note">{messages.emulators ?? ""}</span>
+          {#if downloadProgress}
+            <span class="note">{downloadProgress.message}</span>
+            <button class="outline" onclick={cancelDownload}>
+              {downloadProgress.cancelled ? "正在取消…" : "取消下载"}
+            </button>
+          {/if}
         </div>
       {/if}
 
@@ -906,6 +956,7 @@
           <button class="outline" onclick={exportCsv}>导出 CSV…</button>
           <button class="outline" onclick={cleanMissing}>清理失效路径记录</button>
           <button class="outline" onclick={hashMissing} disabled={busy}>补算缺失指纹</button>
+          <button class="outline" onclick={syncTags} disabled={busy}>同步标签字典</button>
         </div>
         <div class="pane-foot">
           <span class="note">{messages.maintenance ?? ""}</span>

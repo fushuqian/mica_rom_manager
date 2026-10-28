@@ -132,6 +132,14 @@
 - 创建时间：2026-10-27
 - 更新时间：2026-10-27
 
+## Q-020 lite 修完与主版本剩余差异
+
+- 描述：补齐 lite 与 WPF 主版本剩余差异：长任务进度事件与取消（导入/补指纹/下载）、接通 `maintenance_sync_tags` 前端入口、补充 importer/sharer/installer/db::games 单测。
+- 状态：已完成（cargo check、npm run build 通过；`cargo test --lib --target x86_64-pc-windows-msvc` 12 项全通过）；WPF 源码已按老板确认移入 `toberemoved/wpf/`；WebView2 运行时依赖为 Tauri 架构限制，无法去除。
+- 优先级：高
+- 创建时间：2026-10-28
+- 更新时间：2026-10-28
+
 ## Q-019 lite 功能追平主版本
 
 - 描述：按 `lite与主版本差异分析.md` 的结论，把 lite 相比 WPF 主版本缺失的界面功能补齐：游戏编辑弹窗（收藏/模拟器/ROM 浏览/文件大小/封面预览/碟片列表）、模拟器编辑安装目录、多 exe 候选选择弹窗、设置页 GitHub 连接测试、光碟数与格式列排序；rar 解压改为内置 unrar-rs（外部工具兜底）。

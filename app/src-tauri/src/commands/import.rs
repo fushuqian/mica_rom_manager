@@ -1,12 +1,14 @@
 use crate::db::platforms;
 use crate::models::{ImportItem, ImportOutcome, ScanResult};
+use crate::progress::TaskGuard;
 use crate::services::importer;
 use crate::state::AppState;
 use crate::util::Res;
-use tauri::State;
+use tauri::{AppHandle, State};
 
 #[tauri::command]
 pub fn import_scan(
+    app: AppHandle,
     st: State<'_, AppState>,
     inputs: Vec<String>,
     recursive: bool,
@@ -14,22 +16,37 @@ pub fn import_scan(
     platform_override: Option<String>,
 ) -> Res<ScanResult> {
     let allowed = allowed_extensions.filter(|v| !v.is_empty());
-    importer::scan(
+    let task = TaskGuard::new(&app, &st, "import-scan");
+    let mut reporter = task.reporter();
+    let result = importer::scan(
         &st,
         &inputs,
         recursive,
         allowed.as_deref(),
         platform_override.as_deref(),
-    )
+        &mut reporter,
+    );
+    drop(task);
+    result
 }
 
 #[tauri::command]
 pub fn import_apply(
+    app: AppHandle,
     st: State<'_, AppState>,
     items: Vec<ImportItem>,
     mode: String,
 ) -> Res<ImportOutcome> {
-    importer::apply(&st, &items, &mode)
+    let task = TaskGuard::new(&app, &st, "import-apply");
+    let mut reporter = task.reporter();
+    let result = importer::apply(&st, &items, &mode, &mut reporter);
+    drop(task);
+    result
+}
+
+#[tauri::command]
+pub fn cancel_task(st: State<'_, AppState>) {
+    st.request_cancel();
 }
 
 #[derive(Debug, Clone, serde::Serialize, Default)]
@@ -46,6 +63,7 @@ pub struct PlatformScanOutcome {
 /// 扫描平台子库：先清理失效记录，再按格式白名单补充新文件。
 #[tauri::command]
 pub fn platform_scan(
+    app: AppHandle,
     st: State<'_, AppState>,
     name: String,
     formats: Option<String>,
@@ -81,6 +99,8 @@ pub fn platform_scan(
             .unwrap_or_default()
     });
     let allowed = crate::services::formats::parse(&allowed_text);
+    let task = TaskGuard::new(&app, &st, "platform-scan");
+    let mut reporter = task.reporter();
     let scan = importer::scan(
         &st,
         &[dir.to_string_lossy().to_string()],
@@ -91,7 +111,10 @@ pub fn platform_scan(
             Some(&allowed)
         },
         Some(&name),
-    )?;
+        &mut reporter,
+    );
+    drop(task);
+    let scan = scan?;
 
     Ok(PlatformScanOutcome {
         candidates: scan.candidates,

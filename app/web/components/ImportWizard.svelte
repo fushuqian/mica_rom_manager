@@ -27,7 +27,19 @@
   let bulkPlatform = $state("");
   let busy = $state(false);
   let scanning = $state(false);
+  let cancelling = $state(false);
   let error = $state("");
+
+  async function cancelTask() {
+    if (cancelling) return;
+    cancelling = true;
+    try {
+      await api.cancelTask();
+    } catch (e) {
+      error = String(e);
+      cancelling = false;
+    }
+  }
   let dragging = $state(false);
 
   let hasLibrary = $derived(libraryRoot.trim().length > 0);
@@ -61,6 +73,9 @@
       duplicates = result.duplicateCount;
       excluded = result.excludedCount;
       formatSkipped = result.formatSkippedCount;
+      if (result.cancelled) {
+        error = `扫描已取消，仅列出已扫描到的 ${candidates.length} 个候选。`;
+      }
       for (const candidate of candidates) {
         if (candidate.platform && !platformOptions.includes(candidate.platform)) {
           platformOptions = [...platformOptions, candidate.platform];
@@ -72,6 +87,7 @@
       if (token === scanToken) {
         scanning = false;
         busy = false;
+        cancelling = false;
       }
     }
   }
@@ -183,6 +199,7 @@
       error = String(e);
     } finally {
       busy = false;
+      cancelling = false;
     }
   }
 
@@ -333,6 +350,11 @@
 
     <div class="modal-foot">
       <span class="busy-text">{busy ? (scanning ? "正在计算指纹…" : "正在导入…") : ""}</span>
+      {#if busy}
+        <button class="outline" onclick={cancelTask} disabled={cancelling}>
+          {cancelling ? "正在取消…" : "中止任务"}
+        </button>
+      {/if}
       <button class="primary" onclick={confirm} disabled={busy}>开始导入</button>
       <button class="outline" onclick={onClose}>取消</button>
     </div>

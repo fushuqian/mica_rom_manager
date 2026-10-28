@@ -148,6 +148,9 @@ pub struct ScanResult {
     pub duplicate_count: i64,
     pub excluded_count: i64,
     pub format_skipped_count: i64,
+    /// 扫描过程中被用户取消（候选列表只含已扫描到的部分）。
+    #[serde(default)]
+    pub cancelled: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -166,6 +169,9 @@ pub struct ImportOutcome {
     pub imported: i64,
     pub failed: i64,
     pub messages: Vec<String>,
+    /// 用户在导入过程中取消了任务（已入库的记录保留）。
+    #[serde(default)]
+    pub cancelled: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]

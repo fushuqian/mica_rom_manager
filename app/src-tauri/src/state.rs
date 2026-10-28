@@ -14,6 +14,7 @@ pub struct AppState {
     pub exe_dir: PathBuf,
     pub conn: Mutex<Connection>,
     portable: AtomicBool,
+    cancel: AtomicBool,
 }
 
 impl AppState {
@@ -44,6 +45,7 @@ impl AppState {
             exe_dir,
             conn: Mutex::new(conn),
             portable: AtomicBool::new(portable),
+            cancel: AtomicBool::new(false),
         })
     }
 
@@ -55,6 +57,24 @@ impl AppState {
 
     pub fn portable(&self) -> bool {
         self.portable.load(Ordering::Relaxed)
+    }
+
+    /// 长任务开始时清掉上一次的取消请求。
+    pub fn begin_task(&self) {
+        self.cancel.store(false, Ordering::Relaxed);
+    }
+
+    pub fn request_cancel(&self) {
+        self.cancel.store(true, Ordering::Relaxed);
+    }
+
+    pub fn cancelled(&self) -> bool {
+        self.cancel.load(Ordering::Relaxed)
+    }
+
+    /// 任务结束，顺带清掉取消标记，避免下一次任务一开头就被取消。
+    pub fn end_task(&self) {
+        self.cancel.store(false, Ordering::Relaxed);
     }
 
     pub fn set_portable(&self, on: bool) {

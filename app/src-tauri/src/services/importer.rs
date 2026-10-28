@@ -1,5 +1,6 @@
 use crate::db::{games, platforms};
 use crate::models::{Game, ImportCandidate, ImportItem, ImportOutcome, ScanResult};
+use crate::progress::TaskReporter;
 use crate::services::extension_map::ExtensionMap;
 use crate::services::formats;
 use crate::services::hasher;
@@ -28,6 +29,7 @@ pub fn scan(
     recursive: bool,
     allowed_ext: Option<&[String]>,
     platform_override: Option<&str>,
+    reporter: &mut dyn TaskReporter,
 ) -> Res<ScanResult> {
     let existing_paths: HashSet<String> = {
         let list = games::list_all(st)?;
@@ -67,6 +69,7 @@ pub fn scan(
     let mut seen: HashSet<String> = HashSet::new();
     let mut seen_hashes: HashSet<String> = HashSet::new();
     let mut result = ScanResult::default();
+    let mut visited = 0usize;
 
     for input in inputs {
         let path = Path::new(input);
@@ -84,6 +87,7 @@ pub fn scan(
                 &mut seen_hashes,
                 &mut result,
             );
+            visited += 1;
         } else if path.is_dir() {
             let walker = walkdir::WalkDir::new(path)
                 .max_depth(if recursive { usize::MAX } else { 1 })
@@ -107,7 +111,13 @@ pub fn scan(
                     &mut seen_hashes,
                     &mut result,
                 );
+                visited += 1;
             }
+        }
+        let message = format!("已扫描 {} 个文件，候选 {} 个", visited, result.candidates.len());
+        if reporter.tick(visited, 0, &message) {
+            result.cancelled = true;
+            break;
         }
     }
 
@@ -285,9 +295,15 @@ pub fn move_to_library(
 }
 
 /// 按选定模式入库并写入数据库。
-pub fn apply(st: &AppState, items: &[ImportItem], mode: &str) -> Res<ImportOutcome> {
+pub fn apply(
+    st: &AppState,
+    items: &[ImportItem],
+    mode: &str,
+    reporter: &mut dyn TaskReporter,
+) -> Res<ImportOutcome> {
     let library_root = st.library_root();
     let mut outcome = ImportOutcome::default();
+    let total = items.len();
 
     // 平台目录映射
     let mut folders: HashMap<String, String> = HashMap::new();
@@ -295,7 +311,7 @@ pub fn apply(st: &AppState, items: &[ImportItem], mode: &str) -> Res<ImportOutco
         folders.insert(setting.name.to_lowercase(), setting.folder);
     }
 
-    for item in items {
+    for (index, item) in items.iter().enumerate() {
         let folder = folders
             .get(&item.platform.to_lowercase())
             .cloned()
@@ -371,6 +387,12 @@ pub fn apply(st: &AppState, items: &[ImportItem], mode: &str) -> Res<ImportOutco
                     .messages
                     .push(format!("{}：{}", file_name(item), err));
             }
+        }
+
+        let message = format!("导入中 {}/{}：{}", index + 1, total, file_name(item));
+        if reporter.tick(index + 1, total, &message) {
+            outcome.cancelled = true;
+            break;
         }
     }
 
