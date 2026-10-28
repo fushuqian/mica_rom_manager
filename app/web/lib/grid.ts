@@ -15,8 +15,9 @@ export type GridColumn = {
   header: string;
   width: number;
   sortKey: keyof Game | null;
+  sortValue?: (game: Game) => string | number;
   editable: EditorKind;
-  align?: "left" | "center";
+  align?: "left" | "center" | "right";
   tip?: (game: Game) => string;
 };
 
@@ -29,8 +30,8 @@ export const COLUMNS: GridColumn[] = [
   { header: "语言", width: 86, sortKey: "language", editable: "language" },
   { header: "类型", width: 90, sortKey: "genre", editable: "text" },
   { header: "年份", width: 64, sortKey: "releaseYear", editable: "year" },
-  { header: "光碟数", width: 60, sortKey: null, editable: "none", align: "center" },
-  { header: "格式", width: 60, sortKey: "romPath", editable: "none" },
+  { header: "光碟数", width: 60, sortKey: null, sortValue: (game) => discCount(game), editable: "none", align: "center" },
+  { header: "格式", width: 60, sortKey: null, sortValue: (game) => formatExt(game), editable: "none" },
   { header: "状态", width: 76, sortKey: "status", editable: "status" },
   { header: "次数", width: 56, sortKey: "playCount", editable: "none", align: "center" },
   { header: "时长", width: 72, sortKey: "playSeconds", editable: "none" },
@@ -85,24 +86,25 @@ export function ratingText(game: Game): string {
   return ratingStars(game.rating);
 }
 
-export function compareGames(a: Game, b: Game, key: keyof Game | null, dir: "asc" | "desc"): number {
-  if (!key) return 0;
-  const av = a[key];
-  const bv = b[key];
-  let result = 0;
+export function canSort(column: GridColumn): boolean {
+  return column.sortKey !== null || !!column.sortValue;
+}
+
+export function compareGames(a: Game, b: Game, column: GridColumn, dir: "asc" | "desc"): number {
+  if (!canSort(column)) return 0;
+  const av = column.sortValue ? column.sortValue(a) : a[column.sortKey!];
+  const bv = column.sortValue ? column.sortValue(b) : b[column.sortKey!];
+  const aHas = av !== null && av !== undefined && av !== "";
+  const bHas = bv !== null && bv !== undefined && bv !== "";
+  if (!aHas && !bHas) return 0;
+  if (!aHas) return 1;
+  if (!bHas) return -1;
+
+  let result: number;
   if (typeof av === "number" || typeof bv === "number") {
-    const an = typeof av === "number" ? av : av ? Number(av) : 0;
-    const bn = typeof bv === "number" ? bv : bv ? Number(bv) : 0;
-    const aHas = av !== null && av !== undefined && av !== "";
-    const bHas = bv !== null && bv !== undefined && bv !== "";
-    if (!aHas && !bHas) result = 0;
-    else if (!aHas) result = 1;
-    else if (!bHas) result = -1;
-    else result = an - bn;
+    result = Number(av) - Number(bv);
   } else {
-    const as = (av ?? "").toString();
-    const bs = (bv ?? "").toString();
-    result = as.localeCompare(bs, "zh-Hans-CN", { numeric: true, sensitivity: "base" });
+    result = String(av).localeCompare(String(bv), "zh-Hans-CN", { numeric: true, sensitivity: "base" });
   }
   if (result !== 0 && dir === "desc") result = -result;
   return result;

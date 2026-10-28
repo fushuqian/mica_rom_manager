@@ -3,6 +3,7 @@
   import { openPath as openLocalPath, openUrl, revealItemInDir } from "@tauri-apps/plugin-opener";
   import { onMount } from "svelte";
   import EmulatorEditDialog from "./EmulatorEditDialog.svelte";
+  import ExePickDialog from "./ExePickDialog.svelte";
   import {
     api,
     type AppInfo,
@@ -34,6 +35,7 @@
   let portable = $state(false);
   let proxyMode = $state("system");
   let proxyAddress = $state("127.0.0.1:7890");
+  let networkNote = $state("");
 
   async function loadGeneral() {
     info = await api.appInfo();
@@ -77,6 +79,19 @@
       await revealItemInDir(info.dbPath);
     } catch (e) {
       note("general", `打开数据目录失败：${e}`);
+    }
+  }
+
+  async function testGithub() {
+    if (busy) return;
+    busy = true;
+    networkNote = "正在测试…";
+    try {
+      networkNote = await api.networkTestGithub();
+    } catch (e) {
+      networkNote = String(e);
+    } finally {
+      busy = false;
     }
   }
 
@@ -199,16 +214,57 @@
   }
 
   async function finishInstall(emulator: Emulator, outcome: InstallOutcome) {
-    const exe = outcome.exeCandidates[0] ?? "";
-    await api.emulatorApplyInstall(emulator.id, outcome.installDir, exe);
-    await refreshEmulatorList(emulator.id);
-    note(
-      "emulators",
-      exe
-        ? `已安装「${emulator.name}」：${exe}`
-        : `已解压「${emulator.name}」到 ${outcome.installDir}，未找到 exe，请手动指定。`
-    );
+    const candidates = outcome.exeCandidates;
+    if (candidates.length === 0) {
+      await applyInstall(emulator, outcome, "");
+      return;
+    }
+    if (candidates.length === 1) {
+      await applyInstall(emulator, outcome, candidates[0]);
+      return;
+    }
+    exePick = { emulator, outcome, candidates };
   }
+
+  async function applyInstall(emulator: Emulator, outcome: InstallOutcome, exe: string, message?: string) {
+    busy = true;
+    try {
+      await api.emulatorApplyInstall(emulator.id, outcome.installDir, exe);
+      await refreshEmulatorList(emulator.id);
+      note(
+        "emulators",
+        message ??
+          (exe
+            ? `已安装「${emulator.name}」：${exe}`
+            : `已解压「${emulator.name}」到 ${outcome.installDir}，未找到 exe，请手动指定。`)
+      );
+    } catch (e) {
+      note("emulators", String(e));
+    } finally {
+      busy = false;
+    }
+  }
+
+  async function confirmExePick(exe: string) {
+    const pending = exePick;
+    exePick = null;
+    if (pending) await applyInstall(pending.emulator, pending.outcome, exe);
+  }
+
+  async function cancelExePick() {
+    const pending = exePick;
+    exePick = null;
+    if (pending) {
+      await applyInstall(
+        pending.emulator,
+        pending.outcome,
+        "",
+        `已解压「${pending.emulator.name}」到 ${pending.outcome.installDir}，未指定 exe。`
+      );
+    }
+  }
+
+  let exePick = $state<{ emulator: Emulator; outcome: InstallOutcome; candidates: string[] } | null>(null);
 
   async function installFromFolder() {
     const emulator = currentEmulator();
@@ -638,6 +694,12 @@
 
           <label>代理地址</label>
           <input type="text" bind:value={proxyAddress} disabled={proxyMode !== "manual"} placeholder="127.0.0.1:7890" />
+
+          <label>连接测试</label>
+          <div class="inline">
+            <button class="outline" onclick={testGithub} disabled={busy}>测试 GitHub 连接</button>
+            <span class="note">{networkNote}</span>
+          </div>
         </div>
         <div class="hint block">
           数据目录内含 mica.db、covers、emulators、downloads、exports、logs。代理设置同时作用于 GitHub 检查更新与安装包下载。
@@ -858,6 +920,7 @@
           <div class="row wrap-text">规则：ROM 删除一律走回收站；「从库中移除」不会删除文件。</div>
           <div class="row mono wrap-text">数据：{info?.dataDir ?? ""}</div>
           <div class="row mono wrap-text">导出：{info?.exportsDir ?? ""}</div>
+          <div class="row wrap-text">RAR 解压：unrar-rs（RARLAB UnRAR 许可，仅解压）。</div>
         </div>
       {/if}
     </div>
@@ -874,6 +937,16 @@
       await refreshEmulatorList(saved.id);
       note("emulators", `已保存模拟器「${saved.name}」`);
     }}
+  />
+{/if}
+
+{#if exePick}
+  <ExePickDialog
+    emulatorName={exePick.emulator.name}
+    installDir={exePick.outcome.installDir}
+    candidates={exePick.candidates}
+    onPick={confirmExePick}
+    onCancel={cancelExePick}
   />
 {/if}
 

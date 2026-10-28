@@ -241,6 +241,8 @@ export const api = {
   emulatorTestLaunch: (id: number) => invoke<string>("emulator_test_launch", { id }),
 
   fileExists: (path: string) => invoke<boolean>("file_exists", { path }),
+  detectPlatform: (path: string) => invoke<string | null>("detect_platform", { path }),
+  networkTestGithub: () => invoke<string>("network_test_github"),
   coverDataUrl: (path: string) => invoke<string>("cover_data_url", { path }),
   fileSize: (path: string) => invoke<number>("file_size", { path }),
   appVersion: () => invoke<string>("app_version"),

@@ -61,6 +61,8 @@ pub fn run() {
             commands::emulators::emulator_download_asset,
             commands::emulators::emulator_test_launch,
             commands::system::file_exists,
+            commands::system::detect_platform,
+            commands::system::network_test_github,
             commands::system::cover_data_url,
             commands::system::app_version,
             commands::files::launch_game,

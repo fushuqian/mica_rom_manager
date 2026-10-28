@@ -22,3 +22,4 @@ TestResults/
 /app/src-tauri/icons/ios/
 /publish-lite/
 /devlog*.txt
+/.screenshots/

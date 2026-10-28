@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { Game } from "../lib/api";
-  import { COLUMNS, cellText, type GridColumn } from "../lib/grid";
+  import { COLUMNS, canSort, cellText, type GridColumn } from "../lib/grid";
   import { ratingStars } from "../lib/format";
 
   let {
@@ -182,12 +182,12 @@
     {#each COLUMNS as column (column.header)}
       <div
         class="header-cell"
-        class:sortable={column.sortKey !== null}
+        class:sortable={canSort(column)}
         style="width:{widthOf(column)}px"
         role="columnheader"
         tabindex="-1"
-        onclick={() => column.sortKey !== null && onSort(column.header)}
-        onkeydown={(e) => e.key === "Enter" && column.sortKey !== null && onSort(column.header)}
+        onclick={() => canSort(column) && onSort(column.header)}
+        onkeydown={(e) => e.key === "Enter" && canSort(column) && onSort(column.header)}
         oncontextmenu={(e) => onContextMenu(e, null)}
       >
         <span class="title">{column.header}</span>

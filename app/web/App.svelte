@@ -16,7 +16,7 @@
   import Toolbar from "./components/Toolbar.svelte";
   import { api, type BatchChanges, type Game } from "./lib/api";
   import { clone, discs } from "./lib/format";
-  import { COLUMNS, compareGames } from "./lib/grid";
+  import { COLUMNS, canSort, compareGames } from "./lib/grid";
   import {
     ALL_DEVELOPERS,
     ALL_LANGUAGES,
@@ -47,10 +47,9 @@
   let sortedGames = $derived.by(() => {
     const list = store.filterGames();
     const column = COLUMNS.find((c) => c.header === store.sortColumn);
-    if (!column?.sortKey || !store.sortDirection) return list;
+    if (!column || !canSort(column) || !store.sortDirection) return list;
     const direction = store.sortDirection;
-    const key = column.sortKey;
-    return [...list].sort((a, b) => compareGames(a, b, key, direction));
+    return [...list].sort((a, b) => compareGames(a, b, column, direction));
   });
 
   let platformItems = $derived(store.platformFilters);
@@ -78,7 +77,7 @@
 
   function onSort(header: string) {
     const column = COLUMNS.find((c) => c.header === header);
-    if (!column?.sortKey) return;
+    if (!column || !canSort(column)) return;
     if (store.sortColumn !== header) {
       store.sortColumn = header;
       store.sortDirection = "asc";

@@ -1,5 +1,25 @@
 # 变更记录（CHANGELOG）
 
+## 2026-10-28 lite 功能追平主版本
+
+### 新增
+
+- 游戏编辑弹窗补齐 WPF `GameEditWindow` 的字段：收藏勾选、模拟器指定（含「不指定」）、ROM 路径浏览、文件大小只读显示、封面预览、碟片列表（添加/移除/上移/下移、缺失标记）。
+- 模拟器编辑弹窗补「安装目录」字段与目录浏览；选择 exe 时若安装目录为空，自动取 exe 父目录。
+- 新增 `ExePickDialog`：压缩包/文件夹安装后存在多个 exe 时列出候选（显示相对路径）供选择，对应 WPF `ExePickWindow`。
+- 设置 → 常规新增「测试 GitHub 连接」按钮（新命令 `network_test_github`，走同一套代理配置）。
+- 新命令 `detect_platform`，按扩展名识别平台。
+
+### 修复
+
+- 表格「光碟数」「格式」两列原先不可排序，现补 `sortValue` 并统一用 `canSort()` 判断，表头可点击排序。
+- `file_exists` 支持便携路径展开（`%DATA%`），碟片缺失标记在便携模式下正确显示。
+
+### 变更
+
+- rar 解压改为内置 `unrar-rs`（`default-features = false, features = ["crypto-rust"]`）优先，外部 7-Zip/WinRAR 仅作兜底。
+- 关于页补充 RAR 解压许可说明（RARLAB UnRAR 许可，仅解压）。
+
 ## 2026-10-27 v0.14.0-lite
 
 ### 新增

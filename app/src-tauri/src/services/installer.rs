@@ -5,7 +5,7 @@ use crate::util::Res;
 use serde::Serialize;
 use std::path::{Path, PathBuf};
 
-fn client(st: &AppState) -> Res<reqwest::Client> {
+pub(crate) fn client(st: &AppState) -> Res<reqwest::Client> {
     let conn = st.conn();
     let mode = settings::get(&conn, "network.proxy.mode").unwrap_or_else(|| "system".into());
     let address = settings::get(&conn, "network.proxy.address").unwrap_or_default();
@@ -228,8 +228,31 @@ fn extract_archive(archive: &Path, temp: &Path) -> Res<()> {
     Err("仅支持 zip / 7z / rar / tar.gz 压缩包。".into())
 }
 
-/// rar 依赖外部解压工具：优先 7-Zip，其次 WinRAR。
+/// rar 优先使用内置 unrar-rs 解压，失败时回退到外部 7-Zip / WinRAR。
 fn extract_rar(temp: &Path, archive: &Path) -> Res<()> {
+    match extract_rar_builtin(temp, archive) {
+        Ok(()) => Ok(()),
+        Err(builtin) => extract_rar_external(temp, archive)
+            .map_err(|external| format!("内置解压失败：{builtin}；外部工具：{external}")),
+    }
+}
+
+fn extract_rar_builtin(temp: &Path, archive: &Path) -> Res<()> {
+    let file = std::fs::File::open(archive).map_err(|e| format!("打开压缩包失败：{e}"))?;
+    let mut rar = unrar_rs::RarArchive::open(file).map_err(|e| format!("读取 rar 失败：{e}"))?;
+    for index in 0..rar.len() {
+        let entry = rar
+            .by_index(index)
+            .map_err(|e| format!("读取 rar 条目失败：{e}"))?;
+        entry
+            .unpack_in(temp)
+            .map_err(|e| format!("解压 rar 失败：{e}"))?;
+    }
+    Ok(())
+}
+
+/// 外部兜底：优先 7-Zip，其次 WinRAR。
+fn extract_rar_external(temp: &Path, archive: &Path) -> Res<()> {
     let seven_zip = [
         r"C:\Program Files\7-Zip\7z.exe",
         r"C:\Program Files (x86)\7-Zip\7z.exe",

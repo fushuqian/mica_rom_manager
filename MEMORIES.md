@@ -1,9 +1,15 @@
 # 经验记录（MEMORIES）
 
+## 2026-10-28（lite 追平主版本）
+
+- rar 解压可用 `unrar-rs`（RARLAB UnRAR 的纯 Rust 移植，0.14.x，仅解压）。默认特性带 `crypto-aws-lc` 需要 C 工具链，Windows GNU 工具链下要写 `default-features = false, features = ["crypto-rust"]`。API：`RarArchive::open(File)` → `by_index(i)` → `entry.unpack_in(dir)`。
+- 前端 `file_exists` 带 `%DATA%` 的便携路径必须先走 `AppState::expand`，否则碟片「文件缺失」标记在便携模式永远为假。
+- 表格列若没有真实字段（光碟数/格式），排序要给列补 `sortValue` 函数，不能只靠 `sortKey`；可排序判断统一用 `canSort()`，否则表头点了没反应。
+
 ## 2026-10-27（lite / Rust + Tauri 2）
 
 - Tauri 2 的 `reqwest` 要用 `default-features=false` + `rustls-tls` + `system-proxy`，否则 Windows 系统代理不生效；手动代理用 `Proxy::all`，直连用 `.no_proxy()`。
-- Rust 无纯实现 rar 解压库：7z 用 `sevenz-rust`；rar 只能调外部 `7z.exe`/`UnRAR.exe`，并给出「请手动解压后用从文件夹安装」提示。
+- 7z 用 `sevenz-rust`；rar 早期只能调外部 `7z.exe`/`UnRAR.exe`（现已改为 `unrar-rs` 内置优先、外部兜底，见 2026-10-28）。
 - 前端 `@tauri-apps/plugin-opener` 的 `opener:default` 只含 open-url/reveal-item-in-dir，`openPath` 必须额外加 `opener:allow-open-path` 权限，否则调用被拒。
 - 模拟器 `exe_path/core_path` 的相对语义仍与 WPF 一致：只展开 `%DATA%`，不拼程序目录；完整 exe 由 `resolve_exe_path` 结合安装目录计算。
 - SQLite 备份 `VACUUM INTO` 或 `wal_checkpoint` 后再复制，能避免 WAL 未落盘导致备份缺数据；恢复用 `ATTACH` + 版本校验 + 逐表 DELETE/INSERT。

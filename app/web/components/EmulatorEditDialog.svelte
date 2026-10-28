@@ -29,11 +29,19 @@
     });
     if (typeof picked === "string" && picked) {
       draft.exePath = picked;
+      if (!draft.installDir.trim()) {
+        draft.installDir = picked.replace(/[\\/][^\\/]+$/, "");
+      }
       if (!draft.name) {
         const file = picked.split(/[\\/]/).pop() ?? "";
         draft.name = file.replace(/\.(exe|bat|cmd)$/i, "");
       }
     }
+  }
+
+  async function pickInstallDir() {
+    const picked = await openDialog({ title: "选择安装目录", directory: true, multiple: false });
+    if (typeof picked === "string" && picked) draft.installDir = picked;
   }
 
   async function pickCore() {
@@ -89,6 +97,12 @@
       <div class="grid">
         <label>名称</label>
         <input type="text" bind:value={draft.name} />
+
+        <label>安装目录</label>
+        <div class="inline">
+          <input type="text" bind:value={draft.installDir} placeholder="例如 E:\Emulators\RetroArch" />
+          <button class="outline" onclick={pickInstallDir}>浏览…</button>
+        </div>
 
         <label>可执行文件</label>
         <div class="inline">
