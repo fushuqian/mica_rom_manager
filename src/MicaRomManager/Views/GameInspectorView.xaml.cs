@@ -40,6 +40,7 @@ public partial class GameInspectorView : UserControl
     public void Load(Game? game, bool edit)
     {
         _game = game;
+        MultiPanel.Visibility = Visibility.Collapsed;
         _loading = true;
         try
         {
@@ -55,6 +56,54 @@ public partial class GameInspectorView : UserControl
         ScrapeStatus.Text = "";
         if (edit) BeginEdit();
         else EndEdit();
+    }
+
+    /// <summary>多选：显示汇总与批量入口，不进入单条编辑。</summary>
+    public void LoadMulti(IReadOnlyList<Game> games)
+    {
+        _game = null;
+        _loading = true;
+        try
+        {
+            SetDirty(false);
+            ScrapeStatus.Text = "";
+            EndEdit();
+
+            ReadPanel.Visibility = Visibility.Collapsed;
+            ReadFooter.Visibility = Visibility.Collapsed;
+            MultiPanel.Visibility = Visibility.Visible;
+
+            HeaderText.Text = "已选";
+            MultiCountText.Text = $"已选 {games.Count} 项";
+
+            var total = games.Sum(g => g.FileSize);
+            var platforms = games
+                .Where(g => !string.IsNullOrWhiteSpace(g.Platform))
+                .GroupBy(g => g.Platform)
+                .OrderByDescending(group => group.Count())
+                .Take(4)
+                .Select(group => $"{group.Key} × {group.Count()}");
+            var platformText = platforms.Any() ? string.Join("、", platforms) : "—";
+            MultiSummaryText.Text = $"合计 {FormatSize(total)}；{platformText}";
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private static string FormatSize(long bytes)
+    {
+        string[] units = { "B", "KB", "MB", "GB", "TB" };
+        double value = bytes;
+        var unit = 0;
+        while (value >= 1024 && unit < units.Length - 1)
+        {
+            value /= 1024;
+            unit++;
+        }
+
+        return unit == 0 ? $"{bytes} B" : $"{value:0.##} {units[unit]}";
     }
 
     public void BeginEdit()

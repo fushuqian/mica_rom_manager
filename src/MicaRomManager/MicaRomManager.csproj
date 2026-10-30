@@ -6,7 +6,7 @@
     <UseWPF>true</UseWPF>
     <RootNamespace>MicaRomManager</RootNamespace>
     <AssemblyName>MicaRomManager</AssemblyName>
-    <Version>0.30.3</Version>
+    <Version>0.30.4</Version>
     <ApplicationIcon>app.ico</ApplicationIcon>
     <Platforms>AnyCPU</Platforms>
     <PublishSingleFile>true</PublishSingleFile>

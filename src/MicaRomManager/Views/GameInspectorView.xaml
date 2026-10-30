@@ -57,6 +57,30 @@
             <Border Grid.Row="0" Height="1" VerticalAlignment="Bottom"
                     Background="{DynamicResource HairlineBrush}" />
 
+            <!-- 多选汇总 -->
+            <ScrollViewer x:Name="MultiPanel" Grid.Row="1" VerticalScrollBarVisibility="Auto"
+                          Padding="16,14,14,8" Visibility="Collapsed">
+                <StackPanel>
+                    <TextBlock x:Name="MultiCountText" FontSize="15" FontWeight="SemiBold" />
+                    <TextBlock x:Name="MultiSummaryText" FontSize="11.5" Margin="0,6,0,0"
+                               Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" />
+
+                    <Border Height="1" Background="{DynamicResource HairlineBrush}" Margin="0,14,0,10" />
+
+                    <TextBlock Text="批量操作" FontSize="11" Margin="0,0,0,8"
+                               Foreground="{DynamicResource TextSecondaryBrush}" />
+                    <Button Content="批量编辑…" Command="{Binding BatchEditCommand}"
+                            Style="{StaticResource ChipButtonStyle}" Height="32" HorizontalAlignment="Left"
+                            Padding="12,0" />
+                    <Button Content="分享所选…" Command="{Binding ShareSelectedCommand}" Margin="0,8,0,0"
+                            Style="{StaticResource ChipButtonStyle}" Height="32" HorizontalAlignment="Left"
+                            Padding="12,0" />
+                    <Button Content="发送到设备…" Command="{Binding SendSelectedCommand}" Margin="0,8,0,0"
+                            Style="{StaticResource ChipButtonStyle}" Height="32" HorizontalAlignment="Left"
+                            Padding="12,0" />
+                </StackPanel>
+            </ScrollViewer>
+
             <!-- 只读 -->
             <ScrollViewer x:Name="ReadPanel" Grid.Row="1" VerticalScrollBarVisibility="Auto"
                           Padding="16,14,14,8">

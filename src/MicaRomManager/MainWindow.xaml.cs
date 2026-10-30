@@ -452,7 +452,9 @@ public partial class MainWindow : Window
         _viewModel.SetSelectedGames(GameGrid.SelectedItems.Cast<Game>());
         if (InspectorTray.Visibility != Visibility.Visible) return;
         if (EditModeToggle.IsChecked == true) return;
-        Inspector.Load(_viewModel.SelectedGame, edit: false);
+        var selection = _viewModel.SelectedGames;
+        if (selection.Count > 1) Inspector.LoadMulti(selection);
+        else Inspector.Load(_viewModel.SelectedGame, edit: false);
     }
 
     /// <summary>供设置窗口在扫描补录后刷新列表。</summary>
@@ -477,7 +479,17 @@ public partial class MainWindow : Window
         if (_viewModel.SelectedGame == null) return;
 
         InspectorTray.Visibility = Visibility.Visible;
-        Inspector.Load(_viewModel.SelectedGame, edit);
+
+        var selection = _viewModel.SelectedGames;
+        if (selection.Count > 1)
+        {
+            Inspector.LoadMulti(selection);
+            EditModeToggle.IsChecked = false;
+        }
+        else
+        {
+            Inspector.Load(_viewModel.SelectedGame, edit);
+        }
 
         var ease = new CubicEase { EasingMode = EasingMode.EaseOut };
         InspectorTray.BeginAnimation(OpacityProperty,
