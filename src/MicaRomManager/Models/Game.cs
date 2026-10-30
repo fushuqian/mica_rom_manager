@@ -18,10 +18,19 @@ public partial class Game : ObservableObject
     public long Id { get; set; }
 
     [ObservableProperty] private string title = "";
-    [ObservableProperty] private string platform = "";
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(Subtitle))]
+    private string platform = "";
     [ObservableProperty] private string genre = "";
     [ObservableProperty] private string region = "";
-    [ObservableProperty] private string language = "";
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(Subtitle))]
+    private string language = "";
+    /// <summary>列表副行：平台 · 语言（语言为空时只显示平台）。</summary>
+    public string Subtitle =>
+        string.IsNullOrWhiteSpace(Platform)
+            ? (Language ?? "")
+            : (string.IsNullOrWhiteSpace(Language) ? Platform : $"{Platform} · {Language}");
     /// <summary>特别标注，整理文件名时放在语言后面，如「汉化版」。</summary>
     [ObservableProperty] private string specialNote = "";
     /// <summary>ROM 内容指纹（SHA256；大文件为 fast: 采样指纹）。</summary>

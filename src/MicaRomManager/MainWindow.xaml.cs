@@ -241,7 +241,7 @@ public partial class MainWindow : Window
         {
             ApplyHiddenColumns(new ListViewState
             {
-                LayoutVersion = 4,
+                LayoutVersion = 5,
                 HiddenColumns = ListViewState.DefaultHiddenColumns.ToList(),
             });
             return;
@@ -259,18 +259,14 @@ public partial class MainWindow : Window
 
         if (state == null) return;
 
-        var legacyLayout = state.LayoutVersion < 4;
+        var legacyLayout = state.LayoutVersion < 5;
 
-        // 旧布局的列宽/隐藏列沿用旧密度；升到 v3 时补一遍默认隐藏列，避免横向滚动
+        // 换布局时直接套新默认列，避免旧布局的隐藏列（如类型/平台）残留下来
         if (legacyLayout)
         {
-            foreach (var column in ListViewState.DefaultHiddenColumns)
-            {
-                if (!state.HiddenColumns.Contains(column, StringComparer.Ordinal))
-                    state.HiddenColumns.Add(column);
-            }
+            state.HiddenColumns = ListViewState.DefaultHiddenColumns.ToList();
         }
-        state.LayoutVersion = 4;
+        state.LayoutVersion = 5;
 
         _viewModel.OnlyFavorites = state.OnlyFavorites;
         _viewModel.OnlyMissing = state.OnlyMissing;
