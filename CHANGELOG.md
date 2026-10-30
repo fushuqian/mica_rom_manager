@@ -1,5 +1,25 @@
 # 变更记录（CHANGELOG）
 
+## 2026-10-30 v0.26.2
+
+### 修复
+
+- 模拟器更新资产选择改为「Windows + x64 + release」评分：先排除 symbols / pdb、源码、ARM64 / ARMHF、macOS、Linux / AppImage 等资产，避免 DuckStation 选中 ARM64 符号包、PCSX2 选中符号包、PPSSPP 选中 ARM64 构建。
+- 没有可用 Windows 压缩包时不再退回「第一个资产」（会把 RetroArch 的 sourceonly `.tar.xz` 当安装包），改为提示打开官网手动下载。
+- 非语义 tag 且资产名也没有版本时（如 DuckStation 的滚动发布 `latest`），版本回退为发布日期（`2026.10.25`），不再把 `latest` 写进版本号；新旧比较也使用发布日期。
+- 覆盖安装后会把旧安装目录里新包没有的文件合并回新目录，保留存档、设置、核心、纹理等用户数据；新包自带的程序/DLL 仍以新版为准。
+
+### 变更
+
+- 本机修复：DuckStation、PPSSPP 被错误更新成 ARM64 的问题已恢复为 x64，用户数据从更新前备份合并回来；错误版本目录与旧安装都保留在 `publish\data\emulators\.backup\`。
+- DuckStation 本机版本规范为 `2026.10.25`，PPSSPP 为 `1.20.4`，RPCS3 保持 `0.0.43-20511`；所有模拟器可执行文件已逐一校验存在。
+
+### 验证
+
+- `dotnet build`：0 警告 0 错误。
+- `dotnet test`：296 个用例全部通过（288 + 8：真实资产清单选择、发布日期回退、覆盖安装保留用户数据）。
+- `tools\publish.ps1` 发布并校验通过；`publish` 启动冒烟通过。
+
 ## 2026-10-30 v0.26.1
 
 ### 修复

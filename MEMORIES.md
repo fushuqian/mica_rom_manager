@@ -1,5 +1,13 @@
 # 经验记录（MEMORIES）
 
+## 2026-10-30（更新选错资产 / 用户数据保留）
+
+- GitHub Release 资产不能按「包含 win64 / windows 的第一个」来选：DuckStation 的 `windows-arm64-release-symbols.7z` 排在前面，会装成一堆 PDB；PCSX2 的 `windows-x64-Qt-symbols.7z` 同理。必须同时判断 Windows + x64 + release，并排除 symbols/pdb、source、arm64/armhf、macOS、Linux/AppImage。
+- 没有 Windows 包时不要回退到「第一个资产」：RetroArch 的 latest 只有 `retroarch-sourceonly-1.22.2.tar.xz`，会被当成安装包再报「格式不支持」。返回 null，让界面引导打开官网。
+- 滚动发布的 tag 可能是 `latest`（DuckStation），版本号要从 `published_at` 或资产名取；否则会把 `latest` 写进版本号，且每次都「有新版本」。
+- 覆盖安装不能把旧目录直接换掉：用户的存档/设置/核心/纹理都在里面。旧目录移到 `.backup` 后，要把新包中没有的文件合并回新目录；新包自带的程序/DLL 保持新版。
+- 已经踩坏的安装可以用 `.backup\<模拟器>-<时间>` 恢复：DuckStation 的备份里有完整 x64 程序和 `settings.ini`/存档，PPSSPP 备份里有 `PPSSPPWindows64.exe` 和 `memstick`。
+
 ## 2026-10-30（RPCS3 更新源）
 
 - RPCS3 主仓库只有源码 tag（Release assets 为空），Windows 构建在 `RPCS3/rpcs3-binaries-win`；这类仓库的 tag 是 `build-<hash>`，版本号要从资产文件名里取（`rpcs3-v0.0.43-20511-....7z`），不能只信 tag。

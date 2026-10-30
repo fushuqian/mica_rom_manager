@@ -109,11 +109,115 @@ public class EmulatorUpdaterTests
         "rpcs3-v0.0.43-20511-9508444d_win64_msvc.7z", "0.0.43-20511")]
     [InlineData("v0.25.4", "whatever.zip", "0.25.4")]
     [InlineData(null, "app-1.2.3.zip", "1.2.3")]
-    [InlineData("nightly", "RetroArch-Win64.7z", "nightly")]
-    [InlineData("build-x", null, "build-x")]
-    public void ResolveVersion_PrefersTagUnlessTagIsNotAVersion(string? tag, string? asset, string expected)
+    [InlineData("nightly", "RetroArch-Win64.7z", "")]
+    [InlineData("build-x", null, "")]
+    public void ResolveVersion_PrefersTagThenAssetVersion(string? tag, string? asset, string expected)
     {
         Assert.Equal(expected, EmulatorUpdater.ResolveVersion(tag, asset));
+    }
+
+    [Fact]
+    public void ResolveVersion_FallsBackToPublishedDateForRollingRelease()
+    {
+        var published = new DateTimeOffset(2026, 10, 25, 2, 59, 23, TimeSpan.Zero);
+
+        var version = EmulatorUpdater.ResolveVersion(
+            "latest", "duckstation-windows-x64-release.zip", published);
+
+        Assert.Equal("2026.10.25", version);
+        Assert.True(EmulatorUpdater.IsNewer(version, "latest"));
+        Assert.False(EmulatorUpdater.IsNewer(version, "2026.10.25"));
+    }
+
+    [Fact]
+    public void PickWindowsAsset_DuckStation_PicksX64ReleaseNotArm64Symbols()
+    {
+        var assets = new List<(string?, string?)>
+        {
+            ("DuckStation-arm64.AppImage", "https://x/1"),
+            ("DuckStation-armhf.AppImage", "https://x/2"),
+            ("duckstation-mac-release.zip", "https://x/3"),
+            ("duckstation-windows-arm64-installer.exe", "https://x/4"),
+            ("duckstation-windows-arm64-release-symbols.7z", "https://x/5"),
+            ("duckstation-windows-arm64-release.zip", "https://x/6"),
+            ("duckstation-windows-x64-installer.exe", "https://x/7"),
+            ("duckstation-windows-x64-release-symbols.7z", "https://x/8"),
+            ("duckstation-windows-x64-release.zip", "https://x/9"),
+            ("duckstation-windows-x64-sse2-release.zip", "https://x/10"),
+            ("DuckStation-x64.AppImage", "https://x/11"),
+        };
+
+        var picked = EmulatorUpdater.PickWindowsAsset(assets);
+
+        Assert.Equal("duckstation-windows-x64-release.zip", picked!.Value.Name);
+    }
+
+    [Fact]
+    public void PickWindowsAsset_PCSX2_PicksQtArchiveNotSymbols()
+    {
+        var assets = new List<(string?, string?)>
+        {
+            ("pcsx2-v2.8.2-linux-appimage-x64-Qt.AppImage", "https://x/1"),
+            ("pcsx2-v2.8.2-macos-Qt.tar.xz", "https://x/2"),
+            ("pcsx2-v2.8.2-windows-x64-installer.exe", "https://x/3"),
+            ("pcsx2-v2.8.2-windows-x64-Qt-symbols.7z", "https://x/4"),
+            ("pcsx2-v2.8.2-windows-x64-Qt.7z", "https://x/5"),
+        };
+
+        var picked = EmulatorUpdater.PickWindowsAsset(assets);
+
+        Assert.Equal("pcsx2-v2.8.2-windows-x64-Qt.7z", picked!.Value.Name);
+    }
+
+    [Fact]
+    public void PickWindowsAsset_PPSSPP_PicksX64NotArm64()
+    {
+        var assets = new List<(string?, string?)>
+        {
+            ("ppsspp-1.20.4.tar.xz", "https://x/1"),
+            ("PPSSPP-v1.20.4-anylinux-aarch64.AppImage", "https://x/2"),
+            ("PPSSPP-v1.20.4-anylinux-x86_64.AppImage", "https://x/3"),
+            ("PPSSPP-v1.20.4-Windows-ARM64.zip", "https://x/4"),
+            ("PPSSPP-v1.20.4-Windows-x64.zip", "https://x/5"),
+            ("PPSSPPSDL-macOS-v1.20.4.zip", "https://x/6"),
+        };
+
+        var picked = EmulatorUpdater.PickWindowsAsset(assets);
+
+        Assert.Equal("PPSSPP-v1.20.4-Windows-x64.zip", picked!.Value.Name);
+    }
+
+    [Fact]
+    public void PickWindowsAsset_MesenAndMgba_PickWindowsX64Archives()
+    {
+        var mesen = EmulatorUpdater.PickWindowsAsset(new List<(string?, string?)>
+        {
+            ("Mesen_2.1.1_Linux_ARM64.zip", "https://x/1"),
+            ("Mesen_2.1.1_Linux_x64.zip", "https://x/2"),
+            ("Mesen_2.1.1_macOS_x64_Intel.zip", "https://x/3"),
+            ("Mesen_2.1.1_Windows.zip", "https://x/4"),
+        });
+        Assert.Equal("Mesen_2.1.1_Windows.zip", mesen!.Value.Name);
+
+        var mgba = EmulatorUpdater.PickWindowsAsset(new List<(string?, string?)>
+        {
+            ("mGBA-0.10.5-3ds.7z", "https://x/1"),
+            ("mGBA-0.10.5-switch.7z", "https://x/2"),
+            ("mGBA-0.10.5-win32.7z", "https://x/3"),
+            ("mGBA-0.10.5-win64.7z", "https://x/4"),
+        });
+        Assert.Equal("mGBA-0.10.5-win64.7z", mgba!.Value.Name);
+    }
+
+    [Fact]
+    public void PickWindowsAsset_SourceOnlyReleaseReturnsNull()
+    {
+        var picked = EmulatorUpdater.PickWindowsAsset(new List<(string?, string?)>
+        {
+            ("retroarch-sourceonly-1.22.2.tar.xz", "https://x/source.tar.xz"),
+        });
+
+        Assert.Null(picked);
     }
 
     [Theory]

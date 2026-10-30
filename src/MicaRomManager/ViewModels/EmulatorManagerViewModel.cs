@@ -245,8 +245,7 @@ public partial class EmulatorManagerViewModel : ObservableObject
             return;
         }
 
-        var latestVersion = EmulatorUpdater.ResolveVersion(result.LatestTag, result.AssetName);
-        if (!EmulatorUpdater.IsNewer(latestVersion, emulator.Version))
+        if (!result.IsNewer)
         {
             MessageBox.Show(result.Message, "检查更新", MessageBoxButton.OK, MessageBoxImage.Information);
             return;
@@ -261,12 +260,13 @@ public partial class EmulatorManagerViewModel : ObservableObject
             return;
         }
 
+        var latestVersion = result.LatestVersion ?? "";
         var targetDir = Path.Combine(AppServices.Paths.EmulatorsDir, RomImporter.SanitizeFolderName(emulator.Name));
         var confirm = MessageBox.Show(
             $"{result.Message}\n\n"
             + $"下载资产：{result.AssetName}\n"
             + $"安装到：{targetDir}\n"
-            + "旧版本会整体移到 data\\emulators\\.backup。\n\n现在下载并安装？",
+            + "旧版本会整体移到 data\\emulators\\.backup，用户数据（存档/设置等）会合并回新目录。\n\n现在下载并安装？",
             "检查更新", MessageBoxButton.YesNo, MessageBoxImage.Question);
         if (confirm != MessageBoxResult.Yes) return;
 

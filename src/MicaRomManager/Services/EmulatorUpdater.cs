@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.IO;
 using System.Net;
 using System.Net.Http;
@@ -12,7 +13,9 @@ public sealed record UpdateCheckResult(
     string? LatestTag = null,
     string? ReleaseUrl = null,
     string? AssetName = null,
-    string? AssetUrl = null);
+    string? AssetUrl = null,
+    string? LatestVersion = null,
+    bool IsNewer = false);
 
 public sealed class EmulatorUpdater
 {
@@ -58,6 +61,14 @@ public sealed class EmulatorUpdater
             var tag = root.TryGetProperty("tag_name", out var tagElement) ? tagElement.GetString() : null;
             var releaseUrl = root.TryGetProperty("html_url", out var urlElement) ? urlElement.GetString() : null;
 
+            DateTimeOffset? publishedAt = null;
+            if (root.TryGetProperty("published_at", out var publishedElement) &&
+                DateTimeOffset.TryParse(publishedElement.GetString(), CultureInfo.InvariantCulture,
+                    DateTimeStyles.AssumeUniversal, out var parsedPublished))
+            {
+                publishedAt = parsedPublished;
+            }
+
             string? assetName = null;
             string? assetUrl = null;
             if (root.TryGetProperty("assets", out var assets) && assets.ValueKind == JsonValueKind.Array)
@@ -77,16 +88,19 @@ public sealed class EmulatorUpdater
                 }
             }
 
-            var displayVersion = ResolveVersion(tag, assetName);
-            var isNewer = IsNewer(displayVersion, currentVersion);
+            var displayVersion = ResolveVersion(tag, assetName, publishedAt);
+            var comparisonVersion = displayVersion.Length > 0 ? displayVersion : tag ?? "";
+            var isNewer = IsNewer(comparisonVersion, currentVersion);
+            var messageVersion = displayVersion.Length > 0 ? displayVersion : tag ?? "未知";
 
             var message = string.IsNullOrWhiteSpace(currentVersion)
-                ? $"最新版本：{displayVersion}。"
+                ? $"最新版本：{messageVersion}。"
                 : isNewer
-                    ? $"发现新版本：{displayVersion}（本地：{currentVersion}）。"
-                    : $"已是最新版本（本地：{currentVersion}，最新：{displayVersion}）。";
+                    ? $"发现新版本：{messageVersion}（本地：{currentVersion}）。"
+                    : $"已是最新版本（本地：{currentVersion}，最新：{messageVersion}）。";
 
-            return new UpdateCheckResult(true, message, tag, releaseUrl, assetName, assetUrl);
+            return new UpdateCheckResult(true, message, tag, releaseUrl, assetName, assetUrl,
+                displayVersion, isNewer);
         }
         catch (TaskCanceledException)
         {
@@ -223,16 +237,18 @@ public sealed class EmulatorUpdater
     }
 
     /// <summary>
-    /// 写回与比较用的版本：tag 本身是版本号时用 tag；
-    /// tag 不是版本号（例如 RPCS3 的 build-&lt;hash&gt;）时从资产名里取。
+    /// 写回与比较用的版本：tag 本身是版本号时用 tag；否则从资产名提取；
+    /// 两者都没有时退回发布日期，避免把 "latest" 之类的标签写进版本号。
     /// </summary>
-    public static string ResolveVersion(string? tag, string? assetName)
+    public static string ResolveVersion(string? tag, string? assetName, DateTimeOffset? publishedAt = null)
     {
         var tagVersion = VersionFromTag(tag);
         if (LooksLikeVersion(tagVersion)) return tagVersion;
 
         var assetVersion = VersionFromAssetName(assetName);
-        return assetVersion.Length > 0 ? assetVersion : tagVersion;
+        if (assetVersion.Length > 0) return assetVersion;
+
+        return publishedAt?.ToString("yyyy.MM.dd", CultureInfo.InvariantCulture) ?? "";
     }
 
     private static bool LooksLikeVersion(string? value) =>
@@ -240,33 +256,85 @@ public sealed class EmulatorUpdater
 
     private static string NormalizeVersion(string? version) => VersionFromTag(version);
 
+    /// <summary>明显不是 Windows 可执行包的关键字：符号表、源码、其它平台架构。</summary>
+    private static readonly string[] NonWindowsAssetTokens =
+    {
+        "symbols", "pdb", "debug", "source", "arm64", "armhf", "aarch64", "armv7",
+        "macos", "mac-", "-mac", "osx", "darwin", "linux", "appimage", "flatpak", "ubuntu",
+        "android", "ios", "ipa", "switch", "vita", "wii", "3ds",
+    };
+
     /// <summary>
-    /// 从 Release 资产里挑 Windows 包：win64 &gt; windows &gt; -win &gt; 任意 zip &gt; 任意 7z &gt; 第一个资产。
-    /// 抽成纯函数便于测试，避免误装 3DS / Switch 构建。
+    /// 从 Release 资产里挑 Windows x64 包：
+    /// 先排除符号表 / 源码 / ARM / macOS / Linux 资产，再优先 windows + x64 + release 的 zip/7z。
+    /// 没有 Windows 标记时退回 zip 优先；一个可用压缩包都没有则返回 null（由界面提示打开官网）。
     /// </summary>
     internal static (string? Name, string? Url)? PickWindowsAsset(
         IReadOnlyList<(string? Name, string? Url)> assets)
     {
-        if (assets.Count == 0) return null;
-
         var archives = assets
-            .Where(a => a.Name?.EndsWith(".zip", StringComparison.OrdinalIgnoreCase) == true
-                        || a.Name?.EndsWith(".7z", StringComparison.OrdinalIgnoreCase) == true)
+            .Where(a => !string.IsNullOrWhiteSpace(a.Name) && !string.IsNullOrWhiteSpace(a.Url))
+            .Where(a => IsArchive(a.Name!))
+            .Where(a => !NonWindowsAssetTokens.Any(token =>
+                a.Name!.Contains(token, StringComparison.OrdinalIgnoreCase)))
             .ToList();
 
-        foreach (var marker in new[] { "win64", "windows", "-win" })
-        {
-            var hit = archives.FirstOrDefault(a =>
-                a.Name!.Contains(marker, StringComparison.OrdinalIgnoreCase));
-            if (hit.Name != null) return hit;
-        }
+        if (archives.Count == 0) return null;
 
-        var zip = archives.FirstOrDefault(a =>
-            a.Name!.EndsWith(".zip", StringComparison.OrdinalIgnoreCase));
+        var windows = archives.Where(a => IsWindowsAsset(a.Name!)).ToList();
+        var windows64 = windows.Where(a => Is64BitAsset(a.Name!)).ToList();
+
+        var picked = windows64
+            .OrderByDescending(a => ScoreAsset(a.Name!))
+            .FirstOrDefault();
+        if (picked.Name != null) return picked;
+
+        picked = windows
+            .OrderByDescending(a => ScoreAsset(a.Name!))
+            .FirstOrDefault();
+        if (picked.Name != null) return picked;
+
+        // 有些仓库的 Windows 包名里没有 windows/win 标记，退回原来的 zip 优先策略。
+        var zip = archives
+            .OrderByDescending(a => ScoreAsset(a.Name!))
+            .FirstOrDefault(a => a.Name!.EndsWith(".zip", StringComparison.OrdinalIgnoreCase));
         if (zip.Name != null) return zip;
-        if (archives.Count > 0) return archives[0];
 
-        return assets[0];
+        return archives.OrderByDescending(a => ScoreAsset(a.Name!)).First();
+    }
+
+    private static bool IsArchive(string name) =>
+        name.EndsWith(".zip", StringComparison.OrdinalIgnoreCase) ||
+        name.EndsWith(".7z", StringComparison.OrdinalIgnoreCase) ||
+        name.EndsWith(".rar", StringComparison.OrdinalIgnoreCase);
+
+    private static bool IsWindowsAsset(string name)
+    {
+        var lower = name.ToLowerInvariant();
+        return lower.Contains("windows") || lower.Contains("win64") || lower.Contains("win32") ||
+               lower.Contains("-win") || lower.Contains("_win") ||
+               lower.Contains("win-") || lower.Contains("win_");
+    }
+
+    private static bool Is64BitAsset(string name)
+    {
+        var lower = name.ToLowerInvariant();
+        return lower.Contains("x64") || lower.Contains("win64") || lower.Contains("amd64") ||
+               lower.Contains("x86_64") || lower.Contains("x86-64") ||
+               lower.Contains("64bit") || lower.Contains("64-bit");
+    }
+
+    private static int ScoreAsset(string name)
+    {
+        var lower = name.ToLowerInvariant();
+        var score = 0;
+        if (IsWindowsAsset(name)) score += 20;
+        if (Is64BitAsset(name)) score += 20;
+        if (lower.Contains("release")) score += 5;
+        if (lower.EndsWith(".zip")) score += 3;
+        else if (lower.EndsWith(".7z")) score += 2;
+        if (lower.Contains("sse2")) score -= 2;
+        return score;
     }
 
     /// <summary>

@@ -106,6 +106,43 @@ public class EmulatorInstallerTests : IDisposable
     }
 
     [Fact]
+    public void InstallFromZip_PreservesUserDataFromPreviousInstall()
+    {
+        var target = Path.Combine(_paths.EmulatorsDir, "DuckStation");
+        Write(target + "\\", "settings.ini", "old settings");
+        Write(target + "\\", @"userdata\save.dat", "save");
+
+        var zipPath = Path.Combine(_dir, "duckstation.zip");
+        var payload = Path.Combine(_dir, "duckstation-payload");
+        Write(payload, "duckstation-qt-x64-ReleaseLTCG.exe");
+        Write(payload, "Qt6Core.dll");
+        System.IO.Compression.ZipFile.CreateFromDirectory(payload, zipPath);
+
+        var result = _installer.InstallFromArchive(zipPath, "DuckStation");
+
+        Assert.True(File.Exists(Path.Combine(result.InstallDir, "duckstation-qt-x64-ReleaseLTCG.exe")));
+        Assert.Equal("old settings", File.ReadAllText(Path.Combine(result.InstallDir, "settings.ini")));
+        Assert.Equal("save", File.ReadAllText(Path.Combine(result.InstallDir, "userdata", "save.dat")));
+        Assert.NotEmpty(Directory.GetDirectories(_paths.BackupsDir));
+    }
+
+    [Fact]
+    public void MergeMissingFiles_KeepsNewProgramFilesAndAddsOldUserData()
+    {
+        var backup = Path.Combine(_dir, "backup");
+        Write(backup + "\\", "app.exe", "old");
+        Write(backup + "\\", "save.dat", "save");
+
+        var target = Path.Combine(_dir, "target");
+        Write(target + "\\", "app.exe", "new");
+
+        EmulatorInstaller.MergeMissingFiles(backup, target);
+
+        Assert.Equal("new", File.ReadAllText(Path.Combine(target, "app.exe")));
+        Assert.Equal("save", File.ReadAllText(Path.Combine(target, "save.dat")));
+    }
+
+    [Fact]
     public void PrepareTargetWithBackup_ReturnsDistinctBackupPaths()
     {
         Write(Path.Combine(_paths.EmulatorsDir, "RetroArch") + "\\", "old.exe", "old");

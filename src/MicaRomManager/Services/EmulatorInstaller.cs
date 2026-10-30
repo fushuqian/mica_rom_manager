@@ -90,19 +90,54 @@ public sealed class EmulatorInstaller
         }
     }
 
-    /// <summary>把解压/文件夹内容装进目标目录；复制失败时回滚到旧的安装目录。</summary>
+    /// <summary>
+    /// 把解压/文件夹内容装进目标目录；复制失败时回滚到旧的安装目录。
+    /// 覆盖安装时会把旧目录里新包没有的文件（存档、设置、核心等）合并回来，避免更新丢用户数据。
+    /// </summary>
     private InstallResult InstallInto(string source, string emulatorName)
     {
         var (target, backup) = PrepareTargetWithBackup(emulatorName);
         try
         {
             CopyDirectory(source, target);
+            if (backup != null) MergeMissingFiles(backup, target);
             return new InstallResult(target, FindExeCandidates(target, emulatorName));
         }
         catch
         {
             RollbackInstall(target, backup);
             throw;
+        }
+    }
+
+    /// <summary>
+    /// 只复制目标目录里不存在的文件：新包自带的程序/DLL 保持新版，
+    /// 旧包没有的存档、设置、核心、纹理等用户数据补回来。
+    /// 单个文件失败不阻断安装。
+    /// </summary>
+    internal static void MergeMissingFiles(string sourceDirectory, string targetDirectory)
+    {
+        if (!Directory.Exists(sourceDirectory)) return;
+
+        var options = new EnumerationOptions { RecurseSubdirectories = true, IgnoreInaccessible = true };
+        foreach (var sourceFile in Directory.EnumerateFiles(sourceDirectory, "*", options))
+        {
+            try
+            {
+                var relative = Path.GetRelativePath(sourceDirectory, sourceFile);
+                if (relative.StartsWith("..", StringComparison.Ordinal)) continue;
+
+                var targetFile = Path.Combine(targetDirectory, relative);
+                if (File.Exists(targetFile)) continue;
+
+                var directory = Path.GetDirectoryName(targetFile);
+                if (!string.IsNullOrEmpty(directory)) Directory.CreateDirectory(directory);
+                File.Copy(sourceFile, targetFile, false);
+            }
+            catch
+            {
+                // 用户数据合并是尽力而为，不能因为某个文件失败把新安装回滚掉
+            }
         }
     }
 
