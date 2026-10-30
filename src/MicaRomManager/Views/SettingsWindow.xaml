@@ -37,9 +37,11 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
+        <Border Grid.RowSpan="3" Background="{DynamicResource ShellScrimBrush}" IsHitTestVisible="False" />
+
         <controls:FluentTitleBar Grid.Row="0" Title="设置" />
 
-        <TabControl Grid.Row="1" Margin="16,0,16,0"
+        <TabControl Grid.Row="1" Margin="0"
                     Style="{StaticResource SettingsTabControlStyle}"
                     ItemContainerStyle="{StaticResource SettingsTabItemStyle}"
                     TabStripPlacement="Left">

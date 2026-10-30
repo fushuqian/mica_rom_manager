@@ -486,16 +486,16 @@
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="176" />
+                            <ColumnDefinition Width="1" />
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
-                        <Border Grid.Column="0" Background="{DynamicResource NavBrush}"
-                                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
-                                CornerRadius="10" Margin="0,0,12,0" Padding="8">
+                        <Border Grid.Column="0" Background="{DynamicResource ShellPanelBrush}"
+                                BorderThickness="0" Padding="0,8,0,0">
                             <TabPanel IsItemsHost="True" KeyboardNavigation.TabIndex="1" />
                         </Border>
-                        <Border Grid.Column="1" Background="{DynamicResource CardBrush}"
-                                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
-                                CornerRadius="10" Padding="18">
+                        <Border Grid.Column="1" Background="{DynamicResource HairlineBrush}" Width="1" />
+                        <Border Grid.Column="2" Background="{DynamicResource MainPanelBrush}"
+                                BorderThickness="0" Padding="0">
                             <ContentPresenter ContentSource="SelectedContent" />
                         </Border>
                     </Grid>
@@ -506,12 +506,13 @@
 
     <Style x:Key="SettingsTabItemStyle" TargetType="TabItem">
         <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
-        <Setter Property="Margin" Value="0,1" />
-        <Setter Property="Padding" Value="11,9" />
+        <Setter Property="Margin" Value="0" />
+        <Setter Property="Height" Value="34" />
+        <Setter Property="Padding" Value="20,0" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="TabItem">
-                    <Border x:Name="Bd" Background="Transparent" CornerRadius="6"
+                    <Border x:Name="Bd" Background="Transparent"
                             Padding="{TemplateBinding Padding}" BorderThickness="0">
                         <ContentPresenter ContentSource="Header" VerticalAlignment="Center" />
                     </Border>
