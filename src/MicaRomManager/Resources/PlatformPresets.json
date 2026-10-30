@@ -1,0 +1,38 @@
+[
+  {
+    "vendor": "Sony",
+    "consoles": [ "PS1", "PS2", "PS3", "PS4", "PS5", "PSP", "PSVITA" ]
+  },
+  {
+    "vendor": "Nintendo",
+    "consoles": [ "NES", "SNES", "N64", "NGC", "WII", "Wii U", "WIIU", "SWITCH", "Switch", "GB", "GBC", "GBA", "NDS", "3DS", "N3DS", "VB" ]
+  },
+  {
+    "vendor": "Sega",
+    "consoles": [ "MD", "SMS", "GG", "SS", "DC", "32X" ]
+  },
+  {
+    "vendor": "Microsoft",
+    "consoles": [ "XBOX", "XBOX360" ]
+  },
+  {
+    "vendor": "SNK",
+    "consoles": [ "NEOGEO", "NGP" ]
+  },
+  {
+    "vendor": "NEC",
+    "consoles": [ "PCE", "PCECD", "PCFX" ]
+  },
+  {
+    "vendor": "Bandai",
+    "consoles": [ "WS", "WSC" ]
+  },
+  {
+    "vendor": "Atari",
+    "consoles": [ "ATARI2600", "ATARI5200", "ATARI7800", "LYNX", "JAGUAR" ]
+  },
+  {
+    "vendor": "其他",
+    "consoles": [ "ARCADE", "\u8857\u673a", "3DO", "CDI", "NGAGE" ]
+  }
+]

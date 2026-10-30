@@ -13,4 +13,7 @@ public sealed class PlatformSetting
     /// <summary>平台级启动参数；空时使用 "{rom}"。</summary>
     public string ArgsTemplate { get; set; } = "";
     public bool IsCustom { get; set; }
+
+    /// <summary>界面分组用：来自 PlatformPresets.json 的厂商名，写库时忽略。</summary>
+    public string Vendor { get; set; } = "";
 }

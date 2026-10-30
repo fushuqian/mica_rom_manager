@@ -3,9 +3,9 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              FontFamily="{StaticResource AppFontFamily}"
              FontSize="13">
-    <Grid Margin="12">
+    <Grid Margin="12,8,12,8">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="220" />
+            <ColumnDefinition Width="236" />
             <ColumnDefinition Width="16" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
@@ -14,124 +14,225 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
+        <!-- 左栏：内置模板全集（已安装带绿点） -->
         <Grid Grid.Row="0" Grid.Column="0">
             <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <ListBox Grid.Row="0" ItemsSource="{Binding Emulators}"
-                     SelectedItem="{Binding SelectedEmulator, Mode=TwoWay}">
+            <TextBlock Grid.Row="0" Text="模拟器（内置 + 已安装）" FontSize="11.5" Margin="2,0,0,6"
+                       Foreground="{DynamicResource TextSecondaryBrush}" />
+
+            <ListBox Grid.Row="1" x:Name="CatalogList" ItemsSource="{Binding Catalog}"
+                     SelectedItem="{Binding SelectedCatalogItem, Mode=TwoWay}"
+                     ScrollViewer.VerticalScrollBarVisibility="Auto">
                 <ListBox.ItemTemplate>
                     <DataTemplate>
-                        <StackPanel Margin="2,4">
-                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
-                            <TextBlock Text="{Binding Version}" FontSize="11"
-                                       Foreground="{DynamicResource TextSecondaryBrush}" />
+                        <StackPanel Margin="2,3">
+                            <StackPanel Orientation="Horizontal">
+                                <Ellipse Width="6" Height="6" Margin="0,0,7,0" VerticalAlignment="Center">
+                                    <Ellipse.Style>
+                                        <Style TargetType="Ellipse">
+                                            <Setter Property="Fill" Value="#C7C7CC" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsInstalled}" Value="True">
+                                                    <Setter Property="Fill" Value="#30D158" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Ellipse.Style>
+                                </Ellipse>
+                                <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
+                                <TextBlock Text="{Binding PlatformDisplay}" FontSize="11" Margin="8,0,0,0"
+                                           Foreground="{DynamicResource TextSecondaryBrush}"
+                                           TextTrimming="CharacterEllipsis" />
+                            </StackPanel>
                         </StackPanel>
                     </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>
 
-            <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,8,0,0">
-                <Button Content="新增" Width="76" Style="{StaticResource SecondaryButtonStyle}"
-                        Command="{Binding AddEmulatorCommand}" />
-                <Button Content="刷新" Margin="8,0,0,0" Style="{StaticResource SecondaryButtonStyle}"
-                        Command="{Binding RefreshListCommand}" />
+            <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,6,0,0">
+                <TextBlock Text="绿点为已安装；灰点为内置模板，选中后可安装。" FontSize="11"
+                           Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" />
             </StackPanel>
         </Grid>
 
-        <StackPanel Grid.Row="0" Grid.Column="2">
-            <TextBlock Style="{StaticResource SectionTitleStyle}"
-                       Text="{Binding SelectedEmulator.Name, FallbackValue=（未选择模拟器）, TargetNullValue=（未选择模拟器）}" />
+        <!-- 右栏：已安装 -> 可编辑；未安装 -> 模板说明 + 安装 -->
+        <Grid Grid.Row="0" Grid.Column="2">
 
-            <Grid Margin="0,8,0,0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="90" />
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                </Grid.RowDefinitions>
+            <!-- 已安装 -->
+            <StackPanel x:Name="InstalledPane">
+                <StackPanel.Style>
+                    <Style TargetType="StackPanel">
+                        <Setter Property="Visibility" Value="Visible" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding SelectedCatalogItem.IsInstalled}" Value="False">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </StackPanel.Style>
 
-                <TextBlock Grid.Row="0" Grid.Column="0" Text="安装目录" Style="{StaticResource FieldLabelStyle}" />
-                <TextBlock Grid.Row="0" Grid.Column="1" Margin="0,0,0,6" TextTrimming="CharacterEllipsis"
-                           Text="{Binding SelectedEmulator.InstallDir}" />
+                <TextBlock Style="{StaticResource SectionTitleStyle}"
+                           Text="{Binding SelectedEmulator.Name, FallbackValue=（未选择模拟器）, TargetNullValue=（未选择模拟器）}" />
 
-                <TextBlock Grid.Row="1" Grid.Column="0" Text="可执行文件" Style="{StaticResource FieldLabelStyle}" />
-                <TextBlock Grid.Row="1" Grid.Column="1" Margin="0,0,0,6" TextTrimming="CharacterEllipsis"
-                           Text="{Binding SelectedEmulator.ResolvedExeDisplay}" />
+                <Grid Margin="0,10,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="96" />
+                        <ColumnDefinition Width="*" MinWidth="320" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
 
-                <TextBlock Grid.Row="2" Grid.Column="0" Text="版本" Style="{StaticResource FieldLabelStyle}" />
-                <TextBlock Grid.Row="2" Grid.Column="1" Margin="0,0,0,6"
-                           Text="{Binding SelectedEmulator.Version}" />
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="名称" Style="{StaticResource FieldLabelStyle}" />
+                    <TextBox Grid.Row="0" Grid.Column="1" Margin="0,0,0,8"
+                             Text="{Binding SelectedEmulator.Name, UpdateSourceTrigger=PropertyChanged}" />
 
-                <TextBlock Grid.Row="3" Grid.Column="0" Text="支持格式" Style="{StaticResource FieldLabelStyle}" />
-                <TextBlock Grid.Row="3" Grid.Column="1" Margin="0,0,0,6" TextTrimming="CharacterEllipsis"
-                           Text="{Binding SelectedEmulator.SupportedExt}" />
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="可执行文件" Style="{StaticResource FieldLabelStyle}" />
+                    <TextBox Grid.Row="1" Grid.Column="1" Margin="0,0,0,8" IsReadOnly="True"
+                             Text="{Binding SelectedEmulator.ResolvedExeDisplay, Mode=OneWay}" />
+                    <Button Grid.Row="1" Grid.Column="2" Content="导入（文件夹）" Margin="8,0,0,8"
+                            Style="{StaticResource SecondaryButtonStyle}"
+                            Command="{Binding InstallFromFolderCommand}" />
 
-                <TextBlock Grid.Row="4" Grid.Column="0" Text="GitHub 仓库" Style="{StaticResource FieldLabelStyle}" />
-                <TextBlock Grid.Row="4" Grid.Column="1" Margin="0,0,0,6" TextTrimming="CharacterEllipsis"
-                           Text="{Binding SelectedEmulator.GithubRepo}" />
+                    <TextBlock Grid.Row="2" Grid.Column="0" Text="安装目录" Style="{StaticResource FieldLabelStyle}" />
+                    <TextBox Grid.Row="2" Grid.Column="1" Margin="0,0,0,8" IsReadOnly="True"
+                             Text="{Binding SelectedEmulator.InstallDir, Mode=OneWay}" />
+                    <Button Grid.Row="2" Grid.Column="2" Content="导入（压缩包）" Margin="8,0,0,8"
+                            Style="{StaticResource SecondaryButtonStyle}"
+                            Command="{Binding InstallFromArchiveCommand}" />
 
-                <TextBlock Grid.Row="5" Grid.Column="0" Text="官网 / 发布页" Style="{StaticResource FieldLabelStyle}" />
-                <TextBlock Grid.Row="5" Grid.Column="1" Margin="0,0,0,6" TextTrimming="CharacterEllipsis"
-                           Text="{Binding SelectedEmulator.WebsiteUrl}" />
+                    <TextBlock Grid.Row="3" Grid.Column="0" Text="GitHub 仓库" Style="{StaticResource FieldLabelStyle}" />
+                    <TextBox Grid.Row="3" Grid.Column="1" Margin="0,0,0,8"
+                             ToolTip="owner/repo，用于检查更新"
+                             Text="{Binding SelectedEmulator.GithubRepo, UpdateSourceTrigger=PropertyChanged}" />
 
-                <TextBlock Grid.Row="6" Grid.Column="0" Text="状态" Style="{StaticResource FieldLabelStyle}" />
-                <TextBlock Grid.Row="6" Grid.Column="1" Text="{Binding SelectedEmulator.EnabledDisplay}" />
-            </Grid>
+                    <TextBlock Grid.Row="4" Grid.Column="0" Text="官网 / 发布页" Style="{StaticResource FieldLabelStyle}" />
+                    <TextBox Grid.Row="4" Grid.Column="1" Margin="0,0,0,8"
+                             Text="{Binding SelectedEmulator.WebsiteUrl, UpdateSourceTrigger=PropertyChanged}" />
 
-            <WrapPanel Margin="0,16,0,0">
-                <Button Content="导入（文件夹）" Style="{StaticResource SecondaryButtonStyle}"
-                        Command="{Binding InstallFromFolderCommand}" />
-                <Button Content="导入（压缩包）" Style="{StaticResource SecondaryButtonStyle}"
-                        Command="{Binding InstallFromArchiveCommand}" />
-            </WrapPanel>
+                    <TextBlock Grid.Row="5" Grid.Column="0" Text="支持格式" Style="{StaticResource FieldLabelStyle}" />
+                    <TextBlock Grid.Row="5" Grid.Column="1" Margin="0,1,0,8" TextTrimming="CharacterEllipsis"
+                               Text="{Binding SelectedCatalogItem.Extensions}" />
 
-            <WrapPanel Margin="0,8,0,0">
-                <Button Content="运行调试" Style="{StaticResource SecondaryButtonStyle}"
-                        Command="{Binding TestLaunchCommand}" />
-                <Button Content="打开安装目录" Style="{StaticResource SecondaryButtonStyle}"
-                        Command="{Binding OpenInstallDirCommand}" />
-                <Button Content="编辑配置" Style="{StaticResource SecondaryButtonStyle}"
-                        Command="{Binding EditSelectedCommand}" />
-            </WrapPanel>
+                    <TextBlock Grid.Row="6" Grid.Column="0" Text="版本 / 状态" Style="{StaticResource FieldLabelStyle}" />
+                    <StackPanel Grid.Row="6" Grid.Column="1" Orientation="Horizontal">
+                        <TextBlock Text="{Binding SelectedEmulator.Version}" FontSize="12" Margin="0,2,12,0"
+                                   Foreground="{DynamicResource TextSecondaryBrush}" />
+                        <CheckBox Content="启用" IsChecked="{Binding SelectedEmulator.Enabled}" />
+                    </StackPanel>
+                </Grid>
 
-            <WrapPanel Margin="0,8,0,0">
-                <Button Content="检查更新" Style="{StaticResource SecondaryButtonStyle}"
-                        Command="{Binding CheckUpdateCommand}" />
-                <Button Content="打开官网" Style="{StaticResource SecondaryButtonStyle}"
-                        Command="{Binding OpenWebsiteCommand}" />
-                <Button Content="删除" Style="{StaticResource SecondaryButtonStyle}"
-                        Command="{Binding DeleteSelectedCommand}" />
-            </WrapPanel>
+                <TextBlock Margin="0,12,0,0" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"
+                           MaxWidth="560"
+                           Text="启动参数在「设置 → 平台」里按平台配置；这里负责程序文件、仓库与官网。导入支持文件夹、zip、7z、rar、tar.gz / tgz。" />
+            </StackPanel>
 
-            <TextBlock Margin="0,16,0,0" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"
-                       Text="启动参数在「设置 → 平台」里按平台配置；这里负责程序文件、官网与 GitHub 更新。导入支持文件夹、zip、7z、rar、tar.gz / tgz。" />
-        </StackPanel>
+            <!-- 未安装（模板） -->
+            <StackPanel x:Name="TemplatePane">
+                <StackPanel.Style>
+                    <Style TargetType="StackPanel">
+                        <Setter Property="Visibility" Value="Collapsed" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding SelectedCatalogItem.IsInstalled}" Value="False">
+                                <Setter Property="Visibility" Value="Visible" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </StackPanel.Style>
 
-        <Grid Grid.Row="1" Grid.ColumnSpan="3" Margin="0,8,0,0">
+                <TextBlock Style="{StaticResource SectionTitleStyle}"
+                           Text="{Binding SelectedCatalogItem.Name, FallbackValue=（未选择）, TargetNullValue=（未选择）}" />
+
+                <Grid Margin="0,10,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="96" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="支持主机" Style="{StaticResource FieldLabelStyle}" />
+                    <TextBlock Grid.Row="0" Grid.Column="1" Margin="0,1,0,8" TextWrapping="Wrap"
+                               Text="{Binding SelectedCatalogItem.PlatformDisplay}" />
+
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="支持格式" Style="{StaticResource FieldLabelStyle}" />
+                    <TextBlock Grid.Row="1" Grid.Column="1" Margin="0,1,0,8" TextWrapping="Wrap"
+                               Text="{Binding SelectedCatalogItem.Extensions}" />
+
+                    <TextBlock Grid.Row="2" Grid.Column="0" Text="GitHub" Style="{StaticResource FieldLabelStyle}" />
+                    <TextBlock Grid.Row="2" Grid.Column="1" Margin="0,1,0,8"
+                               Text="{Binding SelectedCatalogItem.GithubRepo}" />
+
+                    <TextBlock Grid.Row="3" Grid.Column="0" Text="官网" Style="{StaticResource FieldLabelStyle}" />
+                    <TextBlock Grid.Row="3" Grid.Column="1" Margin="0,1,0,8"
+                               Text="{Binding SelectedCatalogItem.WebsiteUrl}" />
+
+                    <TextBlock Grid.Row="4" Grid.Column="0" Text="说明" Style="{StaticResource FieldLabelStyle}" />
+                    <TextBlock Grid.Row="4" Grid.Column="1" Margin="0,1,0,8" TextWrapping="Wrap" MaxWidth="520"
+                               Foreground="{DynamicResource TextSecondaryBrush}"
+                               Text="{Binding SelectedCatalogItem.Notes}" />
+                </Grid>
+
+                <WrapPanel Margin="0,12,0,0">
+                    <Button Content="安装（选文件夹）" Style="{StaticResource PrimaryButtonStyle}"
+                            Command="{Binding InstallTemplateCommand}" />
+                </WrapPanel>
+
+                <TextBlock Margin="0,10,0,0" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"
+                           MaxWidth="560"
+                           Text="安装会按模板创建条目并绑定同名平台，然后让你选择程序文件夹或压缩包。" />
+            </StackPanel>
+        </Grid>
+
+        <!-- 底栏：状态左，按钮右下 -->
+        <Grid Grid.Row="1" Grid.ColumnSpan="3" Margin="0,10,0,0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
-            <TextBlock Text="{Binding StatusMessage}" Foreground="{DynamicResource TextSecondaryBrush}"
-                       TextWrapping="Wrap" VerticalAlignment="Center" />
-            <ProgressBar Grid.Column="1" Width="140" Height="4" Margin="12,0,0,0" VerticalAlignment="Center"
-                         Maximum="100" Value="{Binding DownloadProgress}"
-                         Visibility="{Binding IsBusy, Converter={StaticResource BoolToVis}}" />
-            <Button Grid.Column="2" Content="取消下载" Margin="8,0,0,0"
-                    Style="{StaticResource SecondaryButtonStyle}"
-                    Command="{Binding CancelUpdateCommand}"
-                    Visibility="{Binding IsDownloading, Converter={StaticResource BoolToVis}}" />
+
+            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                <TextBlock Text="{Binding StatusMessage}" Foreground="{DynamicResource TextSecondaryBrush}"
+                           TextWrapping="Wrap" VerticalAlignment="Center" MaxWidth="520" />
+                <ProgressBar Width="120" Height="4" Margin="12,0,0,0" VerticalAlignment="Center"
+                             Maximum="100" Value="{Binding DownloadProgress}"
+                             Visibility="{Binding IsBusy, Converter={StaticResource BoolToVis}}" />
+            </StackPanel>
+
+            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                <Button Content="校验安装路径" Style="{StaticResource SecondaryButtonStyle}"
+                        Command="{Binding ValidatePathsCommand}" />
+                <Button Content="检查更新" Margin="8,0,0,0" Style="{StaticResource SecondaryButtonStyle}"
+                        Command="{Binding CheckUpdateCommand}" />
+                <Button Content="取消下载" Margin="8,0,0,0" Style="{StaticResource SecondaryButtonStyle}"
+                        Command="{Binding CancelUpdateCommand}"
+                        Visibility="{Binding IsDownloading, Converter={StaticResource BoolToVis}}" />
+            </StackPanel>
+
+            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="12,0,0,0">
+                <Button Content="删除" Style="{StaticResource SecondaryButtonStyle}"
+                        Command="{Binding DeleteSelectedCommand}" />
+                <Button Content="保存" Margin="8,0,0,0" Style="{StaticResource PrimaryButtonStyle}" MinWidth="72"
+                        Command="{Binding SaveChangesCommand}" />
+            </StackPanel>
         </Grid>
     </Grid>
 </UserControl>

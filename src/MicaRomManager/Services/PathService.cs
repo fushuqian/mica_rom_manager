@@ -16,6 +16,7 @@ public sealed class PathService
     public string AiChatPath => Path.Combine(DataDir, "ai-chat.json");
 
     public static string TemplatesPath => Path.Combine(AppContext.BaseDirectory, "Resources", "EmulatorTemplates.json");
+    public static string PlatformPresetsPath => Path.Combine(AppContext.BaseDirectory, "Resources", "PlatformPresets.json");
     public static string DeviceProfilesPath => Path.Combine(AppContext.BaseDirectory, "Resources", "DeviceProfiles.json");
 
     public PathService() : this(AppContext.BaseDirectory)

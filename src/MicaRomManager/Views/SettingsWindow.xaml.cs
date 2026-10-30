@@ -3,6 +3,7 @@ using System.Reflection;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Media.Animation;
 using MicaRomManager.Data;
 using MicaRomManager.Models;
@@ -145,7 +146,6 @@ public partial class SettingsWindow : Window
     private void LookupKindList_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         _currentLookupKind = LookupKindList.SelectedItem as LookupKind;
-        NewLookupValueBox.Text = "";
         LoadLookupValues();
     }
 
@@ -155,56 +155,97 @@ public partial class SettingsWindow : Window
         if (_currentLookupKind == null) return;
 
         foreach (var value in AppServices.Lookups.List(_currentLookupKind.Key))
-            LookupValueList.Items.Add(value);
+            LookupValueList.Items.Add(new LookupValueRow { Value = value, Draft = value });
     }
 
+    /// <summary>底部「添加」：插入一条待录入的空行并直接进入编辑态。</summary>
     private void AddLookupValue_Click(object sender, RoutedEventArgs e)
     {
         if (_currentLookupKind == null) return;
 
-        var result = AppServices.Lookups.Add(_currentLookupKind.Key, NewLookupValueBox.Text);
+        var row = new LookupValueRow { Value = "", Draft = "", IsEditing = true };
+        LookupValueList.Items.Add(row);
+        LookupValueList.SelectedItem = row;
+        LookupValueList.ScrollIntoView(row);
+        LookupValueList.UpdateLayout();
+        LookupValueList.ItemContainerGenerator.ContainerFromItem(row);
+    }
+
+    /// <summary>「编辑」：把选中条目切换成原地输入。</summary>
+    private void RenameLookupValue_Click(object sender, RoutedEventArgs e) => BeginLookupEdit();
+
+    private void LookupValueList_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e) =>
+        BeginLookupEdit();
+
+    private void BeginLookupEdit()
+    {
+        if (_currentLookupKind == null) return;
+        if (LookupValueList.SelectedItem is not LookupValueRow row)
+        {
+            MessageBox.Show("请先在右侧列表选中要编辑的值。", "字典库",
+                MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        foreach (var item in LookupValueList.Items.OfType<LookupValueRow>()) item.IsEditing = false;
+        row.Draft = row.Value;
+        row.IsEditing = true;
+        LookupValueList.ScrollIntoView(row);
+    }
+
+    /// <summary>原地确认：空值行走新增，其余走重命名。</summary>
+    private void LookupInlineCommit_Click(object sender, RoutedEventArgs e)
+    {
+        if (_currentLookupKind == null) return;
+        if ((sender as FrameworkElement)?.Tag is not LookupValueRow row) return;
+
+        var draft = (row.Draft ?? "").Trim();
+        if (draft.Length == 0)
+        {
+            MessageBox.Show("值不能为空。", "字典库", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        var result = string.IsNullOrWhiteSpace(row.Value)
+            ? AppServices.Lookups.Add(_currentLookupKind.Key, draft)
+            : AppServices.Lookups.Rename(_currentLookupKind.Key, row.Value, draft);
+
         if (!result.Success)
         {
             MessageBox.Show(result.Message, "字典库", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
-        NewLookupValueBox.Text = "";
         LoadLookupValues();
         if (_currentLookupKind.Key == LookupRepository.Platform) LoadPlatforms();
     }
 
-    private void RenameLookupValue_Click(object sender, RoutedEventArgs e)
+    /// <summary>原地取消：恢复原值；空行直接移除。</summary>
+    private void LookupInlineCancel_Click(object sender, RoutedEventArgs e)
     {
-        if (_currentLookupKind == null) return;
-        if (LookupValueList.SelectedItem is not string oldValue)
+        if ((sender as FrameworkElement)?.Tag is not LookupValueRow row) return;
+
+        if (string.IsNullOrWhiteSpace(row.Value))
         {
-            MessageBox.Show("请先在右侧列表选中要重命名的值。", "字典库",
-                MessageBoxButton.OK, MessageBoxImage.Information);
+            LookupValueList.Items.Remove(row);
             return;
         }
 
-        var result = AppServices.Lookups.Rename(_currentLookupKind.Key, oldValue, NewLookupValueBox.Text);
-        MessageBox.Show(result.Message, "字典库", MessageBoxButton.OK,
-            result.Success ? MessageBoxImage.Information : MessageBoxImage.Warning);
-        if (!result.Success) return;
-
-        NewLookupValueBox.Text = "";
-        LoadLookupValues();
-        if (_currentLookupKind.Key == LookupRepository.Platform) LoadPlatforms();
+        row.Draft = row.Value;
+        row.IsEditing = false;
     }
 
     private void RemoveLookupValue_Click(object sender, RoutedEventArgs e)
     {
         if (_currentLookupKind == null) return;
-        if (LookupValueList.SelectedItem is not string value)
+        if (LookupValueList.SelectedItem is not LookupValueRow selectedRow)
         {
             MessageBox.Show("请先在右侧列表选中要删除的值。", "字典库",
                 MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
 
-        var result = AppServices.Lookups.Delete(_currentLookupKind.Key, value);
+        var result = AppServices.Lookups.Delete(_currentLookupKind.Key, selectedRow.Value);
         MessageBox.Show(result.Message, "字典库", MessageBoxButton.OK,
             result.Success ? MessageBoxImage.Information : MessageBoxImage.Warning);
         if (!result.Success) return;
@@ -216,7 +257,18 @@ public partial class SettingsWindow : Window
     private void LoadPlatforms(string? selectName = null)
     {
         var selected = selectName ?? (PlatformList.SelectedItem as PlatformSetting)?.Name;
-        PlatformList.ItemsSource = AppServices.Platforms.ListAll();
+
+        // 先把预置清单里缺的主机补进平台表，再按「厂商 → 主机」分组显示
+        var seeded = PlatformPresetStore.SeedMissing(AppServices.Platforms, AppServices.Paths);
+        if (seeded > 0) PlatformScanHint.Text = $"已按预置清单补充 {seeded} 个主机条目。";
+
+        var presets = PlatformPresetStore.Load(AppServices.Paths);
+        var platforms = AppServices.Platforms.ListAll();
+        foreach (var platform in platforms) platform.Vendor = PlatformPresetStore.VendorOf(presets, platform.Name);
+
+        var view = new ListCollectionView(platforms);
+        view.GroupDescriptions.Add(new PropertyGroupDescription(nameof(PlatformSetting.Vendor)));
+        PlatformList.ItemsSource = view;
 
         PlatformEmulatorCombo.Items.Clear();
         PlatformEmulatorCombo.Items.Add(new ComboBoxItem { Content = "（不指定）", Tag = null });
@@ -224,7 +276,7 @@ public partial class SettingsWindow : Window
         foreach (var emulator in _emulators)
             PlatformEmulatorCombo.Items.Add(new ComboBoxItem { Content = emulator.Name, Tag = emulator.Id });
 
-        if (PlatformList.ItemsSource is List<PlatformSetting> platforms && !string.IsNullOrEmpty(selected))
+        if (!string.IsNullOrEmpty(selected))
         {
             var match = platforms.FirstOrDefault(p => string.Equals(p.Name, selected, StringComparison.OrdinalIgnoreCase));
             if (match != null) PlatformList.SelectedItem = match;
@@ -1018,4 +1070,33 @@ public partial class SettingsWindow : Window
             AiTestButton.IsEnabled = true;
         }
     }
+
+
+/// <summary>字典库列表的一行：支持原地编辑（Draft 为输入中的值）。</summary>
+public sealed class LookupValueRow : System.ComponentModel.INotifyPropertyChanged
+{
+    private string _value = "";
+    private string _draft = "";
+    private bool _editing;
+
+    public string Value
+    {
+        get => _value;
+        set { _value = value; PropertyChanged?.Invoke(this, new(nameof(Value))); }
+    }
+
+    public string Draft
+    {
+        get => _draft;
+        set { _draft = value; PropertyChanged?.Invoke(this, new(nameof(Draft))); }
+    }
+
+    public bool IsEditing
+    {
+        get => _editing;
+        set { _editing = value; PropertyChanged?.Invoke(this, new(nameof(IsEditing))); }
+    }
+
+    public event System.ComponentModel.PropertyChangedEventHandler? PropertyChanged;
+}
 }

@@ -180,3 +180,10 @@
 - **托盘叠在助手上必须是不透明底**：助手面板 ShellPanelBrush 只有 40% 白，托盘若用同系透明笔刷会透出对话文字；新增 TrayBrush（#FDF9FAFC / 深色 #FA18181D）。
 - **点空白关闭不要用遮罩 Border**：遮罩会盖住筛选条上的「编辑」开关，导致点不动；改为窗口级 PreviewMouseDown，命中托盘与开关时放行。
 - **这台机器 2K@200% 缩放**，窗口 1280 DIP 在 3840×2160 上仍能放下；截图必须先把 PowerShell 进程设为 Per-Monitor DPI 感知，否则 GetWindowRect 返回被虚拟化的坐标，只能拍到窗口左上角。
+
+## 2026-10-31 v0.30.1 设置窗口与平台预置
+
+- **只读计算属性不能 TwoWay 绑定**：`Emulator.ResolvedExeDisplay` 是只读，TextBox 默认 TwoWay 会在 `ShowDialog` 时抛 `InvalidOperationException`，窗口直接打不开；只读展示一律显式 `Mode=OneWay`。
+- **UIA 自动化点按钮**：按 `Name` 找到的元素可能不是按钮（会是窗口标题或文本），要用 `AndCondition(Name, ControlType.Button)` 再取 `InvokePattern`；否则 `GetCurrentPattern` 抛「不支持的模式」，看起来像点了没反应。
+- **资源文件有 data 副本**：`PlatformPresets.json` / `EmulatorTemplates.json` 首次运行会复制到 `data\`，改完资源要删掉 data 副本才会生效。
+- **平台名用短名**：库里既有 `PS1/PS2/SNES/3DS/Wii U/街机` 这类写法，预置清单要按这些名字写（或加别名），否则分组会落到「自定义」。

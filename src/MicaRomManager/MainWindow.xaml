@@ -4,7 +4,7 @@
         xmlns:controls="clr-namespace:MicaRomManager.Controls"
         xmlns:views="clr-namespace:MicaRomManager.Views"
         xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
-        Title="Mica ROM Manager BUILD7"
+        Title="Mica ROM Manager"
         Width="1280" Height="780"
         MinWidth="1080" MinHeight="640"
         WindowStartupLocation="CenterScreen"

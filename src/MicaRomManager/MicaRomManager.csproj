@@ -6,7 +6,7 @@
     <UseWPF>true</UseWPF>
     <RootNamespace>MicaRomManager</RootNamespace>
     <AssemblyName>MicaRomManager</AssemblyName>
-    <Version>0.30.0</Version>
+    <Version>0.30.1</Version>
     <ApplicationIcon>app.ico</ApplicationIcon>
     <Platforms>AnyCPU</Platforms>
     <PublishSingleFile>true</PublishSingleFile>
@@ -32,6 +32,9 @@
 
   <ItemGroup>
     <None Update="Resources\EmulatorTemplates.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\PlatformPresets.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Resources\DeviceProfiles.json">

@@ -16,6 +16,9 @@ public partial class EmulatorManagerViewModel : ObservableObject
     public ObservableCollection<Emulator> Emulators { get; } = new();
 
     [ObservableProperty] private Emulator? selectedEmulator;
+    /// <summary>左栏：内置模板全集 + 已安装项，未安装的模板也会列出来。</summary>
+    public ObservableCollection<EmulatorCatalogItem> Catalog { get; } = new();
+    [ObservableProperty] private EmulatorCatalogItem? selectedCatalogItem;
     [ObservableProperty] private string statusMessage = "选择模拟器后可导入、调试或更新。";
     [ObservableProperty] private bool isBusy;
     [ObservableProperty] private bool isDownloading;
@@ -35,7 +38,140 @@ public partial class EmulatorManagerViewModel : ObservableObject
         Emulators.Clear();
         foreach (var emulator in AppServices.EmulatorRepo.ListAll()) Emulators.Add(emulator);
 
+        BuildCatalog();
+
         SelectedEmulator = Emulators.FirstOrDefault(e => e.Id == previousId) ?? Emulators.FirstOrDefault();
+        SelectedCatalogItem = Catalog.FirstOrDefault(item => item.Emulator?.Id == SelectedEmulator?.Id)
+                              ?? Catalog.FirstOrDefault();
+    }
+
+    /// <summary>内置模板优先：已安装的合并状态点，未安装的也列出来供预览与安装。</summary>
+    private void BuildCatalog()
+    {
+        Catalog.Clear();
+        List<EmulatorTemplate> templates;
+        try
+        {
+            templates = EmulatorTemplateStore.Load(AppServices.Paths);
+        }
+        catch
+        {
+            templates = new List<EmulatorTemplate>();
+        }
+
+        foreach (var emulator in Emulators)
+        {
+            var template = templates.FirstOrDefault(t =>
+                string.Equals(t.Name, emulator.Name, StringComparison.OrdinalIgnoreCase));
+            Catalog.Add(new EmulatorCatalogItem
+            {
+                Name = emulator.Name,
+                PlatformDisplay = emulator.PlatformDisplay,
+                Extensions = string.Join(", ", (template?.Extensions ?? new List<string>()).Select(x => x.TrimStart('.'))),
+                GithubRepo = emulator.GithubRepo,
+                WebsiteUrl = emulator.WebsiteUrl,
+                Notes = template?.Notes ?? emulator.Notes,
+                IsInstalled = true,
+                Emulator = emulator,
+                Template = template,
+            });
+        }
+
+        foreach (var template in templates.Where(t =>
+                     !Emulators.Any(e => string.Equals(e.Name, t.Name, StringComparison.OrdinalIgnoreCase))))
+        {
+            Catalog.Add(new EmulatorCatalogItem
+            {
+                Name = template.Name,
+                PlatformDisplay = string.Join(", ", template.Platforms),
+                Extensions = string.Join(", ", template.Extensions.Select(x => x.TrimStart('.'))),
+                GithubRepo = template.GithubRepo,
+                WebsiteUrl = template.WebsiteUrl,
+                Notes = template.Notes,
+                IsInstalled = false,
+                Template = template,
+            });
+        }
+    }
+
+    partial void OnSelectedCatalogItemChanged(EmulatorCatalogItem? value)
+    {
+        SelectedEmulator = value?.Emulator;
+    }
+
+    /// <summary>保存右侧就地修改的名称 / 仓库 / 官网 / 备注 / 启用状态。</summary>
+    [RelayCommand]
+    private void SaveChanges()
+    {
+        var emulator = SelectedEmulator;
+        if (emulator == null) return;
+
+        if (string.IsNullOrWhiteSpace(emulator.Name))
+        {
+            MessageBox.Show("名称不能为空。", "保存模拟器", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        try
+        {
+            AppServices.EmulatorRepo.Save(emulator);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"保存失败：{ex.Message}", "保存模拟器", MessageBoxButton.OK, MessageBoxImage.Error);
+            return;
+        }
+
+        var id = emulator.Id;
+        Reload();
+        SelectedEmulator = Emulators.FirstOrDefault(e => e.Id == id);
+        StatusMessage = $"「{emulator.Name}」已保存";
+    }
+
+    /// <summary>校验安装目录与可执行文件是否还在（替代原来没用的「打开安装目录」）。</summary>
+    [RelayCommand]
+    private void ValidatePaths()
+    {
+        var emulator = SelectedEmulator;
+        if (emulator == null) return;
+
+        var exe = EmulatorPaths.ResolveExe(emulator);
+        var dirOk = !string.IsNullOrWhiteSpace(emulator.InstallDir) && Directory.Exists(emulator.InstallDir);
+        var exeOk = !string.IsNullOrWhiteSpace(exe) && File.Exists(exe);
+
+        var report = $"安装目录：{(dirOk ? "存在" : "缺失")}\n可执行文件：{(exeOk ? "存在" : "缺失")}";
+        StatusMessage = $"「{emulator.Name}」校验完成：目录{(dirOk ? "正常" : "缺失")}，程序{(exeOk ? "正常" : "缺失")}";
+        MessageBox.Show(report + (exeOk ? "" : "\n\n可重新「导入（文件夹）」或「导入（压缩包）」修复。"),
+            "校验安装路径", MessageBoxButton.OK, exeOk ? MessageBoxImage.Information : MessageBoxImage.Warning);
+    }
+
+    /// <summary>从内置模板一键建档并接着选文件夹安装。</summary>
+    [RelayCommand]
+    private void InstallTemplate()
+    {
+        var item = SelectedCatalogItem;
+        if (item?.Template is not { } template) return;
+
+        var existingNames = Emulators.Select(e => e.Name).ToList();
+        var emulator = EmulatorTemplateFactory.CreateFromTemplate(
+            template,
+            existingNames,
+            AppServices.Platforms.ListAll().Select(platform => platform.Name).ToList());
+
+        try
+        {
+            AppServices.EmulatorRepo.Save(emulator);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"创建失败：{ex.Message}", "安装模拟器", MessageBoxButton.OK, MessageBoxImage.Error);
+            return;
+        }
+
+        Reload();
+        SelectedEmulator = Emulators.FirstOrDefault(e => e.Id == emulator.Id);
+        StatusMessage = $"已按模板创建「{emulator.Name}」，接着选择程序文件夹。";
+        InstallFromFolder();
     }
 
     [RelayCommand]
