@@ -41,13 +41,13 @@
                             <Grid Margin="0,5">
                                 <Border Visibility="{Binding IsUser, Converter={StaticResource BoolToVis}}"
                                         Background="{DynamicResource HoverBrush}" CornerRadius="10"
-                                        Padding="10,7" MaxWidth="300" HorizontalAlignment="Right">
+                                        Padding="10,7" MaxWidth="236" HorizontalAlignment="Right">
                                     <TextBlock Text="{Binding Text}" Foreground="{DynamicResource TextPrimaryBrush}" TextWrapping="Wrap" />
                                 </Border>
 
                                 <Border Visibility="{Binding IsAssistant, Converter={StaticResource BoolToVis}}"
                                         Background="Transparent" BorderThickness="0" Padding="0,2"
-                                        MaxWidth="340" HorizontalAlignment="Left">
+                                        MaxWidth="252" HorizontalAlignment="Left">
                                     <TextBlock Text="{Binding Text}" TextWrapping="Wrap" LineHeight="21" />
                                 </Border>
 
