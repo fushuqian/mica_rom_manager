@@ -17,6 +17,7 @@ public partial class GameInspectorView : UserControl
     private bool _loading;
     private bool _dirty;
     private bool _overwrite;
+    private int _rating;
 
     public GameInspectorView()
     {
@@ -159,7 +160,8 @@ public partial class GameInspectorView : UserControl
         EditPublisher.Text = game.Publisher;
         EditDeveloper.Text = game.Developer;
         EditStatus.Text = game.Status;
-        EditRating.Text = game.Rating.ToString();
+        _rating = game.Rating;
+        UpdateRatingStars();
         EditTags.Text = game.Tags;
         EditNotes.Text = game.Notes;
     }
@@ -179,6 +181,34 @@ public partial class GameInspectorView : UserControl
         catch
         {
             return null;
+        }
+    }
+
+    /// <summary>点星设置评分；再点同一颗清空。</summary>
+    private void RatingStar_Click(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        if (sender is not FrameworkElement element || !int.TryParse(element.Tag as string, out var star)) return;
+
+        _rating = _rating == star ? 0 : star;
+        UpdateRatingStars();
+        SetDirty(true);
+        e.Handled = true;
+    }
+
+    private void UpdateRatingStars()
+    {
+        if (RatingStarsPanel == null) return;
+
+        var filled = (Brush)FindResource("AccentBrush");
+        var empty = (Brush)FindResource("ScrollThumbBrush");
+        var index = 0;
+        foreach (var child in RatingStarsPanel.Children)
+        {
+            if (child is not TextBlock star) continue;
+            index++;
+            var on = index <= _rating;
+            star.Text = on ? "★" : "☆";
+            star.Foreground = on ? filled : empty;
         }
     }
 
@@ -211,7 +241,7 @@ public partial class GameInspectorView : UserControl
         _game.Developer = EditDeveloper.Text.Trim();
         _game.Status = (EditStatus.SelectedItem as string) ?? EditStatus.Text.Trim();
         if (_game.Status.Length == 0) _game.Status = GameStatus.NotPlayed;
-        _game.Rating = int.TryParse(EditRating.Text.Trim(), out var rating) ? Math.Clamp(rating, 0, 5) : 0;
+        _game.Rating = Math.Clamp(_rating, 0, 5);
         _game.Tags = EditTags.Text.Trim();
         _game.Notes = EditNotes.Text;
 

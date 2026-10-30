@@ -620,6 +620,9 @@
                 <Border x:Name="InspectorTray" Width="300" HorizontalAlignment="Right"
                         Visibility="Collapsed" Background="{DynamicResource TrayBrush}"
                         BorderBrush="{DynamicResource HairlineBrush}" BorderThickness="1,0,0,0">
+                    <Border.RenderTransform>
+                        <TranslateTransform x:Name="TrayTransform" X="24" />
+                    </Border.RenderTransform>
                     <views:GameInspectorView x:Name="Inspector" />
                 </Border>
             </Grid>

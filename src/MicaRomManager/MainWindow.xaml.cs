@@ -478,11 +478,14 @@ public partial class MainWindow : Window
 
         InspectorTray.Visibility = Visibility.Visible;
         Inspector.Load(_viewModel.SelectedGame, edit);
+
+        var ease = new CubicEase { EasingMode = EasingMode.EaseOut };
         InspectorTray.BeginAnimation(OpacityProperty,
-            new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(160))
-            {
-                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut },
-            });
+            new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(180)) { EasingFunction = ease },
+            HandoffBehavior.SnapshotAndReplace);
+        TrayTransform.BeginAnimation(TranslateTransform.XProperty,
+            new DoubleAnimation(24, 0, TimeSpan.FromMilliseconds(200)) { EasingFunction = ease },
+            HandoffBehavior.SnapshotAndReplace);
     }
 
     private void CloseTray()
@@ -500,7 +503,19 @@ public partial class MainWindow : Window
             }
         }
 
-        InspectorTray.Visibility = Visibility.Collapsed;
+        var easeOut = new CubicEase { EasingMode = EasingMode.EaseIn };
+        var fade = new DoubleAnimation(1, 0, TimeSpan.FromMilliseconds(140)) { EasingFunction = easeOut };
+        fade.Completed += (_, _) =>
+        {
+            InspectorTray.Visibility = Visibility.Collapsed;
+            InspectorTray.Opacity = 1;
+            TrayTransform.X = 24;
+        };
+        InspectorTray.BeginAnimation(OpacityProperty, fade, HandoffBehavior.SnapshotAndReplace);
+        TrayTransform.BeginAnimation(TranslateTransform.XProperty,
+            new DoubleAnimation(0, 20, TimeSpan.FromMilliseconds(150)) { EasingFunction = easeOut },
+            HandoffBehavior.SnapshotAndReplace);
+
         EditModeToggle.IsChecked = false;
     }
 
@@ -562,6 +577,17 @@ public partial class MainWindow : Window
             if (InspectorTray.Visibility == Visibility.Visible)
             {
                 CloseTray();
+                e.Handled = true;
+            }
+
+            return;
+        }
+
+        if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.S)
+        {
+            if (InspectorTray.Visibility == Visibility.Visible && Inspector.IsEditing)
+            {
+                Inspector.SaveCurrent();
                 e.Handled = true;
             }
 

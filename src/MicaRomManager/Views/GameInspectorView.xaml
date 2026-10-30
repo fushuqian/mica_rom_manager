@@ -13,8 +13,9 @@
             <Setter Property="Padding" Value="8,4" />
             <Setter Property="FontSize" Value="12.5" />
             <Setter Property="VerticalContentAlignment" Value="Center" />
-            <Setter Property="Background" Value="{DynamicResource InputBrush}" />
-            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Background" Value="#FFFFFFFF" />
+            <Setter Property="BorderBrush" Value="{DynamicResource HairlineBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
         </Style>
         <Style x:Key="InspCombo" TargetType="ComboBox">
             <Setter Property="MinHeight" Value="30" />
@@ -144,8 +145,19 @@
                                       SelectionChanged="Field_Changed" />
                         </StackPanel>
                         <StackPanel Width="116">
-                            <TextBlock Text="评分（0-5）" Style="{StaticResource InspLabel}" />
-                            <TextBox x:Name="EditRating" Style="{StaticResource InspBox}" TextChanged="Field_Changed" />
+                            <TextBlock Text="评分" Style="{StaticResource InspLabel}" />
+                            <StackPanel x:Name="RatingStarsPanel" Orientation="Horizontal" Margin="2,5,0,0">
+                                <TextBlock Text="☆" FontSize="15" Tag="1" Cursor="Hand"
+                                           MouseLeftButtonUp="RatingStar_Click" />
+                                <TextBlock Text="☆" FontSize="15" Tag="2" Cursor="Hand" Margin="2,0,0,0"
+                                           MouseLeftButtonUp="RatingStar_Click" />
+                                <TextBlock Text="☆" FontSize="15" Tag="3" Cursor="Hand" Margin="2,0,0,0"
+                                           MouseLeftButtonUp="RatingStar_Click" />
+                                <TextBlock Text="☆" FontSize="15" Tag="4" Cursor="Hand" Margin="2,0,0,0"
+                                           MouseLeftButtonUp="RatingStar_Click" />
+                                <TextBlock Text="☆" FontSize="15" Tag="5" Cursor="Hand" Margin="2,0,0,0"
+                                           MouseLeftButtonUp="RatingStar_Click" />
+                            </StackPanel>
                         </StackPanel>
                     </StackPanel>
 
