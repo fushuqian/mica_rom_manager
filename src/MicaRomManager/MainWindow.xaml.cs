@@ -74,7 +74,8 @@ public partial class MainWindow : Window
     }
 
     private void RestoreAssistantState() =>
-        SetAssistantOpen(AppServices.Settings.GetBool(AssistantOpenKey), persist: false);
+        // 缺省展开：老板要求米卡助手默认常驻，设置里可关
+        SetAssistantOpen(AppServices.Settings.GetBool(AssistantOpenKey, true), persist: false);
 
     private void ToggleAssistant_Click(object sender, RoutedEventArgs e) =>
         SetAssistantOpen(AssistantPanel.Visibility != Visibility.Visible);

@@ -33,6 +33,8 @@ public partial class SettingsWindow : Window
         LoadAiSettings();
         LoadLookupKinds();
         LoadPlatforms();
+
+        AssistantDefaultCheck.IsChecked = AppServices.Settings.GetBool("ui.assistant_open_v2", true);
         LoadPrompts();
         DataDirText.Text = AppServices.Paths.DataDir;
 
@@ -673,6 +675,8 @@ public partial class SettingsWindow : Window
 
     private void SaveGeneral_Click(object sender, RoutedEventArgs e)
     {
+        AppServices.Settings.Set("ui.assistant_open_v2", (AssistantDefaultCheck.IsChecked == true).ToString());
+
         var mode = CurrentProxyMode();
         if (mode == "manual" && !NetworkClientProvider.TryParseProxyAddress(ProxyAddressBox.Text, out _, out _))
         {

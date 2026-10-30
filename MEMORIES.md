@@ -187,3 +187,9 @@
 - **UIA 自动化点按钮**：按 `Name` 找到的元素可能不是按钮（会是窗口标题或文本），要用 `AndCondition(Name, ControlType.Button)` 再取 `InvokePattern`；否则 `GetCurrentPattern` 抛「不支持的模式」，看起来像点了没反应。
 - **资源文件有 data 副本**：`PlatformPresets.json` / `EmulatorTemplates.json` 首次运行会复制到 `data\`，改完资源要删掉 data 副本才会生效。
 - **平台名用短名**：库里既有 `PS1/PS2/SNES/3DS/Wii U/街机` 这类写法，预置清单要按这些名字写（或加别名），否则分组会落到「自定义」。
+
+## 2026-10-31 v0.30.2 常驻与同步
+
+- **助手开关的语义**：`ui.assistant_open_v2` 既是最新状态也是启动默认值，设置里的文案要写「启动时展开」，不要写「默认常驻」，否则用户会疑惑为什么关掉后下次又是别的状态。
+- **emoji 在 WPF 里不可靠**：⭐ 走字体回退常被渲染成单色轮廓，改成 `Path` 矢量五角星最稳（Fill 固定金色，Visibility 绑 Favorite）。
+- **字典库自动同步要幂等**：`LookupSync` 先 `List(kind)` 比对（忽略大小写）再 `Add`，否则每次保存都会重复插入或触发唯一约束。

@@ -189,12 +189,17 @@ public partial class MainViewModel : ObservableObject, IAiAppHost
     {
         AppServices.GameRepo.Update(game);
 
+        // 刮削/编辑产生的新值自动补进字典库，下一次筛选就能选到
+        var lookupAdded = LookupSync.SyncGame(game);
+
         if (!string.IsNullOrWhiteSpace(game.Platform) && !Platforms.Contains(game.Platform))
             Platforms.Add(game.Platform);
         foreach (var tag in SplitTags(game.Tags))
             if (!Tags.Contains(tag)) Tags.Add(tag);
 
         RefreshPlatformFilters();
+
+        if (lookupAdded > 0) RefreshLookups();
 
         // 编辑状态/平台/标签等参与筛选的字段后，按当前条件立即刷新
         ApplyFilter();

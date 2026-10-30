@@ -356,9 +356,11 @@
                                 <DataGridTemplateColumn Header="收藏" Width="Auto" SortMemberPath="Favorite">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
-                                            <TextBlock Text="{Binding FavoriteDisplay}" FontSize="13"
-                                                       FontFamily="Segoe UI Emoji, Segoe UI Symbol, Segoe MDL2 Assets"
-                                                       VerticalAlignment="Center" />
+                                            <Grid Width="14" Height="14" VerticalAlignment="Center">
+                                                <Path Data="M7,0 L8.9,4.6 L13.9,5.1 L10.1,8.5 L11.2,13.4 L7,10.8 L2.8,13.4 L3.9,8.5 L0.1,5.1 L5.1,4.6 Z"
+                                                      Fill="#FFB300" Stretch="Fill" Width="13" Height="13"
+                                                      Visibility="{Binding Favorite, Converter={StaticResource BoolToVis}}" />
+                                            </Grid>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>

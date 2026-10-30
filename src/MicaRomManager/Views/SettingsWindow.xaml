@@ -85,6 +85,11 @@
                     <StackPanel Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="2" Margin="0,0,0,12">
                         <CheckBox x:Name="PortableModeCheck"
                                   Content="便携模式（库目录为程序目录下的相对路径）" />
+                        <CheckBox x:Name="AssistantDefaultCheck" Margin="0,10,0,0"
+                                  Content="启动时展开米卡助手" />
+                        <TextBlock Margin="0,4,0,0" Foreground="{DynamicResource TextSecondaryBrush}"
+                                   TextWrapping="Wrap" MaxWidth="520"
+                                   Text="米卡助手默认常驻在右侧；关闭后启动时收起，仍可用顶栏按钮随时打开。" />
                         <TextBlock Margin="0,4,0,0" Foreground="{DynamicResource TextSecondaryBrush}"
                                    TextWrapping="Wrap" MaxWidth="520"
                                    Text="程序 exe 与库文件夹放在同一盘，库目录为程序目录下的任意命名文件夹（如 E:\MicaRomManager.exe + E:\game_library\）。开启后库目录、ROM / 碟片 / 封面、模拟器路径都存为相对路径，换电脑盘符变化仍可用。" />
