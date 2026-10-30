@@ -1,5 +1,8 @@
 namespace MicaRomManager.Services.Ai;
 
+using System.Text.Encodings.Web;
+using System.Text.Json;
+
 public sealed record AiTurnResult(string Text, AiPendingAction? Pending, string Error);
 
 /// <summary>助手多轮工具调用循环；写操作返回 Pending，用户确认后再继续。</summary>
@@ -9,11 +12,15 @@ public sealed class AiAssistantService
     private const int MaxHistory = 20;
 
     private readonly IAiChatClient _client;
-    private readonly AiToolExecutor _executor = new();
+    private readonly IAiToolExecutor _executor;
     private readonly List<AiChatMessage> _history = new();
     private string? _pendingToolCallId;
 
-    public AiAssistantService(IAiChatClient? client = null) => _client = client ?? AppServices.Ai;
+    public AiAssistantService(IAiChatClient? client = null, IAiToolExecutor? executor = null)
+    {
+        _client = client ?? AppServices.Ai;
+        _executor = executor ?? new AiToolExecutor();
+    }
 
     public bool HasPending => _pendingToolCallId != null;
 
@@ -66,17 +73,25 @@ public sealed class AiAssistantService
         _pendingToolCallId = null;
     }
 
-    public void CancelPending()
+    public void CancelPending(string reason = "用户取消了该操作，不要执行。")
     {
         if (_pendingToolCallId == null) return;
-        AddHistory(new AiChatMessage
-        {
-            Role = "tool",
-            ToolCallId = _pendingToolCallId,
-            Content = "{\"ok\":false,\"message\":\"用户取消了该操作，不要执行。\"}",
-        });
+        AddHistory(ToolResult(_pendingToolCallId, reason));
         _pendingToolCallId = null;
     }
+
+    /// <summary>构造一条合法的 tool 响应消息（必须带 tool_call_id）。</summary>
+    private static AiChatMessage ToolResult(string toolCallId, string message) => new()
+    {
+        Role = "tool",
+        ToolCallId = toolCallId,
+        Content = JsonSerializer.Serialize(new { ok = false, message }, ToolJsonOptions),
+    };
+
+    private static readonly JsonSerializerOptions ToolJsonOptions = new()
+    {
+        Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+    };
 
     private async Task<AiTurnResult> RunLoopAsync(IAiAppHost host, CancellationToken token)
     {
@@ -128,7 +143,20 @@ public sealed class AiAssistantService
             for (var index = 0; index < calls.Count; index++)
             {
                 var call = calls[index];
-                var execution = await _executor.ExecuteAsync(call, host, token);
+                AiToolExecution execution;
+                try
+                {
+                    execution = await _executor.ExecuteAsync(call, host, token);
+                }
+                catch (OperationCanceledException)
+                {
+                    // 取消发生在工具执行中：先补齐本轮所有 call 的 tool 响应，
+                    // 否则历史里会留下「有 tool_calls、无 tool 响应」的非法消息，下一次请求必被端点拒绝。
+                    for (var rest = index; rest < calls.Count; rest++)
+                        AddHistory(ToolResult(calls[rest].Id, "已取消：用户中止了本轮操作。"));
+
+                    throw;
+                }
 
                 if (execution.Pending != null)
                 {

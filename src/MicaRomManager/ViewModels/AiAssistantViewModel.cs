@@ -165,12 +165,12 @@ public partial class AiAssistantViewModel : ObservableObject
         }
         catch (OperationCanceledException)
         {
-            _service.CancelPending();
+            _service.CancelPending("用户取消了该操作，不要执行。");
             Add(new AiChatItem { Kind = AiChatKind.Tool, Text = "执行已取消。" });
         }
         catch (Exception ex)
         {
-            _service.CancelPending();
+            _service.CancelPending($"执行失败：{ex.Message}。该操作可能未完成，不要自动重试，先如实告知用户。");
             AddError($"执行失败：{ex.Message}");
         }
         finally

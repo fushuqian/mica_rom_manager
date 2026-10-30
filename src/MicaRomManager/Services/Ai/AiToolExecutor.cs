@@ -15,7 +15,7 @@ public sealed class AiToolExecution
 }
 
 /// <summary>执行模型请求的工具；所有写操作只生成待确认动作，不直接落库。</summary>
-public sealed class AiToolExecutor
+public sealed class AiToolExecutor : IAiToolExecutor
 {
     private static readonly JsonSerializerOptions JsonOptions = new()
     {

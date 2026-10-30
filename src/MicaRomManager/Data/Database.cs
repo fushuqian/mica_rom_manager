@@ -5,6 +5,9 @@ using Microsoft.Data.Sqlite;
 
 namespace MicaRomManager.Data;
 
+/// <summary>数据库恢复结果；PreRestoreBackupPath 是恢复前自动备份的路径。</summary>
+public sealed record RestoreOutcome(bool Success, string Message, string PreRestoreBackupPath);
+
 public sealed class Database
 {
     public string DbPath { get; }
@@ -29,6 +32,83 @@ public sealed class Database
         pragma.CommandText = "PRAGMA foreign_keys = ON; PRAGMA busy_timeout = 3000;";
         pragma.ExecuteNonQuery();
         return connection;
+    }
+
+    /// <summary>
+    /// 用备份文件替换当前库：先把现有库自动备份，清空连接池后覆盖，再做完整性校验；
+    /// 校验失败自动回滚到恢复前的库，避免把程序变成一个打不开的空壳。
+    /// </summary>
+    public RestoreOutcome RestoreFrom(string backupPath)
+    {
+        if (string.IsNullOrWhiteSpace(backupPath) || !File.Exists(backupPath))
+            return new RestoreOutcome(false, "备份文件不存在。", "");
+
+        var preRestore = "";
+        try
+        {
+            var backupsDir = Path.Combine(Path.GetDirectoryName(DbPath) ?? ".", "backups");
+            Directory.CreateDirectory(backupsDir);
+            preRestore = Path.Combine(backupsDir, $"mica-pre-restore-{DateTime.Now:yyyyMMdd-HHmmss}.db");
+            File.Copy(DbPath, preRestore, true);
+        }
+        catch (Exception ex)
+        {
+            return new RestoreOutcome(false, $"备份当前库失败，已中止恢复：{ex.Message}", "");
+        }
+
+        // 连接池里还握着旧文件的句柄，必须先清干净，否则复制会被占用或读到旧页。
+        SqliteConnection.ClearAllPools();
+
+        try
+        {
+            File.Copy(backupPath, DbPath, true);
+            if (!QuickCheck(out var detail))
+            {
+                Rollback(preRestore);
+                return new RestoreOutcome(false, $"备份库校验未通过（{detail}），已回滚到恢复前的库。", preRestore);
+            }
+
+            return new RestoreOutcome(true, "数据库已恢复，请重启程序生效。", preRestore);
+        }
+        catch (Exception ex)
+        {
+            Rollback(preRestore);
+            return new RestoreOutcome(false, $"恢复失败：{ex.Message}（已回滚到恢复前的库）", preRestore);
+        }
+    }
+
+    /// <summary>恢复失败时用自动备份覆盖回去；失败也不抛，交给上层提示。</summary>
+    private void Rollback(string preRestore)
+    {
+        if (string.IsNullOrWhiteSpace(preRestore) || !File.Exists(preRestore)) return;
+
+        try
+        {
+            SqliteConnection.ClearAllPools();
+            File.Copy(preRestore, DbPath, true);
+        }
+        catch
+        {
+            // 回滚失败时保留自动备份文件，供用户手动处理
+        }
+    }
+
+    private bool QuickCheck(out string detail)
+    {
+        try
+        {
+            using var connection = Open();
+            using var cmd = connection.CreateCommand();
+            cmd.CommandText = "PRAGMA quick_check;";
+            var result = cmd.ExecuteScalar() as string ?? "";
+            detail = result;
+            return string.Equals(result, "ok", StringComparison.OrdinalIgnoreCase);
+        }
+        catch (Exception ex)
+        {
+            detail = ex.Message;
+            return false;
+        }
     }
 
     private void Initialize()

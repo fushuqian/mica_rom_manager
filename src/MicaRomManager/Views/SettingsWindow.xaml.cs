@@ -677,19 +677,20 @@ public partial class SettingsWindow : Window
         };
         if (dialog.ShowDialog() != true) return;
 
-        var answer = MessageBox.Show("用所选备份覆盖当前数据库？\n\n建议先备份当前数据库，恢复后需要重启程序。",
+        var answer = MessageBox.Show(
+            "用所选备份覆盖当前数据库？\n\n恢复前会自动把当前库备份到 data\\backups\\；恢复后需要重启程序。",
             "恢复数据库", MessageBoxButton.YesNo, MessageBoxImage.Warning);
         if (answer != MessageBoxResult.Yes) return;
 
-        try
-        {
-            File.Copy(dialog.FileName, AppServices.Paths.DbPath, true);
-            MaintenanceStatus.Text = "数据库已恢复，请重启程序生效。";
-        }
-        catch (Exception ex)
-        {
-            MaintenanceStatus.Text = $"恢复失败：{ex.Message}";
-        }
+        var outcome = AppServices.Db.RestoreFrom(dialog.FileName);
+        MaintenanceStatus.Text = outcome.Success
+            ? $"{outcome.Message}（恢复前备份：{outcome.PreRestoreBackupPath}）"
+            : outcome.Message;
+
+        if (!outcome.Success) return;
+
+        MessageBox.Show("数据库已恢复，请关闭并重新启动程序。", "恢复数据库",
+            MessageBoxButton.OK, MessageBoxImage.Information);
     }
 
     private void ExportCsv_Click(object sender, RoutedEventArgs e)

@@ -1,5 +1,15 @@
 # 经验记录（MEMORIES）
 
+## 2026-10-30
+
+- AI 助手：取消或失败要在**同一次循环里**把本轮所有 tool_call 的响应补齐；只 append 了带 `tool_calls` 的 assistant 消息就抛 `OperationCanceledException`，历史里就会留下没有配对 tool 响应的消息，之后每次请求都会被端点 400 拒绝，且用户看不出来原因。
+- 「执行失败」不能回填成「用户取消」，模型会据此告诉用户「已按你的意思取消」，事实相反；失败要带上原因并要求模型不要自动重试。
+- OpenAI 兼容端点对 `tool_call_id: null`、`tool_calls: null` 并不都宽容；请求体序列化统一用 `DefaultIgnoreCondition = WhenWritingNull`。
+- 覆盖正在使用的 SQLite 文件前必须 `SqliteConnection.ClearAllPools()`，覆盖后必须 `PRAGMA quick_check`，并且先自动备份、校验失败自动回滚，否则一次坏备份就把程序变成打不开的空壳。
+- 发送前判断空间要用 `DriveInfo(Path.GetPathRoot(target)).AvailableFreeSpace` 现场探测；`DriveEntry.FreeBytes` 是扫描时快照，几十分钟后就是错的。
+- 发布目录缺内容文件属于静默故障：`DeviceProfileStore` 找不到内置 JSON 直接返回空数组，界面只是「没有设备」。发布后必须校验 `Resources\*.json` 与 exe 版本，已脚本化到 `tools\verify-publish.ps1`。
+- 本机工作区在同步盘下，实测出现过 `obj` 里 221 个 `*.sync-conflict-*`，以及单个源文件在两次读取之间被替换（`CancelPending` 的 `ToolCallId` 一会有一会没有）。改文件前重新读、改完用 `git diff` 复核，不要拿早前的读取结果当当前状态。
+
 ## 2026-10-27（AI 助手）
 
 - 服务层的 `AiChatMessage` 与 UI 展示模型 `MicaRomManager.Models.AiChatMessage` 同名，引用两个命名空间会歧义；ViewModel 里用 `using AiChatItem = ...` 别名，测试里用 `AiWireMessage` 别名。

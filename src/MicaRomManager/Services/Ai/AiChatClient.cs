@@ -4,6 +4,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace MicaRomManager.Services.Ai;
 
@@ -20,6 +21,12 @@ public sealed class AiChatClient : IAiChatClient
     private readonly Data.SettingsRepository _settings;
     private readonly NetworkClientProvider _network;
     private HttpClient _client;
+
+    /// <summary>null 字段一律不写进请求体：部分端点对 `tool_call_id: null`、`tool_calls: null` 直接报 400。</summary>
+    private static readonly JsonSerializerOptions BodyOptions = new()
+    {
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+    };
 
     private sealed record PostResult(
         bool Success,
@@ -141,7 +148,7 @@ public sealed class AiChatClient : IAiChatClient
         {
             using var request = new HttpRequestMessage(HttpMethod.Post, url);
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", options.ApiKey);
-            request.Content = new StringContent(JsonSerializer.Serialize(body), Encoding.UTF8, "application/json");
+            request.Content = new StringContent(JsonSerializer.Serialize(body, BodyOptions), Encoding.UTF8, "application/json");
 
             using var response = await _client.SendAsync(request, timeout.Token);
             var text = await response.Content.ReadAsStringAsync(timeout.Token);

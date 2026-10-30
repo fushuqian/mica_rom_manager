@@ -1,5 +1,25 @@
 # 变更记录（CHANGELOG）
 
+## 2026-10-30 v0.25.1
+
+### 修复
+
+- AI 助手在工具执行中被「停止」后，历史里会留下「有 tool_calls、没有 tool 响应」的非法消息，之后整个对话都会被端点拒绝。现在取消时先把本轮所有 tool 响应补齐，再中止本轮。
+- 待确认操作执行失败时，原本回填给模型的是「用户取消了该操作」，模型会误判。现在如实回传失败原因，并提示不要自动重试。
+- AI 请求体不再序列化 null 字段（`tool_call_id`、`tool_calls`），避免部分端点直接返回 400。
+- 发送到设备前先校验目标盘可用空间，不足时一个字节都不拷并给出中文提示（需要 / 可用）；复制中途失败或取消会删除写了一半的目标文件，不再把半截 ROM 留在设备上。
+- 恢复数据库改为：先自动备份当前库到 `data\backups\`，清空 SQLite 连接池后覆盖，再用 `PRAGMA quick_check` 校验；校验或复制失败自动回滚到恢复前的库。
+
+### 新增
+
+- `tools\publish.ps1` 与 `tools\verify-publish.ps1`：发布后校验 `Resources\EmulatorTemplates.json`、`Resources\DeviceProfiles.json` 是否存在，exe 的 `FileVersion` 是否等于 csproj `<Version>`，`ProductVersion` 是否包含当前 git HEAD。
+- 内置设备配置缺失时写 `data\logs\app.log` 留痕，设备页显示对应提示，不再静默显示空列表。
+
+### 验证
+
+- `dotnet build`：0 警告 0 错误。
+- `dotnet test`：172 个用例全部通过（新增 7 个：AI 取消路径 2、发送空间校验 2、数据库恢复 3）。
+
 ## 2026-10-28 v0.25.0
 
 ### 新增

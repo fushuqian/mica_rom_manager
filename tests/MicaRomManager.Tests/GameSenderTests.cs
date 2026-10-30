@@ -141,6 +141,36 @@ public class GameSenderTests : IDisposable
     }
 
     [Fact]
+    public void Send_FailsFastWhenDeviceHasNotEnoughSpace()
+    {
+        var source = CreateSource("big.chd", new string('x', 4096));
+
+        var outcome = GameSender.Send(
+            new Game { Title = "G", Platform = "PlayStation", RomPath = source },
+            Connection(),
+            freeSpaceProbe: _ => 1024);
+
+        Assert.Equal(0, outcome.Copied);
+        Assert.Equal(1, outcome.Failed);
+        Assert.Contains(outcome.Messages, message => message.Contains("空间不足"));
+        Assert.False(File.Exists(Path.Combine(_driveDir, "Roms", "PS", "big.chd")));
+    }
+
+    [Fact]
+    public void Send_SkipsSpaceCheckWhenProbeIsUnknown()
+    {
+        var source = CreateSource("ok.chd", "ok");
+
+        var outcome = GameSender.Send(
+            new Game { Title = "G", Platform = "PlayStation", RomPath = source },
+            Connection(),
+            freeSpaceProbe: _ => -1);
+
+        Assert.Equal(1, outcome.Copied);
+        Assert.Equal(0, outcome.Failed);
+    }
+
+    [Fact]
     public void Send_UnmappedPlatformIsSkipped()
     {
         var source = CreateSource("game.iso", "x");

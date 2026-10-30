@@ -24,7 +24,8 @@ public static class GameSender
         Game game,
         DeviceConnection connection,
         Action<GameSendProgress>? progress = null,
-        CancellationToken token = default)
+        CancellationToken token = default,
+        Func<string, long>? freeSpaceProbe = null)
     {
         var messages = new List<string>();
 
@@ -44,6 +45,16 @@ public static class GameSender
         }
 
         var totalBytes = files.Sum(SafeSize);
+
+        // 发送前先看空间：不足时一个字节都不拷，避免写到一半留下半截文件。
+        var freeBytes = (freeSpaceProbe ?? DefaultFreeSpace)(connection.Drive.RootPath);
+        if (totalBytes > 0 && freeBytes >= 0 && freeBytes < totalBytes)
+        {
+            messages.Add(
+                $"设备空间不足：需要 {Game.FormatSize(totalBytes)}，可用 {Game.FormatSize(freeBytes)}。请清理后再发送。");
+            return new GameSendOutcome(0, 0, files.Count, 0, messages, "");
+        }
+
         var copied = 0;
         var skipped = 0;
         var failed = 0;
@@ -80,11 +91,21 @@ public static class GameSender
                 if (!string.IsNullOrWhiteSpace(directory)) Directory.CreateDirectory(directory);
 
                 var baseBytes = copiedBytes;
-                CopyWithProgress(source, target, token, copied =>
+                try
                 {
-                    copiedBytes = baseBytes + copied;
-                    progress?.Invoke(new GameSendProgress(copiedBytes, totalBytes, index + 1, files.Count, fileName));
-                });
+                    CopyWithProgress(source, target, token, copied =>
+                    {
+                        copiedBytes = baseBytes + copied;
+                        progress?.Invoke(new GameSendProgress(copiedBytes, totalBytes, index + 1, files.Count, fileName));
+                    });
+                }
+                catch
+                {
+                    // 中途失败或取消：删掉写了一半的目标文件，别把半截 ROM 留在设备上
+                    TryDeleteFile(target);
+                    throw;
+                }
+
                 copied++;
             }
             catch (Exception ex)
@@ -129,6 +150,33 @@ public static class GameSender
         catch
         {
             return 0;
+        }
+    }
+
+    /// <summary>读取目标盘可用空间；探测失败返回 -1（视为未知，不阻止发送）。</summary>
+    private static long DefaultFreeSpace(string root)
+    {
+        try
+        {
+            var path = Path.GetPathRoot(Path.GetFullPath(root));
+            if (string.IsNullOrWhiteSpace(path)) return -1;
+            return new DriveInfo(path).AvailableFreeSpace;
+        }
+        catch
+        {
+            return -1;
+        }
+    }
+
+    private static void TryDeleteFile(string path)
+    {
+        try
+        {
+            if (File.Exists(path)) File.Delete(path);
+        }
+        catch
+        {
+            // 清理失败不掩盖原始错误
         }
     }
 

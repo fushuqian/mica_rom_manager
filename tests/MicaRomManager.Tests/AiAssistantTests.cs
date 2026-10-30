@@ -272,6 +272,71 @@ public class AiAssistantTests
         }
     }
 
+    [Fact]
+    public async Task AssistantService_CancelDuringToolExecutionKeepsHistoryValid()
+    {
+        var host = new FakeHost(new[] { new Game { Id = 1, Title = "银河战士", Platform = "SNES" } });
+        var client = new FakeChatClient();
+        client.Results.Enqueue(ToolCallResult(Tool("scan_device_tree", "{\"drive_root\":\"E:\\\\\"}")));
+        client.Results.Enqueue(new AiToolChatResult(true, "好的，已停下。", "",
+            new List<AiToolCall>(), 200, TimeSpan.Zero));
+
+        var service = new AiAssistantService(client, new CancellingExecutor());
+
+        await Assert.ThrowsAsync<OperationCanceledException>(
+            () => service.SendAsync("扫描 E 盘", host, CancellationToken.None));
+
+        // 取消后必须还能继续对话：历史里不能留下「有 tool_calls、无 tool 响应」的非法消息。
+        var next = await service.SendAsync("那算了", host, CancellationToken.None);
+
+        Assert.Equal("好的，已停下。", next.Text);
+        AssertHistoryIsValid(client.Requests[^1]);
+    }
+
+    [Fact]
+    public async Task AssistantService_CancelPendingReportsReasonAndKeepsHistoryValid()
+    {
+        var host = new FakeHost(new[] { new Game { Id = 2, Title = "洛克人X4", Platform = "PlayStation" } });
+        var client = new FakeChatClient();
+        var call = Tool("update_games", "{\"game_ids\":[2],\"fields\":{\"rating\":5}}");
+        client.Results.Enqueue(ToolCallResult(call));
+        client.Results.Enqueue(new AiToolChatResult(true, "明白，先不改。", "",
+            new List<AiToolCall>(), 200, TimeSpan.Zero));
+
+        var service = new AiAssistantService(client);
+        var result = await service.SendAsync("给它打五星", host, CancellationToken.None);
+        Assert.NotNull(result.Pending);
+
+        service.CancelPending("执行失败：磁盘只读，该操作未生效。");
+        await service.SendAsync("继续", host, CancellationToken.None);
+
+        var request = client.Requests[^1];
+        AssertHistoryIsValid(request);
+        Assert.Contains(request, message =>
+            message.Role == "tool"
+            && message.ToolCallId == call.Id
+            && (message.Content ?? "").Contains("磁盘只读"));
+    }
+
+    private static void AssertHistoryIsValid(IReadOnlyList<AiWireMessage> messages)
+    {
+        foreach (var message in messages)
+        {
+            if (message.Role != "assistant" || message.ToolCalls == null) continue;
+            foreach (var call in message.ToolCalls)
+            {
+                Assert.Contains(messages, candidate =>
+                    candidate.Role == "tool" && candidate.ToolCallId == call.Id);
+            }
+        }
+    }
+
+    private sealed class CancellingExecutor : IAiToolExecutor
+    {
+        public Task<AiToolExecution> ExecuteAsync(AiToolCall call, IAiAppHost host, CancellationToken token) =>
+            throw new OperationCanceledException();
+    }
+
     private static AiToolCall Tool(string name, string arguments) => new()
     {
         Id = "call-" + name,

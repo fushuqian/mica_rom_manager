@@ -29,6 +29,9 @@ public sealed class DeviceProfileStore
     private readonly string _userDir;
     private readonly string _builtinFile;
 
+    /// <summary>内置配置文件缺失（发布目录漏带 Resources\DeviceProfiles.json 时会命中）。</summary>
+    public bool BuiltInMissing { get; private set; }
+
     public DeviceProfileStore(string userDir, string builtinFile)
     {
         _userDir = userDir;
@@ -97,7 +100,15 @@ public sealed class DeviceProfileStore
 
     private IEnumerable<DeviceProfile> LoadBuiltIn()
     {
-        if (!File.Exists(_builtinFile)) return Array.Empty<DeviceProfile>();
+        if (!File.Exists(_builtinFile))
+        {
+            // 静默返回空会让「设备」页看起来像没有内置配置，问题却查不到原因，这里留一条痕迹。
+            BuiltInMissing = true;
+            LogMissingBuiltIn();
+            return Array.Empty<DeviceProfile>();
+        }
+
+        BuiltInMissing = false;
 
         try
         {
@@ -138,6 +149,24 @@ public sealed class DeviceProfileStore
         }
 
         return result;
+    }
+
+    private void LogMissingBuiltIn()
+    {
+        try
+        {
+            var dataDir = Directory.GetParent(_userDir)?.FullName;
+            if (string.IsNullOrEmpty(dataDir)) return;
+
+            var logs = Path.Combine(dataDir, "logs");
+            Directory.CreateDirectory(logs);
+            File.AppendAllText(Path.Combine(logs, "app.log"),
+                $"[{DateTime.Now:O}] 缺少内置设备配置：{_builtinFile}{Environment.NewLine}");
+        }
+        catch
+        {
+            // 日志失败不影响使用
+        }
     }
 
     private string MakeUniqueId(string name)

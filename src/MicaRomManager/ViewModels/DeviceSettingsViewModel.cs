@@ -73,6 +73,12 @@ public partial class DeviceSettingsViewModel : ObservableObject
         StatusMessage = Profiles.Count == 0
             ? "还没有设备配置；可点「新增」创建，或把 JSON 放到 data\\devices 后点「刷新」。"
             : "";
+
+        if (AppServices.DeviceProfiles.BuiltInMissing)
+        {
+            StatusMessage = "内置设备配置缺失（Resources\\DeviceProfiles.json），当前只显示自定义配置；"
+                            + "请重新发布程序，或把该文件放到程序目录的 Resources 下后点「刷新」。";
+        }
     }
 
     partial void OnSelectedProfileChanged(DeviceProfile? value)
