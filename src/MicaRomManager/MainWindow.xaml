@@ -24,7 +24,7 @@
                             UseAeroCaptionButtons="False" />
     </shell:WindowChrome.WindowChrome>
 
-    <Grid>
+    <Grid x:Name="RootGrid">
         <Grid.Style>
             <Style TargetType="Grid">
                 <Style.Triggers>
@@ -149,31 +149,34 @@
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
-            <Border Grid.Column="0" Background="{DynamicResource CardBrush}"
-                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="10">
-                <DockPanel Margin="10">
-                    <StackPanel DockPanel.Dock="Top" Margin="4,2,4,8">
-                        <TextBlock Text="平台" FontSize="15" FontWeight="SemiBold" />
-                        <TextBlock Text="按平台筛选游戏库" FontSize="11" Margin="0,2,0,0"
-                                   Foreground="{DynamicResource TextSecondaryBrush}" />
-                    </StackPanel>
-                    <ListBox x:Name="PlatformSidebar" BorderThickness="0" Background="Transparent"
-                             ItemsSource="{Binding PlatformFilters}"
-                             SelectedItem="{Binding SelectedPlatformFilter, Mode=TwoWay}">
-                        <ListBox.ItemTemplate>
-                            <DataTemplate>
-                                <DockPanel MinWidth="160">
-                                    <TextBlock DockPanel.Dock="Right" Text="{Binding Count}" Margin="8,0,0,0"
-                                               VerticalAlignment="Center" FontSize="12"
-                                               Foreground="{DynamicResource TextSecondaryBrush}" />
-                                    <TextBlock Text="{Binding Display}" TextTrimming="CharacterEllipsis"
-                                               VerticalAlignment="Center" />
-                                </DockPanel>
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
-                    </ListBox>
-                </DockPanel>
-            </Border>
+            <Grid Grid.Column="0">
+                <Border Style="{StaticResource CardShadowStyle}" Margin="0,3,0,0" />
+                <Border Background="{DynamicResource CardBrush}"
+                        BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="10">
+                    <DockPanel Margin="10">
+                        <StackPanel DockPanel.Dock="Top" Margin="4,2,4,8">
+                            <TextBlock Text="平台" FontSize="15" FontWeight="SemiBold" />
+                            <TextBlock Text="按平台筛选游戏库" FontSize="11" Margin="0,2,0,0"
+                                       Foreground="{DynamicResource TextSecondaryBrush}" />
+                        </StackPanel>
+                        <ListBox x:Name="PlatformSidebar" BorderThickness="0" Background="Transparent"
+                                 ItemsSource="{Binding PlatformFilters}"
+                                 SelectedItem="{Binding SelectedPlatformFilter, Mode=TwoWay}">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <DockPanel MinWidth="160">
+                                        <TextBlock DockPanel.Dock="Right" Text="{Binding Count}" Margin="8,0,0,0"
+                                                   VerticalAlignment="Center" FontSize="12"
+                                                   Foreground="{DynamicResource TextSecondaryBrush}" />
+                                        <TextBlock Text="{Binding Display}" TextTrimming="CharacterEllipsis"
+                                                   VerticalAlignment="Center" />
+                                    </DockPanel>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </DockPanel>
+                </Border>
+            </Grid>
 
             <Grid Grid.Column="2">
                 <Grid.RowDefinitions>
@@ -183,9 +186,11 @@
                 </Grid.RowDefinitions>
 
                 <!-- 搜索 + 筛选 -->
-                <Border Grid.Row="0" Background="{DynamicResource CardBrush}"
+                <Grid Grid.Row="0" Margin="0,0,0,10">
+                <Border Style="{StaticResource CardShadowStyle}" Margin="0,3,0,0" />
+                <Border Background="{DynamicResource CardBrush}"
                         BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
-                        CornerRadius="10" Padding="10,8" Margin="0,0,0,10">
+                        CornerRadius="10" Padding="10,8">
                     <StackPanel Orientation="Horizontal">
                         <Grid Width="380" HorizontalAlignment="Left">
                             <TextBox x:Name="SearchBox" Height="34" Padding="34,0,10,0"
@@ -240,6 +245,7 @@
                         </TextBlock>
                     </StackPanel>
                 </Border>
+                </Grid>
 
                 <!-- 外置盘未连接提示 -->
                 <Border Grid.Row="1" Padding="10,7" Margin="0,0,0,10" CornerRadius="8"
@@ -256,7 +262,9 @@
                 </Border>
 
                 <!-- 游戏列表卡片 -->
-                <Border Grid.Row="2" Background="{DynamicResource CardBrush}"
+                <Grid Grid.Row="2">
+                <Border Style="{StaticResource CardShadowStyle}" Margin="0,3,0,0" />
+                <Border Background="{DynamicResource CardBrush}"
                         BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
                         CornerRadius="10" ClipToBounds="True">
                     <DataGrid x:Name="GameGrid" Style="{StaticResource AppDataGridStyle}" RowHeight="34"
@@ -428,6 +436,7 @@
                         </DataGrid.Columns>
                     </DataGrid>
                 </Border>
+                </Grid>
 
                 <!-- 筛选浮层 -->
                 <Popup x:Name="FilterPopup" PlacementTarget="{Binding ElementName=FilterButton}"

@@ -6,6 +6,7 @@
 - 状态：已完成 v0.28.0（0 警告、302 单测通过、publish 冒烟通过、DWM backdrop=2/corner=2；实际 Mica 观感与对话框统一待老板验收）
 - 2026-10-31 v0.28.1：发现深色系统下仍强制浅色，已补 ThemePalette + DynamicResource、SingleBorderWindow + GlassFrame -1、Acrylic 与 70% 深色卡片；待老板确认“透明感”是否足够。
 - 2026-10-31 v0.28.2：右上角按钮重影，原因是 SingleBorderWindow 仍绘制系统标题栏按钮；已改回 WindowStyle=None，仅保留自绘按钮，并重置默认列到 LayoutVersion 3。
+- 2026-10-31 v0.28.3：主界面卡片更淡（78%），平台栏/筛选/表格/AI 加悬浮阴影；窗口淡入、切换平台表格淡入、AI 抽屉滑动、按钮 hover 微缩放。
 - 优先级：高
 - 创建时间：2026-10-31
 - 更新时间：2026-10-31

@@ -4,8 +4,10 @@
              FontFamily="{StaticResource AppFontFamily}"
              FontSize="13"
              Background="Transparent">
-    <Border Background="{DynamicResource PanelBrush}" BorderBrush="{DynamicResource BorderBrush}"
-            BorderThickness="1" CornerRadius="12" ClipToBounds="True">
+    <Grid>
+        <Border Style="{StaticResource CardShadowStyle}" Margin="0,4,0,0" />
+        <Border Background="{DynamicResource PanelBrush}" BorderBrush="{DynamicResource BorderBrush}"
+                BorderThickness="1" CornerRadius="12" ClipToBounds="True">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -192,4 +194,5 @@
         </Border>
     </Grid>
     </Border>
+    </Grid>
 </UserControl>

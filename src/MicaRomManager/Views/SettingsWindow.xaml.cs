@@ -3,6 +3,7 @@ using System.Reflection;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media.Animation;
 using MicaRomManager.Data;
 using MicaRomManager.Models;
 using MicaRomManager.Services;
@@ -21,6 +22,12 @@ public partial class SettingsWindow : Window
     {
         InitializeComponent();
         WindowBackdrop.Apply(this, WindowBackdrop.BackdropKind.Acrylic);
+        RootGrid.Opacity = 0;
+        Loaded += (_, _) => RootGrid.BeginAnimation(OpacityProperty,
+            new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(200))
+            {
+                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut },
+            });
         LoadGeneral();
         LoadAiSettings();
         LoadLookupKinds();

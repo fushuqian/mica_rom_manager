@@ -20,7 +20,7 @@
                             UseAeroCaptionButtons="False" />
     </shell:WindowChrome.WindowChrome>
 
-    <Grid>
+    <Grid x:Name="RootGrid">
         <Grid.Style>
             <Style TargetType="Grid">
                 <Style.Triggers>

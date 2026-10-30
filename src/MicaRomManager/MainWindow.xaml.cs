@@ -6,6 +6,7 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using System.Windows.Media.Media3D;
 using System.Windows.Threading;
 using MicaRomManager.Models;
@@ -20,6 +21,7 @@ public partial class MainWindow : Window
 {
     private readonly MainViewModel _viewModel;
     private readonly AiAssistantViewModel _assistantViewModel;
+    private bool _assistantOpen;
 
     private const string ViewStateKey = "list_view_state";
     private const string AssistantOpenKey = "ui.assistant_open_v2";
@@ -28,6 +30,7 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         WindowBackdrop.Apply(this, WindowBackdrop.BackdropKind.Acrylic);
+        RootGrid.Opacity = 0;
         _viewModel = new MainViewModel();
         DataContext = _viewModel;
         FilterPopup.DataContext = _viewModel;
@@ -43,7 +46,25 @@ public partial class MainWindow : Window
         RestoreViewState();
         RestoreAssistantState();
         SearchBox.Focus();
+        AnimateIn();
+        PlatformSidebar.SelectionChanged += (_, _) => FadeTable();
         Dispatcher.BeginInvoke(CheckPortableLibrary, DispatcherPriority.ApplicationIdle);
+    }
+
+    private void AnimateIn()
+    {
+        RootGrid.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(220))
+        {
+            EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut },
+        });
+    }
+
+    private void FadeTable()
+    {
+        GameGrid.BeginAnimation(OpacityProperty, new DoubleAnimation(0.35, 1, TimeSpan.FromMilliseconds(180))
+        {
+            EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut },
+        });
     }
 
     private void RestoreAssistantState() =>
@@ -93,7 +114,44 @@ public partial class MainWindow : Window
 
     private void SetAssistantOpen(bool open, bool persist = true)
     {
-        AssistantPanel.Visibility = open ? Visibility.Visible : Visibility.Collapsed;
+        _assistantOpen = open;
+
+        if (open)
+        {
+            AssistantPanel.Visibility = Visibility.Visible;
+            AssistantPanel.Opacity = 0;
+            var slide = new TranslateTransform(28, 0);
+            AssistantPanel.RenderTransform = slide;
+
+            AssistantPanel.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1,
+                TimeSpan.FromMilliseconds(180))
+            {
+                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut },
+            }, HandoffBehavior.SnapshotAndReplace);
+            slide.BeginAnimation(TranslateTransform.XProperty, new DoubleAnimation(28, 0,
+                TimeSpan.FromMilliseconds(220))
+            {
+                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut },
+            });
+        }
+        else if (AssistantPanel.Visibility == Visibility.Visible)
+        {
+            var slide = AssistantPanel.RenderTransform as TranslateTransform ?? new TranslateTransform();
+            AssistantPanel.RenderTransform = slide;
+
+            var fade = new DoubleAnimation(1, 0, TimeSpan.FromMilliseconds(140));
+            fade.Completed += (_, _) =>
+            {
+                if (_assistantOpen) return;
+                AssistantPanel.Visibility = Visibility.Collapsed;
+                AssistantPanel.Opacity = 1;
+                slide.X = 0;
+            };
+
+            AssistantPanel.BeginAnimation(OpacityProperty, fade);
+            slide.BeginAnimation(TranslateTransform.XProperty, new DoubleAnimation(0, 28,
+                TimeSpan.FromMilliseconds(140)));
+        }
 
         if (persist) AppServices.Settings.Set(AssistantOpenKey, open.ToString());
 
