@@ -12,7 +12,10 @@
 ## 凭据
 
 - GitHub 推送走 Git Credential Manager，凭据存于 Windows 凭据管理器（target=`git:https://github.com`，user=`fushuqian`）。
-- `gh auth status` 返回未登录；API 调用需先 `git credential fill` 读 token（不落盘时 `Set-Content -Encoding UTF8 mica_cred.txt` 后再读）。
+- 2026-10-30：旧 `ghp_` 令牌已失效（API 401），已改用 `gh auth login`；现有令牌前缀 `gho_`，scopes 含 `repo`、`workflow`、`read:org`、`gist`。
+- 推送命令（本机需走代理）：
+  `git -c credential.https://github.com.helper=manager -c http.proxy=http://127.0.0.1:7890 push origin main`
+- 查状态：`gh auth status`；调 API：`gh api user`（无需再手工 `git credential fill`）。
 - 命令 `cmdkey /list` 可列出所有凭据条目。
 
 ## GitHub 仓库
