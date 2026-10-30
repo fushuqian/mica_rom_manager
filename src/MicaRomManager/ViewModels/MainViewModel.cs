@@ -25,7 +25,7 @@ public partial class PlatformFilterItem : ObservableObject
 
     public string Display => string.Equals(Name, MainViewModel.AllPlatforms, StringComparison.Ordinal)
         ? "所有游戏"
-        : Name;
+        : PlatformDisplayNames.Of(Name);
 
     [ObservableProperty] private int count;
 }

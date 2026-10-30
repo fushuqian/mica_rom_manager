@@ -380,7 +380,7 @@
                                 <DataGridTemplateColumn Header="平台" Width="Auto" SortMemberPath="Platform">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
-                                            <TextBlock Text="{Binding Platform}" VerticalAlignment="Center"
+                                            <TextBlock Text="{Binding PlatformDisplay}" VerticalAlignment="Center"
                                                        TextTrimming="CharacterEllipsis" />
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>

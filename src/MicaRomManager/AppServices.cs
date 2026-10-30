@@ -29,6 +29,17 @@ public static class AppServices
     public static void Initialize()
     {
         Paths = new PathService();
+
+        // 平台展示名（PS1 → PlayStation）来自预置清单，界面用，不写库
+        try
+        {
+            Models.PlatformDisplayNames.Initialize(PlatformPresetStore.LoadShipped());
+        }
+        catch
+        {
+            // 清单缺失不影响启动
+        }
+
         Db = new Database(Paths.DbPath);
         GameRepo = new GameRepository(Db);
         EmulatorRepo = new EmulatorRepository(Db);

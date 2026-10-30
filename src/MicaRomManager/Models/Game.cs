@@ -20,6 +20,7 @@ public partial class Game : ObservableObject
     [ObservableProperty] private string title = "";
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(Subtitle))]
+    [NotifyPropertyChangedFor(nameof(PlatformDisplay))]
     private string platform = "";
     [ObservableProperty] private string genre = "";
     [ObservableProperty]
@@ -28,9 +29,12 @@ public partial class Game : ObservableObject
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(Subtitle))]
     private string language = "";
+    /// <summary>平台展示名（PS1 → PlayStation）；未配置映射时原样返回。</summary>
+    public string PlatformDisplay => PlatformDisplayNames.Of(Platform);
+
     /// <summary>列表副行：平台 · 区域 · 语言（空值自动跳过）。</summary>
     public string Subtitle =>
-        string.Join(" · ", new[] { Platform, Region, Language }
+        string.Join(" · ", new[] { PlatformDisplay, Region, Language }
             .Where(part => !string.IsNullOrWhiteSpace(part)));
     /// <summary>特别标注，整理文件名时放在语言后面，如「汉化版」。</summary>
     [ObservableProperty] private string specialNote = "";

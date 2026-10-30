@@ -1,38 +1,103 @@
 [
   {
     "vendor": "Sony",
-    "consoles": [ "PS1", "PS2", "PS3", "PS4", "PS5", "PSP", "PSVITA" ]
+    "consoles": [ "PS1", "PS2", "PS3", "PS4", "PS5", "PSP", "PSVITA" ],
+    "display": {
+      "PS1": "PlayStation",
+      "PS2": "PlayStation 2",
+      "PS3": "PlayStation 3",
+      "PS4": "PlayStation 4",
+      "PS5": "PlayStation 5",
+      "PSVITA": "PS Vita"
+    }
   },
   {
     "vendor": "Nintendo",
-    "consoles": [ "NES", "SNES", "N64", "NGC", "WII", "Wii U", "WIIU", "SWITCH", "Switch", "GB", "GBC", "GBA", "NDS", "3DS", "N3DS", "VB" ]
+    "consoles": [ "NES", "SNES", "N64", "NGC", "WII", "Wii U", "WIIU", "SWITCH", "Switch", "GB", "GBC", "GBA", "NDS", "3DS", "N3DS", "VB" ],
+    "display": {
+      "NES": "FC / NES",
+      "SNES": "Super Nintendo",
+      "N64": "Nintendo 64",
+      "NGC": "GameCube",
+      "WII": "Wii",
+      "WIIU": "Wii U",
+      "Wii U": "Wii U",
+      "SWITCH": "Switch",
+      "Switch": "Switch",
+      "GB": "Game Boy",
+      "GBC": "Game Boy Color",
+      "GBA": "Game Boy Advance",
+      "NDS": "Nintendo DS",
+      "3DS": "Nintendo 3DS",
+      "N3DS": "Nintendo 3DS",
+      "VB": "Virtual Boy"
+    }
   },
   {
     "vendor": "Sega",
-    "consoles": [ "MD", "SMS", "GG", "SS", "DC", "32X" ]
+    "consoles": [ "MD", "SMS", "GG", "SS", "DC", "32X" ],
+    "display": {
+      "MD": "Mega Drive",
+      "SMS": "Master System",
+      "GG": "Game Gear",
+      "SS": "Saturn",
+      "DC": "Dreamcast",
+      "32X": "32X"
+    }
   },
   {
     "vendor": "Microsoft",
-    "consoles": [ "XBOX", "XBOX360" ]
+    "consoles": [ "XBOX", "XBOX360" ],
+    "display": {
+      "XBOX": "Xbox",
+      "XBOX360": "Xbox 360"
+    }
   },
   {
     "vendor": "SNK",
-    "consoles": [ "NEOGEO", "NGP" ]
+    "consoles": [ "NEOGEO", "NGP" ],
+    "display": {
+      "NEOGEO": "Neo Geo",
+      "NGP": "Neo Geo Pocket"
+    }
   },
   {
     "vendor": "NEC",
-    "consoles": [ "PCE", "PCECD", "PCFX" ]
+    "consoles": [ "PCE", "PCECD", "PCFX" ],
+    "display": {
+      "PCE": "PC Engine",
+      "PCECD": "PC Engine CD",
+      "PCFX": "PC-FX"
+    }
   },
   {
     "vendor": "Bandai",
-    "consoles": [ "WS", "WSC" ]
+    "consoles": [ "WS", "WSC" ],
+    "display": {
+      "WS": "WonderSwan",
+      "WSC": "WonderSwan Color"
+    }
   },
   {
     "vendor": "Atari",
-    "consoles": [ "ATARI2600", "ATARI5200", "ATARI7800", "LYNX", "JAGUAR" ]
+    "consoles": [ "ATARI2600", "ATARI5200", "ATARI7800", "LYNX", "JAGUAR" ],
+    "display": {
+      "ATARI2600": "Atari 2600",
+      "ATARI5200": "Atari 5200",
+      "ATARI7800": "Atari 7800",
+      "LYNX": "Atari Lynx",
+      "JAGUAR": "Atari Jaguar"
+    }
   },
   {
     "vendor": "其他",
-    "consoles": [ "ARCADE", "\u8857\u673a", "3DO", "CDI", "NGAGE" ]
+    "consoles": [ "ARCADE", "街机", "3DO", "CDI", "NGAGE" ],
+    "display": {
+      "ARCADE": "Arcade",
+      "街机": "街机",
+      "3DO": "3DO",
+      "CDI": "CD-i",
+      "NGAGE": "N-Gage"
+    }
   }
 ]

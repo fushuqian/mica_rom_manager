@@ -35,6 +35,22 @@ public static class PlatformPresetStore
         }
     }
 
+    /// <summary>只读随程序发布的清单（不碰 data 副本），用于界面展示名。</summary>
+    public static List<PlatformPreset> LoadShipped()
+    {
+        try
+        {
+            if (!File.Exists(PathService.PlatformPresetsPath)) return new List<PlatformPreset>();
+            return JsonSerializer.Deserialize<List<PlatformPreset>>(
+                       File.ReadAllText(PathService.PlatformPresetsPath), Options)
+                   ?? new List<PlatformPreset>();
+        }
+        catch
+        {
+            return new List<PlatformPreset>();
+        }
+    }
+
     /// <summary>把预置清单里还没有的主机补进平台表（幂等）。</summary>
     public static int SeedMissing(PlatformRepository repository, PathService paths)
     {
@@ -70,4 +86,7 @@ public sealed class PlatformPreset
 {
     public string Vendor { get; set; } = "";
     public List<string> Consoles { get; set; } = new();
+
+    /// <summary>短名 → 展示名；可选。</summary>
+    public Dictionary<string, string> Display { get; set; } = new(StringComparer.OrdinalIgnoreCase);
 }

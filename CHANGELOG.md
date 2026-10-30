@@ -1,5 +1,17 @@
 # 变更记录（CHANGELOG）
 
+## 2026-10-31 v0.30.5
+
+### 平台展示名
+
+- 平台在界面上一律用完整名字：`PS1 → PlayStation`、`SNES → Super Nintendo`、`FC / NES`、`Game Boy Advance`、`Xbox 360`、`Wii U`、`Nintendo 3DS` 等；库里仍存短名，筛选与数据不受影响。
+- 生效位置：左侧平台列表、列表副行（平台 · 区域 · 语言）、「平台」列。
+- 映射写在 `Resources/PlatformPresets.json` 的 `display` 段，随程序发布读取（不受 data 副本影响），改完即生效。
+
+### 验证
+
+- 0 警告 0 错误、302 单测通过；实机截图确认侧栏与副行都显示完整名。
+
 ## 2026-10-31 v0.30.4
 
 ### 托盘多选汇总
