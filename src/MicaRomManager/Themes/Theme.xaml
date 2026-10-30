@@ -15,37 +15,51 @@
     <BooleanToVisibilityConverter x:Key="BoolToVis" />
 
     <!-- 颜色 / 半透明表面（Mica 背景会透出来） -->
-    <SolidColorBrush x:Key="WindowBackgroundBrush" Color="#F4F6F9" />
+    <SolidColorBrush x:Key="WindowBackgroundBrush" Color="#F5F5F7" />
     <SolidColorBrush x:Key="SurfaceBrush" Color="#DEFFFFFF" />
     <SolidColorBrush x:Key="CardBrush" Color="#BFFFFFFF" />
     <SolidColorBrush x:Key="PanelBrush" Color="#FFFFFFFF" />
-    <SolidColorBrush x:Key="FlyoutBrush" Color="#F5FFFFFF" />
-    <SolidColorBrush x:Key="InputBrush" Color="#A6FFFFFF" />
+    <SolidColorBrush x:Key="FlyoutBrush" Color="#F7FFFFFF" />
+    <SolidColorBrush x:Key="InputBrush" Color="#66FFFFFF" />
     <SolidColorBrush x:Key="NavBrush" Color="#80FFFFFF" />
-    <SolidColorBrush x:Key="BorderBrush" Color="#26000000" />
-    <SolidColorBrush x:Key="InputBorderBrush" Color="#33000000" />
-    <SolidColorBrush x:Key="TextPrimaryBrush" Color="#1A1A1A" />
-    <SolidColorBrush x:Key="TextSecondaryBrush" Color="#5F6368" />
-    <SolidColorBrush x:Key="AccentBrush" Color="#0F6CBD" />
-    <SolidColorBrush x:Key="AccentHoverBrush" Color="#115EA3" />
-    <SolidColorBrush x:Key="AccentPressedBrush" Color="#0C3B5E" />
-    <SolidColorBrush x:Key="AccentSubtleBrush" Color="#1F0F6CBD" />
+    <SolidColorBrush x:Key="BorderBrush" Color="#14000000" />
+    <SolidColorBrush x:Key="InputBorderBrush" Color="#1F000000" />
+    <SolidColorBrush x:Key="TextPrimaryBrush" Color="#1D1D1F" />
+    <SolidColorBrush x:Key="TextSecondaryBrush" Color="#8E8E93" />
+    <SolidColorBrush x:Key="AccentBrush" Color="#0071E3" />
+    <SolidColorBrush x:Key="AccentHoverBrush" Color="#0077ED" />
+    <SolidColorBrush x:Key="AccentPressedBrush" Color="#0062C4" />
+    <SolidColorBrush x:Key="AccentSubtleBrush" Color="#1A0071E3" />
     <SolidColorBrush x:Key="DangerBrush" Color="#C42B1C" />
     <SolidColorBrush x:Key="WarningBrush" Color="#9D5D00" />
     <SolidColorBrush x:Key="WarningBackgroundBrush" Color="#F5FFF4CE" />
-    <SolidColorBrush x:Key="RowAltBrush" Color="#08FFFFFF" />
+    <SolidColorBrush x:Key="RowAltBrush" Color="#00FFFFFF" />
     <SolidColorBrush x:Key="HeaderBackgroundBrush" Color="Transparent" />
-    <SolidColorBrush x:Key="HoverBrush" Color="#12000000" />
-    <SolidColorBrush x:Key="PressedBrush" Color="#1F000000" />
-    <SolidColorBrush x:Key="SelectionBrush" Color="#260F6CBD" />
+    <SolidColorBrush x:Key="HoverBrush" Color="#0A000000" />
+    <SolidColorBrush x:Key="PressedBrush" Color="#14000000" />
+    <SolidColorBrush x:Key="SelectionBrush" Color="#1A0071E3" />
     <SolidColorBrush x:Key="OnAccentTextBrush" Color="#FFFFFF" />
-    <SolidColorBrush x:Key="GridLineBrush" Color="#14000000" />
-    <SolidColorBrush x:Key="ScrollThumbBrush" Color="#59000000" />
-    <SolidColorBrush x:Key="ScrollThumbHoverBrush" Color="#8C000000" />
+    <SolidColorBrush x:Key="GridLineBrush" Color="#0A000000" />
+    <SolidColorBrush x:Key="ScrollThumbBrush" Color="#33000000" />
+    <SolidColorBrush x:Key="ScrollThumbHoverBrush" Color="#59000000" />
+
+    <!-- 三栏平面：发丝线 + 半透明面板（Acrylic 会透出来） -->
+    <SolidColorBrush x:Key="HairlineBrush" Color="#14000000" />
+    <SolidColorBrush x:Key="ShellPanelBrush" Color="#66F4F5FA" />
+    <SolidColorBrush x:Key="MainPanelBrush" Color="#99FFFFFF" />
+    <!-- 压在 Acrylic 之上的一层薄雾：压住壁纸花纹，保证文字对比度 -->
+    <SolidColorBrush x:Key="ShellScrimBrush" Color="#1AFFFFFF" />
+    <!-- 悬停浮起时垫在下面的抬升层（只抬一档，避免整块变实） -->
+    <SolidColorBrush x:Key="ShellPanelLiftBrush" Color="#5CF4F5FA" />
+    <SolidColorBrush x:Key="MainPanelLiftBrush" Color="#73FFFFFF" />
 
     <!-- 只让卡片的背景层投射阴影，文字放在上层的透明 Border 里，避免整棵子树被栅格化 -->
     <DropShadowEffect x:Key="CardShadowEffect" Color="#000000" BlurRadius="28"
                       ShadowDepth="8" Direction="270" Opacity="0.40" />
+
+    <!-- 悬停浮起：投影挂在不含内容的空白层上 -->
+    <DropShadowEffect x:Key="PanelShadowEffect" Color="#09141E" BlurRadius="34"
+                      ShadowDepth="10" Direction="270" Opacity="0.30" />
 
     <!-- 标题栏按钮 -->
     <Style x:Key="CaptionButtonStyle" TargetType="Button">
@@ -698,6 +712,311 @@
     <Style x:Key="DataGridTextStyle" TargetType="TextBlock">
         <Setter Property="TextTrimming" Value="CharacterEllipsis" />
         <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+    <!-- ================= 新版外壳：标题栏 / 工具栏 / 侧栏 / 列表 ================= -->
+
+    <Style x:Key="TitleBarButtonStyle" TargetType="Button">
+        <Setter Property="Width" Value="46" />
+        <Setter Property="Height" Value="48" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="FontFamily" Value="{StaticResource IconFontFamily}" />
+        <Setter Property="FontSize" Value="10" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="Bd" Background="{TemplateBinding Background}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource HoverBrush}" />
+                            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource PressedBrush}" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="TitleBarCloseButtonStyle" TargetType="Button" BasedOn="{StaticResource TitleBarButtonStyle}">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="Bd" Background="{TemplateBinding Background}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="#E81123" />
+                            <Setter Property="Foreground" Value="White" />
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="#C50F1F" />
+                            <Setter Property="Foreground" Value="White" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- 工具栏按钮：只有图标+文字，悬停才出现底色 -->
+    <Style x:Key="BarButtonStyle" TargetType="Button">
+        <Setter Property="Height" Value="32" />
+        <Setter Property="Padding" Value="11,0" />
+        <Setter Property="Margin" Value="0,0,2,0" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="FontSize" Value="12.5" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="Bd" Background="{TemplateBinding Background}" CornerRadius="7"
+                            Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
+                                          TextElement.Foreground="{TemplateBinding Foreground}" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource HoverBrush}" />
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource PressedBrush}" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.4" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="BarPrimaryButtonStyle" TargetType="Button" BasedOn="{StaticResource BarButtonStyle}">
+        <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource OnAccentTextBrush}" />
+        <Setter Property="Padding" Value="13,0" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="Bd" Background="{TemplateBinding Background}" CornerRadius="7"
+                            Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
+                                          TextElement.Foreground="{TemplateBinding Foreground}" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentHoverBrush}" />
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentPressedBrush}" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.4" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- 筛选条：纯文字 chip -->
+    <Style x:Key="ChipButtonStyle" TargetType="Button">
+        <Setter Property="Height" Value="26" />
+        <Setter Property="Padding" Value="9,0" />
+        <Setter Property="Margin" Value="0,0,2,0" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="Bd" Background="{TemplateBinding Background}" CornerRadius="7"
+                            Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
+                                          TextElement.Foreground="{TemplateBinding Foreground}" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource HoverBrush}" />
+                            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- 侧栏条目：直角、铺满整行 -->
+    <Style x:Key="SideNavItemStyle" TargetType="ListBoxItem">
+        <Setter Property="Height" Value="32" />
+        <Setter Property="Padding" Value="20,0" />
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+        <Setter Property="FontSize" Value="12.5" />
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ListBoxItem">
+                    <Border x:Name="Bd" Background="Transparent" Padding="{TemplateBinding Padding}">
+                        <ContentPresenter VerticalAlignment="Center"
+                                          TextElement.Foreground="{TemplateBinding Foreground}" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource HoverBrush}" />
+                        </Trigger>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentSubtleBrush}" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="SideNavListStyle" TargetType="ListBox">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="ItemContainerStyle" Value="{StaticResource SideNavItemStyle}" />
+        <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
+        <Setter Property="VirtualizingPanel.IsVirtualizing" Value="False" />
+    </Style>
+
+    <!-- 列表 v2：无竖线、无斑马纹、直角选中、两行式行 -->
+    <Style x:Key="GameHeaderStyleV2" TargetType="DataGridColumnHeader" BasedOn="{StaticResource DataGridHeaderStyle}">
+        <Setter Property="Height" Value="30" />
+        <Setter Property="Padding" Value="14,0" />
+        <Setter Property="FontSize" Value="11" />
+        <Setter Property="BorderThickness" Value="0,0,0,1" />
+        <Setter Property="BorderBrush" Value="{DynamicResource HairlineBrush}" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="DataGridColumnHeader">
+                    <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}" Padding="{TemplateBinding Padding}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <ContentPresenter VerticalAlignment="Center" HorizontalAlignment="Left" />
+                            <Path x:Name="SortArrow" Grid.Column="1" Data="M 0 0 L 4 4 L 8 0 Z"
+                                  Fill="{DynamicResource TextSecondaryBrush}" Margin="6,0,0,0"
+                                  VerticalAlignment="Center" Visibility="Collapsed"
+                                  RenderTransformOrigin="0.5,0.5">
+                                <Path.RenderTransform>
+                                    <RotateTransform Angle="0" />
+                                </Path.RenderTransform>
+                            </Path>
+                        </Grid>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="SortDirection" Value="Ascending">
+                            <Setter TargetName="SortArrow" Property="Visibility" Value="Visible" />
+                        </Trigger>
+                        <Trigger Property="SortDirection" Value="Descending">
+                            <Setter TargetName="SortArrow" Property="Visibility" Value="Visible" />
+                            <Setter TargetName="SortArrow" Property="RenderTransform">
+                                <Setter.Value>
+                                    <RotateTransform Angle="180" />
+                                </Setter.Value>
+                            </Setter>
+                        </Trigger>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Background" Value="{DynamicResource HoverBrush}" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="GameRowStyleV2" TargetType="DataGridRow">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Height" Value="46" />
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" Value="{DynamicResource HoverBrush}" />
+            </Trigger>
+            <Trigger Property="IsSelected" Value="True">
+                <Setter Property="Background" Value="{DynamicResource SelectionBrush}" />
+                <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <Style x:Key="GameCellStyleV2" TargetType="DataGridCell">
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Padding" Value="14,0" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="DataGridCell">
+                    <Border Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}">
+                        <ContentPresenter VerticalAlignment="Center" />
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <Trigger Property="IsSelected" Value="True">
+                <Setter Property="Background" Value="Transparent" />
+                <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+            </Trigger>
+            <DataTrigger Binding="{Binding IsMissing}" Value="True">
+                <Setter Property="Foreground" Value="{DynamicResource DangerBrush}" />
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <Style x:Key="GameGridStyleV2" TargetType="DataGrid">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="RowHeight" Value="46" />
+        <Setter Property="ColumnHeaderHeight" Value="30" />
+        <Setter Property="HeadersVisibility" Value="Column" />
+        <Setter Property="GridLinesVisibility" Value="None" />
+        <Setter Property="RowBackground" Value="Transparent" />
+        <Setter Property="AlternatingRowBackground" Value="Transparent" />
+        <Setter Property="AutoGenerateColumns" Value="False" />
+        <Setter Property="CanUserAddRows" Value="False" />
+        <Setter Property="CanUserDeleteRows" Value="False" />
+        <Setter Property="IsReadOnly" Value="True" />
+        <Setter Property="SelectionMode" Value="Extended" />
+        <Setter Property="SelectionUnit" Value="FullRow" />
+        <Setter Property="EnableRowVirtualization" Value="True" />
+        <Setter Property="EnableColumnVirtualization" Value="True" />
+        <Setter Property="VirtualizingPanel.IsVirtualizing" Value="True" />
+        <Setter Property="VirtualizingPanel.VirtualizationMode" Value="Recycling" />
+        <Setter Property="ColumnHeaderStyle" Value="{StaticResource GameHeaderStyleV2}" />
+        <Setter Property="RowStyle" Value="{StaticResource GameRowStyleV2}" />
+        <Setter Property="CellStyle" Value="{StaticResource GameCellStyleV2}" />
+    </Style>
+
+    <!-- 搜索框：细边、悬停加深 -->
+    <Style x:Key="SearchBoxStyle" TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
+        <Setter Property="Height" Value="30" />
+        <Setter Property="MinHeight" Value="30" />
+        <Setter Property="Padding" Value="32,0,10,0" />
+        <Setter Property="Background" Value="#40FFFFFF" />
+        <Setter Property="BorderThickness" Value="0" />
     </Style>
 
     <!-- 菜单 / 提示 -->

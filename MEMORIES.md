@@ -1,5 +1,14 @@
 # 经验记录（MEMORIES）
 
+## 2026-10-31（v0.29.0 三栏外壳）
+
+- 悬停投影的阴影层**必须自带底色**：`Background="Transparent"` 的空 Border 加 `DropShadowEffect` 投不出阴影（没有任何 alpha 可投影）。做法是给阴影层一个低 alpha 的抬升色（`ShellPanelLiftBrush` / `MainPanelLiftBrush`），和面板同色相，既出阴影又只把面板抬一档。
+- `Style` 触发器里的 `Storyboard.TargetName` 找不到同一 Grid 里的兄弟元素（namescope 只在模板内有效）。要么写在 `ControlTemplate` 里，要么在 code-behind 用 `MouseEnter/MouseLeave` + `BeginAnimation`，本项目用后者。
+- 列表改版后旧列宽会“复活”：`RestoreViewState` 用保存的 `ColumnWidths` 覆盖 XAML 宽度，必须同时升 `LayoutVersion`（v3→v4）才会套用新默认列宽与默认隐藏列。
+- 半透明面板叠在 Acrylic 上时，壁纸花纹会顶穿文字；在窗口最底层压一层 10% 薄雾（`ShellScrimBrush`），既保留透感又把对比度拉回来。
+- 截图验证：`CopyFromScreen` 只能拍到最上层窗口，`SetForegroundWindow` 经常抢不到前台；可靠做法是 `SetWindowPos(HWND_TOPMOST)` → 截图 → 再设回 `HWND_NOTOPMOST`。`PrintWindow` 不抢焦点，但拍不到 DWM 的 Acrylic 背景。
+- 深色调色板是按资源键覆盖的字典（`ThemePalette.Dark`），**新增画刷键必须同时补深色值**，否则深色模式下这些元素仍是浅色。
+
 ## 2026-10-31（WPF 深色 / 系统背景）
 
 - 只改 `SolidColorBrush.Color` 不够：`StaticResource` 在样式里可能已被冻结，深色调色板会出现“背景变了、文字还是深色”。要么全量换 `DynamicResource`，要么重建样式。本项目把 24 个 XAML 的画刷引用统一换成 DynamicResource。

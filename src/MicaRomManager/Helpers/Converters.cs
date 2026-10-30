@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.IO;
+using System.Windows;
 using System.Windows.Data;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -49,14 +50,20 @@ public sealed class StarGlyphConverter : IValueConverter
 
 public sealed class StarBrushConverter : IValueConverter
 {
-    private static readonly Brush FilledBrush = Freeze(new SolidColorBrush(Color.FromRgb(0xE0, 0xA6, 0x4A)));
-    private static readonly Brush EmptyBrush = Freeze(new SolidColorBrush(Color.FromRgb(0xC9, 0xCF, 0xD6)));
+    private static readonly Brush FallbackFilled = Freeze(new SolidColorBrush(Color.FromRgb(0x00, 0x71, 0xE3)));
+    private static readonly Brush FallbackEmpty = Freeze(new SolidColorBrush(Color.FromRgb(0xD2, 0xD2, 0xD7)));
 
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
     {
         var rating = value is int number ? number : 0;
         var index = int.TryParse(parameter as string, out var parsed) ? parsed : 1;
-        return index <= rating ? FilledBrush : EmptyBrush;
+        var filled = index <= rating;
+
+        // 跟随主题：亮/暗切换时按资源键取当前画刷
+        var key = filled ? "AccentBrush" : "ScrollThumbBrush";
+        if (Application.Current?.TryFindResource(key) is Brush themed) return themed;
+
+        return filled ? FallbackFilled : FallbackEmpty;
     }
 
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) =>

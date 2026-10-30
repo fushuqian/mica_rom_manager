@@ -5,10 +5,9 @@
              FontSize="13"
              Background="Transparent">
     <Grid>
-        <Border Background="{DynamicResource PanelBrush}" CornerRadius="12"
-                Margin="0,4,0,0" Effect="{StaticResource CardShadowEffect}" />
+        <Border Background="Transparent" CornerRadius="0" Margin="0" />
         <Border Background="Transparent" BorderThickness="0"
-                CornerRadius="12" ClipToBounds="True">
+                CornerRadius="0" ClipToBounds="True">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -41,16 +40,15 @@
                         <DataTemplate>
                             <Grid Margin="0,5">
                                 <Border Visibility="{Binding IsUser, Converter={StaticResource BoolToVis}}"
-                                        Background="{DynamicResource AccentBrush}" CornerRadius="8"
+                                        Background="{DynamicResource HoverBrush}" CornerRadius="10"
                                         Padding="10,7" MaxWidth="300" HorizontalAlignment="Right">
-                                    <TextBlock Text="{Binding Text}" Foreground="{DynamicResource OnAccentTextBrush}" TextWrapping="Wrap" />
+                                    <TextBlock Text="{Binding Text}" Foreground="{DynamicResource TextPrimaryBrush}" TextWrapping="Wrap" />
                                 </Border>
 
                                 <Border Visibility="{Binding IsAssistant, Converter={StaticResource BoolToVis}}"
-                                        Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}"
-                                        BorderThickness="1" CornerRadius="8" Padding="10,7"
+                                        Background="Transparent" BorderThickness="0" Padding="0,2"
                                         MaxWidth="340" HorizontalAlignment="Left">
-                                    <TextBlock Text="{Binding Text}" TextWrapping="Wrap" />
+                                    <TextBlock Text="{Binding Text}" TextWrapping="Wrap" LineHeight="21" />
                                 </Border>
 
                                 <TextBlock Visibility="{Binding IsTool, Converter={StaticResource BoolToVis}}"
@@ -173,8 +171,9 @@
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
-                <TextBox x:Name="InputBox" Grid.Row="0" MinHeight="64" MaxHeight="110" AcceptsReturn="True"
+                <TextBox x:Name="InputBox" Grid.Row="0" MinHeight="44" MaxHeight="96" AcceptsReturn="True"
                          TextWrapping="Wrap" VerticalContentAlignment="Top" VerticalScrollBarVisibility="Auto"
+                         Background="#40FFFFFF" BorderThickness="0" Padding="10,8"
                          PreviewKeyDown="Input_PreviewKeyDown"
                          Text="{Binding Input, UpdateSourceTrigger=PropertyChanged}"
                          ToolTip="Enter 发送，Shift+Enter 换行" />

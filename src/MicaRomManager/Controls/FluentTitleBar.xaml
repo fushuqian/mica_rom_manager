@@ -9,23 +9,23 @@
             <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
 
-        <StackPanel Grid.Column="0" Orientation="Horizontal" Margin="16,0,0,0" VerticalAlignment="Center">
-            <Border Width="20" Height="20" CornerRadius="5" Background="{DynamicResource AccentBrush}">
-                <TextBlock Text="M" Foreground="White" FontSize="11" FontWeight="Bold"
+        <StackPanel Grid.Column="0" Orientation="Horizontal" Margin="20,0,0,0" VerticalAlignment="Center">
+            <Border Width="18" Height="18" CornerRadius="5" Background="{DynamicResource TextPrimaryBrush}">
+                <TextBlock Text="M" Foreground="{DynamicResource PanelBrush}" FontSize="10" FontWeight="Bold"
                            HorizontalAlignment="Center" VerticalAlignment="Center" />
             </Border>
             <TextBlock x:Name="TitleText" Margin="10,0,0,0" VerticalAlignment="Center"
                        FontSize="12.5" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" />
         </StackPanel>
 
-        <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Top">
-            <Button x:Name="MinimizeButton" Style="{StaticResource CaptionButtonStyle}"
+        <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Stretch">
+            <Button x:Name="MinimizeButton" Style="{StaticResource TitleBarButtonStyle}"
                     Content="&#xE921;" ToolTip="最小化" AutomationProperties.Name="最小化"
                     Click="Minimize_Click" />
-            <Button x:Name="MaximizeButton" Style="{StaticResource CaptionButtonStyle}"
+            <Button x:Name="MaximizeButton" Style="{StaticResource TitleBarButtonStyle}"
                     Content="&#xE922;" ToolTip="最大化" AutomationProperties.Name="最大化"
                     Click="Maximize_Click" />
-            <Button x:Name="CloseButton" Style="{StaticResource CloseCaptionButtonStyle}"
+            <Button x:Name="CloseButton" Style="{StaticResource TitleBarCloseButtonStyle}"
                     Content="&#xE8BB;" ToolTip="关闭" AutomationProperties.Name="关闭"
                     Click="Close_Click" />
         </StackPanel>

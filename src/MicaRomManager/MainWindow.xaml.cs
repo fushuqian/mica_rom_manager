@@ -73,6 +73,24 @@ public partial class MainWindow : Window
     private void ToggleAssistant_Click(object sender, RoutedEventArgs e) =>
         SetAssistantOpen(AssistantPanel.Visibility != Visibility.Visible);
 
+    /// <summary>鼠标进入区块：投影层淡入，区块在窗口内浮起；离开则收回。</summary>
+    private void SideHost_MouseEnter(object sender, MouseEventArgs e) => LiftPanel(SideShadow, 1, 140);
+
+    private void SideHost_MouseLeave(object sender, MouseEventArgs e) => LiftPanel(SideShadow, 0, 180);
+
+    private void MainHost_MouseEnter(object sender, MouseEventArgs e) => LiftPanel(MainShadow, 1, 140);
+
+    private void MainHost_MouseLeave(object sender, MouseEventArgs e) => LiftPanel(MainShadow, 0, 180);
+
+    private static void LiftPanel(UIElement shadow, double to, int milliseconds) =>
+        shadow.BeginAnimation(OpacityProperty, new DoubleAnimation(to, TimeSpan.FromMilliseconds(milliseconds))
+        {
+            EasingFunction = new CubicEase
+            {
+                EasingMode = to > 0 ? EasingMode.EaseOut : EasingMode.EaseIn,
+            },
+        });
+
     /// <summary>工具栏「AI 工具」：把低频的 AI 动作收进菜单。</summary>
     private void AiTools_Click(object sender, RoutedEventArgs e)
     {
@@ -120,37 +138,30 @@ public partial class MainWindow : Window
         {
             AssistantPanel.Visibility = Visibility.Visible;
             AssistantPanel.Opacity = 0;
-            var slide = new TranslateTransform(28, 0);
-            AssistantPanel.RenderTransform = slide;
 
+            var ease = new CubicEase { EasingMode = EasingMode.EaseOut };
+            AssistantHost.BeginAnimation(WidthProperty, new DoubleAnimation(0, AssistantWidth,
+                TimeSpan.FromMilliseconds(220)) { EasingFunction = ease });
             AssistantPanel.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1,
-                TimeSpan.FromMilliseconds(180))
-            {
-                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut },
-            }, HandoffBehavior.SnapshotAndReplace);
-            slide.BeginAnimation(TranslateTransform.XProperty, new DoubleAnimation(28, 0,
-                TimeSpan.FromMilliseconds(220))
-            {
-                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut },
-            });
+                TimeSpan.FromMilliseconds(200)) { EasingFunction = ease },
+                HandoffBehavior.SnapshotAndReplace);
         }
         else if (AssistantPanel.Visibility == Visibility.Visible)
         {
-            var slide = AssistantPanel.RenderTransform as TranslateTransform ?? new TranslateTransform();
-            AssistantPanel.RenderTransform = slide;
-
-            var fade = new DoubleAnimation(1, 0, TimeSpan.FromMilliseconds(140));
-            fade.Completed += (_, _) =>
+            var collapse = new DoubleAnimation(0, TimeSpan.FromMilliseconds(180))
+            {
+                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseIn },
+            };
+            collapse.Completed += (_, _) =>
             {
                 if (_assistantOpen) return;
                 AssistantPanel.Visibility = Visibility.Collapsed;
                 AssistantPanel.Opacity = 1;
-                slide.X = 0;
             };
 
-            AssistantPanel.BeginAnimation(OpacityProperty, fade);
-            slide.BeginAnimation(TranslateTransform.XProperty, new DoubleAnimation(0, 28,
-                TimeSpan.FromMilliseconds(140)));
+            AssistantHost.BeginAnimation(WidthProperty, collapse);
+            AssistantPanel.BeginAnimation(OpacityProperty,
+                new DoubleAnimation(1, 0, TimeSpan.FromMilliseconds(140)));
         }
 
         if (persist) AppServices.Settings.Set(AssistantOpenKey, open.ToString());
@@ -162,6 +173,9 @@ public partial class MainWindow : Window
             AssistantPanel.Focus();
         }, DispatcherPriority.Input);
     }
+
+    /// <summary>右侧助手栏展开宽度。</summary>
+    private const double AssistantWidth = 300;
 
     /// <summary>便携模式下每次启动检查库目录，找不到时让用户重新指定或重建。</summary>
     private void CheckPortableLibrary()
@@ -227,7 +241,7 @@ public partial class MainWindow : Window
         {
             ApplyHiddenColumns(new ListViewState
             {
-                LayoutVersion = 3,
+                LayoutVersion = 4,
                 HiddenColumns = ListViewState.DefaultHiddenColumns.ToList(),
             });
             return;
@@ -245,7 +259,7 @@ public partial class MainWindow : Window
 
         if (state == null) return;
 
-        var legacyLayout = state.LayoutVersion < 3;
+        var legacyLayout = state.LayoutVersion < 4;
 
         // 旧布局的列宽/隐藏列沿用旧密度；升到 v3 时补一遍默认隐藏列，避免横向滚动
         if (legacyLayout)
@@ -256,7 +270,7 @@ public partial class MainWindow : Window
                     state.HiddenColumns.Add(column);
             }
         }
-        state.LayoutVersion = 3;
+        state.LayoutVersion = 4;
 
         _viewModel.OnlyFavorites = state.OnlyFavorites;
         _viewModel.OnlyMissing = state.OnlyMissing;

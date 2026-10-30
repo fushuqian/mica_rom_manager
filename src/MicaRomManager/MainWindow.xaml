@@ -38,134 +38,144 @@
         </Grid.Style>
         <Grid.RowDefinitions>
             <RowDefinition Height="48" />
-            <RowDefinition Height="Auto" />
+            <RowDefinition Height="52" />
             <RowDefinition Height="*" />
-            <RowDefinition Height="32" />
+            <RowDefinition Height="30" />
         </Grid.RowDefinitions>
+
+        <Border Grid.RowSpan="4" Background="{DynamicResource ShellScrimBrush}" IsHitTestVisible="False" />
 
         <controls:FluentTitleBar Grid.Row="0" Title="Mica ROM Manager" />
 
-        <!-- 命令栏：一行放主操作，低频操作收进 AI 工具 / 图标按钮 -->
-        <Border Grid.Row="1" Padding="16,4,16,8" Background="Transparent">
-            <DockPanel>
-                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Border Background="{DynamicResource InputBrush}" BorderBrush="{DynamicResource BorderBrush}"
-                            BorderThickness="1" CornerRadius="12" Padding="9,4" Margin="0,0,4,0"
-                            ToolTip="{Binding ConnectionText}">
-                        <StackPanel Orientation="Horizontal">
-                            <Ellipse Width="7" Height="7" Margin="0,0,7,0" VerticalAlignment="Center">
-                                <Ellipse.Style>
-                                    <Style TargetType="Ellipse">
-                                        <Setter Property="Fill" Value="{DynamicResource TextSecondaryBrush}" />
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding HasConnection}" Value="True">
-                                                <Setter Property="Fill" Value="#2E7D32" />
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </Ellipse.Style>
-                            </Ellipse>
-                            <TextBlock Text="{Binding ConnectionText}" MaxWidth="220" FontSize="12"
-                                       TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Border>
-                    <Button Content="断开" Command="{Binding DisconnectDeviceCommand}"
-                            Style="{StaticResource ToolButtonStyle}" Padding="8,4" FontSize="12"
-                            Visibility="{Binding HasConnection, Converter={StaticResource BoolToVis}}" />
-                    <Button Click="ToggleAssistant_Click" Style="{StaticResource ToolButtonStyle}"
-                            ToolTip="打开 / 收起右侧 AI 助手">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="&#xE8BD;" FontFamily="{StaticResource IconFontFamily}" FontSize="14"
-                                       Margin="0,0,6,0" VerticalAlignment="Center" />
-                            <TextBlock Text="AI 助手" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Button>
-                    <Button Command="{Binding OpenSettingsCommand}" Style="{StaticResource ToolButtonStyle}" Margin="0">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="&#xE713;" FontFamily="{StaticResource IconFontFamily}" FontSize="14"
-                                       Margin="0,0,6,0" VerticalAlignment="Center" />
-                            <TextBlock Text="设置" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Button>
-                </StackPanel>
-
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <Button Command="{Binding ImportCommand}" Style="{StaticResource PrimaryButtonStyle}">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="&#xE8E5;" FontFamily="{StaticResource IconFontFamily}" FontSize="14"
-                                       Margin="0,0,6,0" VerticalAlignment="Center" />
-                            <TextBlock Text="导入游戏" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Button>
-                    <Button Command="{Binding LaunchSelectedCommand}" Style="{StaticResource SecondaryButtonStyle}" Margin="6,0,4,0">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="&#xE768;" FontFamily="{StaticResource IconFontFamily}" FontSize="14"
-                                       Margin="0,0,6,0" VerticalAlignment="Center" />
-                            <TextBlock Text="启动游戏" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Button>
-                    <Button Command="{Binding ShareSelectedCommand}" Style="{StaticResource ToolButtonStyle}">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="&#xE72D;" FontFamily="{StaticResource IconFontFamily}" FontSize="14"
-                                       Margin="0,0,6,0" VerticalAlignment="Center" />
-                            <TextBlock Text="分享打包" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Button>
-                    <Button x:Name="AiToolsButton" Click="AiTools_Click" Style="{StaticResource ToolButtonStyle}"
-                            ToolTip="AI 刮削 / 标签 / 翻译 / 推荐">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="&#xE8B6;" FontFamily="{StaticResource IconFontFamily}" FontSize="14"
-                                       Margin="0,0,6,0" VerticalAlignment="Center" />
-                            <TextBlock Text="AI 工具" VerticalAlignment="Center" />
-                            <TextBlock Text="&#xE70D;" FontFamily="{StaticResource IconFontFamily}" FontSize="9"
-                                       Margin="6,1,0,0" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Button>
-                    <Button Command="{Binding ConnectDeviceCommand}" Style="{StaticResource ToolButtonStyle}">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="&#xE703;" FontFamily="{StaticResource IconFontFamily}" FontSize="14"
-                                       Margin="0,0,6,0" VerticalAlignment="Center" />
-                            <TextBlock Text="{Binding ConnectButtonText}" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Button>
-                    <Button Command="{Binding OpenTaskListCommand}" Style="{StaticResource ToolButtonStyle}"
-                            Padding="9,6" ToolTip="任务列表" AutomationProperties.Name="任务列表">
-                        <TextBlock Text="&#xE9D5;" FontFamily="{StaticResource IconFontFamily}" FontSize="14" />
-                    </Button>
-                    <Button x:Name="ColumnMenuButton" Style="{StaticResource ToolButtonStyle}"
-                            Padding="9,6" ToolTip="列设置：勾选要显示的列，配置会记住"
-                            AutomationProperties.Name="列设置" Click="ColumnMenu_Click">
-                        <TextBlock Text="&#xE8A4;" FontFamily="{StaticResource IconFontFamily}" FontSize="14" />
-                    </Button>
-                </StackPanel>
-            </DockPanel>
-        </Border>
-
-        <!-- 左侧平台 + 右侧筛选/列表 -->
-        <Grid Grid.Row="2" Margin="16,0,16,0">
+        <!-- 命令栏：主操作靠左，连接与设置靠右 -->
+        <Grid Grid.Row="1" Margin="12,0">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="212" />
-                <ColumnDefinition Width="12" />
                 <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
 
-            <Grid Grid.Column="0">
-                <Border Background="{DynamicResource CardBrush}" CornerRadius="10" Margin="0,4,0,0" Effect="{StaticResource CardShadowEffect}" />
-                <Border Background="Transparent" BorderThickness="0" CornerRadius="10">
-                    <DockPanel Margin="10">
-                        <StackPanel DockPanel.Dock="Top" Margin="4,2,4,8">
-                            <TextBlock Text="平台" FontSize="15" FontWeight="SemiBold" />
-                            <TextBlock Text="按平台筛选游戏库" FontSize="11" Margin="0,2,0,0"
+            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                <Button Command="{Binding ImportCommand}" Style="{StaticResource BarPrimaryButtonStyle}">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xE710;" FontFamily="{StaticResource IconFontFamily}" FontSize="13"
+                                   Margin="0,0,7,0" VerticalAlignment="Center" />
+                        <TextBlock Text="导入游戏" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+                <Button Command="{Binding LaunchSelectedCommand}" Style="{StaticResource BarButtonStyle}" Margin="4,0,2,0">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xE768;" FontFamily="{StaticResource IconFontFamily}" FontSize="13"
+                                   Margin="0,0,7,0" VerticalAlignment="Center" />
+                        <TextBlock Text="启动" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+                <Button Command="{Binding ShareSelectedCommand}" Style="{StaticResource BarButtonStyle}">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xE72D;" FontFamily="{StaticResource IconFontFamily}" FontSize="13"
+                                   Margin="0,0,7,0" VerticalAlignment="Center" />
+                        <TextBlock Text="分享打包" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+                <Button x:Name="AiToolsButton" Click="AiTools_Click" Style="{StaticResource BarButtonStyle}"
+                        ToolTip="AI 刮削 / 标签 / 翻译 / 推荐">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xE8B6;" FontFamily="{StaticResource IconFontFamily}" FontSize="13"
+                                   Margin="0,0,7,0" VerticalAlignment="Center" />
+                        <TextBlock Text="AI 工具" VerticalAlignment="Center" />
+                        <TextBlock Text="&#xE70D;" FontFamily="{StaticResource IconFontFamily}" FontSize="8"
+                                   Margin="6,1,0,0" VerticalAlignment="Center"
+                                   Foreground="{DynamicResource TextSecondaryBrush}" />
+                    </StackPanel>
+                </Button>
+                <Button Command="{Binding ConnectDeviceCommand}" Style="{StaticResource BarButtonStyle}">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xE703;" FontFamily="{StaticResource IconFontFamily}" FontSize="13"
+                                   Margin="0,0,7,0" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding ConnectButtonText}" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+                <Button Command="{Binding OpenTaskListCommand}" Style="{StaticResource BarButtonStyle}"
+                        Padding="9,0" ToolTip="任务列表" AutomationProperties.Name="任务列表">
+                    <TextBlock Text="&#xE9D5;" FontFamily="{StaticResource IconFontFamily}" FontSize="13" />
+                </Button>
+                <Button x:Name="ColumnMenuButton" Style="{StaticResource BarButtonStyle}"
+                        Padding="9,0" ToolTip="列设置：勾选要显示的列，配置会记住"
+                        AutomationProperties.Name="列设置" Click="ColumnMenu_Click">
+                    <TextBlock Text="&#xE8A4;" FontFamily="{StaticResource IconFontFamily}" FontSize="13" />
+                </Button>
+            </StackPanel>
+
+            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                <Border Background="{DynamicResource InputBrush}" CornerRadius="11" Padding="9,4" Margin="0,0,6,0"
+                        ToolTip="{Binding ConnectionText}">
+                    <StackPanel Orientation="Horizontal">
+                        <Ellipse Width="6" Height="6" Margin="0,0,7,0" VerticalAlignment="Center">
+                            <Ellipse.Style>
+                                <Style TargetType="Ellipse">
+                                    <Setter Property="Fill" Value="{DynamicResource TextSecondaryBrush}" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding HasConnection}" Value="True">
+                                            <Setter Property="Fill" Value="#30D158" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Ellipse.Style>
+                        </Ellipse>
+                        <TextBlock Text="{Binding ConnectionText}" MaxWidth="180" FontSize="11.5"
+                                   TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Border>
+                <Button Content="断开" Command="{Binding DisconnectDeviceCommand}"
+                        Style="{StaticResource BarButtonStyle}" FontSize="12"
+                        Visibility="{Binding HasConnection, Converter={StaticResource BoolToVis}}" />
+                <Button Click="ToggleAssistant_Click" Style="{StaticResource BarButtonStyle}"
+                        ToolTip="打开 / 收起右侧 AI 助手">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xE8BD;" FontFamily="{StaticResource IconFontFamily}" FontSize="13"
+                                   Margin="0,0,7,0" VerticalAlignment="Center" />
+                        <TextBlock Text="AI 助手" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+                <Button Command="{Binding OpenSettingsCommand}" Style="{StaticResource BarButtonStyle}" Padding="9,0"
+                        ToolTip="设置" AutomationProperties.Name="设置">
+                    <TextBlock Text="&#xE713;" FontFamily="{StaticResource IconFontFamily}" FontSize="13" />
+                </Button>
+            </StackPanel>
+        </Grid>
+
+        <!-- 三栏平面：侧栏 / 列表 / 助手，发丝线分区，悬停浮起 -->
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="208" />
+                <ColumnDefinition Width="1" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="1" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <!-- 左侧：平台列表 -->
+            <Grid Grid.Column="0" x:Name="SideHost"
+                  MouseEnter="SideHost_MouseEnter" MouseLeave="SideHost_MouseLeave">
+
+                <Border x:Name="SideShadow" Background="{DynamicResource ShellPanelLiftBrush}" Opacity="0"
+                        Effect="{StaticResource PanelShadowEffect}" IsHitTestVisible="False" />
+                <Border Background="{DynamicResource ShellPanelBrush}">
+                    <DockPanel>
+                        <StackPanel DockPanel.Dock="Top" Margin="20,16,20,6">
+                            <TextBlock Text="平台" FontSize="10.5" FontWeight="SemiBold"
                                        Foreground="{DynamicResource TextSecondaryBrush}" />
+                            <TextBlock Text="{Binding CountText}" FontSize="11" Margin="0,4,0,0"
+                                       Foreground="{DynamicResource TextSecondaryBrush}"
+                                       TextTrimming="CharacterEllipsis" />
                         </StackPanel>
-                        <ListBox x:Name="PlatformSidebar" BorderThickness="0" Background="Transparent"
+                        <ListBox x:Name="PlatformSidebar" Style="{StaticResource SideNavListStyle}"
                                  ItemsSource="{Binding PlatformFilters}"
                                  SelectedItem="{Binding SelectedPlatformFilter, Mode=TwoWay}">
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
-                                    <DockPanel MinWidth="160">
+                                    <DockPanel MinWidth="120">
                                         <TextBlock DockPanel.Dock="Right" Text="{Binding Count}" Margin="8,0,0,0"
-                                                   VerticalAlignment="Center" FontSize="12"
+                                                   VerticalAlignment="Center" FontSize="11.5"
                                                    Foreground="{DynamicResource TextSecondaryBrush}" />
                                         <TextBlock Text="{Binding Display}" TextTrimming="CharacterEllipsis"
                                                    VerticalAlignment="Center" />
@@ -177,349 +187,380 @@
                 </Border>
             </Grid>
 
-            <Grid Grid.Column="2">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="*" />
-                </Grid.RowDefinitions>
+            <Border Grid.Column="1" Background="{DynamicResource HairlineBrush}" />
 
-                <!-- 搜索 + 筛选 -->
-                <Grid Grid.Row="0" Margin="0,0,0,10">
-                <Border Background="{DynamicResource CardBrush}" CornerRadius="10" Margin="0,4,0,0" Effect="{StaticResource CardShadowEffect}" />
-                <Border Background="Transparent" BorderThickness="0"
-                        CornerRadius="10" Padding="10,8">
-                    <StackPanel Orientation="Horizontal">
-                        <Grid Width="380" HorizontalAlignment="Left">
-                            <TextBox x:Name="SearchBox" Height="34" Padding="34,0,10,0"
-                                     VerticalContentAlignment="Center"
-                                     Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged, Delay=150}"
-                                     ToolTip="搜索标题、文件名、路径、标签、开发商（Ctrl+F）" />
-                            <TextBlock Text="&#xE721;" FontFamily="{StaticResource IconFontFamily}" FontSize="13"
-                                       Margin="11,0,0,0" IsHitTestVisible="False"
-                                       VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}" />
-                            <TextBlock Text="搜索游戏名、文件名、标签…" Margin="34,0,0,0" IsHitTestVisible="False"
-                                       VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}">
-                                <TextBlock.Style>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="Visibility" Value="Collapsed" />
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding Text, ElementName=SearchBox}" Value="">
-                                                <Setter Property="Visibility" Value="Visible" />
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </TextBlock.Style>
+            <!-- 中间：筛选条 + 列表 -->
+            <Grid Grid.Column="2" x:Name="MainHost"
+                  MouseEnter="MainHost_MouseEnter" MouseLeave="MainHost_MouseLeave">
+
+                <Border x:Name="MainShadow" Background="{DynamicResource MainPanelLiftBrush}" Opacity="0"
+                        Effect="{StaticResource PanelShadowEffect}" IsHitTestVisible="False" />
+                <Border Background="{DynamicResource MainPanelBrush}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="46" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <!-- 筛选条 -->
+                        <Grid Grid.Row="0" Margin="14,0,8,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                <Button x:Name="FilterButton" Click="FilterButton_Click"
+                                        Style="{StaticResource ChipButtonStyle}" Height="30" Padding="10,0"
+                                        ToolTip="状态、区域、语言、开发商、标签">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="筛选" VerticalAlignment="Center" />
+                                        <Border Margin="7,0,0,0" MinWidth="17" Height="17" CornerRadius="8.5"
+                                                Background="{DynamicResource AccentBrush}" Padding="5,0"
+                                                VerticalAlignment="Center"
+                                                Visibility="{Binding HasActiveFilters, Converter={StaticResource BoolToVis}}">
+                                            <TextBlock Text="{Binding ActiveFilterCount}"
+                                                       Foreground="{DynamicResource OnAccentTextBrush}" FontSize="10"
+                                                       FontWeight="SemiBold" HorizontalAlignment="Center"
+                                                       VerticalAlignment="Center" />
+                                        </Border>
+                                    </StackPanel>
+                                </Button>
+                                <Button Content="AI 查询" Command="{Binding AiQueryCommand}"
+                                        Style="{StaticResource ChipButtonStyle}" Height="30" Padding="10,0"
+                                        ToolTip="用自然语言筛选或修改游戏库" />
+                            </StackPanel>
+
+                            <Grid Grid.Column="1" MaxWidth="360" Margin="14,0,12,0" HorizontalAlignment="Left">
+                                <TextBox x:Name="SearchBox" Style="{StaticResource SearchBoxStyle}"
+                                         VerticalContentAlignment="Center"
+                                         Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged, Delay=150}"
+                                         ToolTip="搜索标题、文件名、路径、标签、开发商（Ctrl+F）" />
+                                <TextBlock Text="&#xE721;" FontFamily="{StaticResource IconFontFamily}" FontSize="12"
+                                           Margin="11,0,0,0" IsHitTestVisible="False"
+                                           VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}" />
+                                <TextBlock Text="搜索游戏名、文件名、标签…" Margin="32,0,0,0" IsHitTestVisible="False"
+                                           FontSize="12"
+                                           VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Text, ElementName=SearchBox}" Value="">
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </Grid>
+
+                            <TextBlock Grid.Column="2" VerticalAlignment="Center" Margin="0,0,6,0" FontSize="11.5"
+                                       Foreground="{DynamicResource TextSecondaryBrush}"
+                                       ToolTip="{Binding CountText}">
+                                <Run Text="{Binding FilteredCount}" /><Run Text=" / " /><Run Text="{Binding TotalCount}" /><Run Text=" 款" />
                             </TextBlock>
                         </Grid>
 
-                        <StackPanel Orientation="Horizontal" Margin="8,0,0,0">
-                            <Button x:Name="FilterButton" Click="FilterButton_Click"
-                                    Style="{StaticResource SecondaryButtonStyle}" Height="34" Padding="11,0"
-                                    ToolTip="状态、区域、语言、开发商、标签">
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="&#xE71C;" FontFamily="{StaticResource IconFontFamily}" FontSize="13"
-                                               Margin="0,0,6,0" VerticalAlignment="Center" />
-                                    <TextBlock Text="筛选" VerticalAlignment="Center" />
-                                    <Border Margin="7,0,0,0" MinWidth="18" Height="18" CornerRadius="9"
-                                            Background="{DynamicResource AccentBrush}" Padding="5,0"
-                                            VerticalAlignment="Center"
-                                            Visibility="{Binding HasActiveFilters, Converter={StaticResource BoolToVis}}">
-                                        <TextBlock Text="{Binding ActiveFilterCount}" Foreground="{DynamicResource OnAccentTextBrush}" FontSize="10.5"
-                                                   FontWeight="SemiBold" HorizontalAlignment="Center"
-                                                   VerticalAlignment="Center" />
-                                    </Border>
-                                </StackPanel>
-                            </Button>
-                            <Button Content="AI 查询" Command="{Binding AiQueryCommand}" Height="34"
-                                    Margin="6,0,0,0" Padding="12,0" Style="{StaticResource SecondaryButtonStyle}"
-                                    ToolTip="用自然语言筛选或修改游戏库" />
-                        </StackPanel>
-
-                        <TextBlock VerticalAlignment="Center" Margin="14,0,2,0" FontSize="12"
-                                   Foreground="{DynamicResource TextSecondaryBrush}"
-                                   ToolTip="{Binding CountText}">
-                            <Run Text="{Binding FilteredCount}" /><Run Text=" / " /><Run Text="{Binding TotalCount}" /><Run Text=" 款" />
-                        </TextBlock>
-                    </StackPanel>
-                </Border>
-                </Grid>
-
-                <!-- 外置盘未连接提示 -->
-                <Border Grid.Row="1" Padding="10,7" Margin="0,0,0,10" CornerRadius="8"
-                        Background="{DynamicResource WarningBackgroundBrush}"
-                        BorderBrush="{DynamicResource WarningBrush}" BorderThickness="1"
-                        Visibility="{Binding HasLibraryWarning, Converter={StaticResource BoolToVis}}">
-                    <DockPanel>
-                        <Button DockPanel.Dock="Right" Content="刷新文件状态" Margin="12,0,0,0"
-                                Style="{StaticResource SecondaryButtonStyle}"
-                                Command="{Binding RefreshStatusCommand}" />
-                        <TextBlock Text="{Binding LibraryWarning}" VerticalAlignment="Center"
-                                   TextWrapping="Wrap" Foreground="{DynamicResource WarningBrush}" />
-                    </DockPanel>
-                </Border>
-
-                <!-- 游戏列表卡片 -->
-                <Grid Grid.Row="2">
-                <Border Background="{DynamicResource CardBrush}" CornerRadius="10" Margin="0,4,0,0" Effect="{StaticResource CardShadowEffect}" />
-                <Border Background="Transparent" BorderThickness="0"
-                        CornerRadius="10" ClipToBounds="True">
-                    <DataGrid x:Name="GameGrid" Style="{StaticResource AppDataGridStyle}" RowHeight="34"
-                              IsReadOnly="True" Margin="2"
-                              ItemsSource="{Binding GamesView}"
-                              SelectionChanged="OnSelectionChanged"
-                              MouseDoubleClick="OnRowDoubleClick"
-                              CellEditEnding="OnCellEditEnding"
-                              RowEditEnding="OnRowEditEnding"
-                              CurrentCellChanged="OnCurrentCellChanged"
-                              ContextMenuOpening="OnContextMenuOpening">
-                        <DataGrid.ContextMenu>
-                            <ContextMenu DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
-                                <MenuItem Header="启动游戏" Command="{Binding LaunchSelectedCommand}" InputGestureText="Enter" />
-                                <MenuItem Header="用指定模拟器启动" />
-                                <MenuItem Header="编辑信息…" Command="{Binding EditSelectedCommand}" InputGestureText="F2" />
-                                <MenuItem Header="刮削信息…" Command="{Binding ScrapeCommand}" />
-                                <MenuItem Click="AiAsk_Click" ToolTip="把选中的游戏发送给右侧 AI 助手咨询">
-                                    <MenuItem.Header>
-                                        <StackPanel Orientation="Horizontal">
-                                            <Border CornerRadius="3" Padding="4,1" Margin="0,0,6,0" VerticalAlignment="Center">
-                                                <Border.Background>
-                                                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                                                        <GradientStop Color="#7C4DFF" Offset="0" />
-                                                        <GradientStop Color="#13B5FF" Offset="1" />
-                                                    </LinearGradientBrush>
-                                                </Border.Background>
-                                                <TextBlock Text="AI" Foreground="White" FontSize="10" FontWeight="Bold" />
-                                            </Border>
-                                            <TextBlock Text="问问" VerticalAlignment="Center" />
-                                        </StackPanel>
-                                    </MenuItem.Header>
-                                </MenuItem>
-                                <MenuItem Header="推荐游戏…" Command="{Binding RecommendCommand}" />
-                                <MenuItem Header="批量编辑…" Command="{Binding BatchEditCommand}" />
-                                <MenuItem Header="合并为多碟游戏（选中多行，首行为主条目）" Command="{Binding MergeSelectedCommand}" />
-                                <MenuItem Header="拆分多碟…" Command="{Binding SplitMultiDiscCommand}" />
-                                <Separator />
-                                <MenuItem Header="分享打包…" Command="{Binding ShareSelectedCommand}" />
-                                <MenuItem Header="发送到设备…" Command="{Binding SendSelectedCommand}" />
-                                <MenuItem Header="断开设备连接" Command="{Binding DisconnectDeviceCommand}" />
-                                <MenuItem Header="打开所在文件夹" Command="{Binding OpenSelectedFolderCommand}" />
-                                <MenuItem Header="复制文件路径" Command="{Binding CopySelectedPathCommand}" />
-                                <MenuItem Header="设置封面…" Command="{Binding SetCoverCommand}" />
-                                <MenuItem Header="收藏 / 取消收藏" Command="{Binding ToggleFavoriteCommand}" />
-                                <MenuItem Header="刷新文件状态" Command="{Binding RefreshStatusCommand}" />
-                                <Separator />
-                                <MenuItem Header="从库中移除（不删文件）" Command="{Binding RemoveSelectedCommand}" />
-                                <MenuItem Header="移到回收站并移除" Command="{Binding RecycleSelectedCommand}" />
-                            </ContextMenu>
-                        </DataGrid.ContextMenu>
-
-                        <DataGrid.Columns>
-                            <DataGridTextColumn Header="★" Binding="{Binding FavoriteDisplay}" Width="36"
-                                                ElementStyle="{StaticResource DataGridTextStyle}" />
-                            <DataGridTemplateColumn Header="平台" Width="80" SortMemberPath="Platform">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Text="{Binding Platform}" VerticalAlignment="Center" Margin="8,0"
-                                                   TextTrimming="CharacterEllipsis" />
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                                <DataGridTemplateColumn.CellEditingTemplate>
-                                    <DataTemplate>
-                                        <ComboBox IsEditable="True" MinHeight="22" Padding="2,0"
-                                                  ItemsSource="{Binding DataContext.Platforms, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                  Text="{Binding Platform, UpdateSourceTrigger=PropertyChanged}" />
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellEditingTemplate>
-                            </DataGridTemplateColumn>
-                            <DataGridTextColumn Header="标题" Binding="{Binding Title}" Width="270"
-                                                ElementStyle="{StaticResource DataGridTextStyle}" />
-                            <DataGridTemplateColumn x:Name="RatingColumn" Header="评分" Width="96" SortMemberPath="Rating">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="6,0">
-                                            <TextBlock FontSize="13" Cursor="Hand" Tag="1" MouseLeftButtonUp="RatingStar_Click"
-                                                       Text="{Binding Rating, Converter={StaticResource StarGlyphConverter}, ConverterParameter=1}"
-                                                       Foreground="{Binding Rating, Converter={StaticResource StarBrushConverter}, ConverterParameter=1}" />
-                                            <TextBlock FontSize="13" Cursor="Hand" Tag="2" MouseLeftButtonUp="RatingStar_Click"
-                                                       Text="{Binding Rating, Converter={StaticResource StarGlyphConverter}, ConverterParameter=2}"
-                                                       Foreground="{Binding Rating, Converter={StaticResource StarBrushConverter}, ConverterParameter=2}" />
-                                            <TextBlock FontSize="13" Cursor="Hand" Tag="3" MouseLeftButtonUp="RatingStar_Click"
-                                                       Text="{Binding Rating, Converter={StaticResource StarGlyphConverter}, ConverterParameter=3}"
-                                                       Foreground="{Binding Rating, Converter={StaticResource StarBrushConverter}, ConverterParameter=3}" />
-                                            <TextBlock FontSize="13" Cursor="Hand" Tag="4" MouseLeftButtonUp="RatingStar_Click"
-                                                       Text="{Binding Rating, Converter={StaticResource StarGlyphConverter}, ConverterParameter=4}"
-                                                       Foreground="{Binding Rating, Converter={StaticResource StarBrushConverter}, ConverterParameter=4}" />
-                                            <TextBlock FontSize="13" Cursor="Hand" Tag="5" MouseLeftButtonUp="RatingStar_Click"
-                                                       Text="{Binding Rating, Converter={StaticResource StarGlyphConverter}, ConverterParameter=5}"
-                                                       Foreground="{Binding Rating, Converter={StaticResource StarBrushConverter}, ConverterParameter=5}" />
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-                            <DataGridTemplateColumn Header="区域" Width="70" SortMemberPath="Region">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Text="{Binding Region}" VerticalAlignment="Center" Margin="8,0"
-                                                   TextTrimming="CharacterEllipsis" />
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                                <DataGridTemplateColumn.CellEditingTemplate>
-                                    <DataTemplate>
-                                        <ComboBox IsEditable="True" MinHeight="22" Padding="2,0"
-                                                  ItemsSource="{Binding DataContext.RegionFilters, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                  Text="{Binding Region, UpdateSourceTrigger=PropertyChanged}" />
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellEditingTemplate>
-                            </DataGridTemplateColumn>
-                            <DataGridTemplateColumn Header="语言" Width="72" SortMemberPath="Language">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Text="{Binding Language}" VerticalAlignment="Center" Margin="8,0"
-                                                   TextTrimming="CharacterEllipsis" />
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                                <DataGridTemplateColumn.CellEditingTemplate>
-                                    <DataTemplate>
-                                        <ComboBox IsEditable="True" MinHeight="22" Padding="2,0"
-                                                  ItemsSource="{Binding DataContext.LanguageFilters, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                  Text="{Binding Language, UpdateSourceTrigger=PropertyChanged}" />
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellEditingTemplate>
-                            </DataGridTemplateColumn>
-                            <DataGridTextColumn Header="特注" Binding="{Binding SpecialNote}" Width="96"
-                                                ElementStyle="{StaticResource DataGridTextStyle}" />
-                            <DataGridTextColumn Header="类型" Binding="{Binding Genre}" Width="90"
-                                                ElementStyle="{StaticResource DataGridTextStyle}" />
-                            <DataGridTextColumn Header="年份" Binding="{Binding ReleaseYear}" Width="56"
-                                                ElementStyle="{StaticResource DataGridTextStyle}" />
-                            <DataGridTextColumn Header="光碟数" Binding="{Binding DiscCountText}" Width="60" SortMemberPath="DiscCount"
-                                                ElementStyle="{StaticResource DataGridTextStyle}" />
-                            <DataGridTextColumn Header="格式" Binding="{Binding Format}" Width="60" SortMemberPath="Format"
-                                                ElementStyle="{StaticResource DataGridTextStyle}" />
-                            <DataGridTemplateColumn Header="状态" Width="72" SortMemberPath="Status">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Text="{Binding Status}" VerticalAlignment="Center" Margin="8,0" />
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                                <DataGridTemplateColumn.CellEditingTemplate>
-                                    <DataTemplate>
-                                        <ComboBox MinHeight="22" Padding="2,0"
-                                                  ItemsSource="{Binding DataContext.EditStatuses, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                  SelectedItem="{Binding Status, Mode=TwoWay}" />
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellEditingTemplate>
-                            </DataGridTemplateColumn>
-                            <DataGridTextColumn Header="次数" Binding="{Binding PlayCount}" Width="56"
-                                                ElementStyle="{StaticResource DataGridTextStyle}" />
-                            <DataGridTextColumn Header="时长" Binding="{Binding PlaySecondsDisplay}" Width="72" SortMemberPath="PlaySeconds"
-                                                ElementStyle="{StaticResource DataGridTextStyle}" />
-                            <DataGridTextColumn Header="最近游玩" Binding="{Binding LastPlayedDisplay}" Width="132" SortMemberPath="LastPlayedAt"
-                                                ElementStyle="{StaticResource DataGridTextStyle}" />
-                            <DataGridTextColumn Header="大小" Binding="{Binding FileSizeDisplay}" Width="92" SortMemberPath="FileSize"
-                                                ElementStyle="{StaticResource DataGridTextStyle}" />
-                            <DataGridTextColumn Header="标签" Binding="{Binding Tags}" Width="120"
-                                                ElementStyle="{StaticResource DataGridTextStyle}" />
-                            <DataGridTextColumn Header="指纹" Binding="{Binding RomHash}" Width="340"
-                                                SortMemberPath="RomHash"
-                                                ElementStyle="{StaticResource DataGridTextStyle}">
-                                <DataGridTextColumn.CellStyle>
-                                    <Style TargetType="DataGridCell" BasedOn="{StaticResource GameCellStyle}">
-                                        <Setter Property="ToolTip" Value="{Binding RomPath}" />
-                                    </Style>
-                                </DataGridTextColumn.CellStyle>
-                            </DataGridTextColumn>
-                        </DataGrid.Columns>
-                    </DataGrid>
-                </Border>
-                </Grid>
-
-                <!-- 筛选浮层 -->
-                <Popup x:Name="FilterPopup" PlacementTarget="{Binding ElementName=FilterButton}"
-                       Placement="Bottom" StaysOpen="False" AllowsTransparency="True"
-                       PopupAnimation="Fade" VerticalOffset="6">
-                    <Border Width="372" Background="{DynamicResource FlyoutBrush}"
-                            BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
-                            CornerRadius="10" Padding="14">
-                        <Border.Effect>
-                            <DropShadowEffect BlurRadius="20" ShadowDepth="5" Opacity="0.18" />
-                        </Border.Effect>
-                        <StackPanel>
-                            <TextBlock Text="筛选条件" FontSize="15" FontWeight="SemiBold" />
-                            <TextBlock Text="条件会立即生效；可叠加使用。" FontSize="11" Margin="0,3,0,10"
-                                       Foreground="{DynamicResource TextSecondaryBrush}" />
-
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="12" />
-                                    <ColumnDefinition Width="*" />
-                                </Grid.ColumnDefinitions>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="Auto" />
-                                </Grid.RowDefinitions>
-
-                                <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,0,8">
-                                    <TextBlock Text="状态" FontSize="11" Margin="0,0,0,4"
-                                               Foreground="{DynamicResource TextSecondaryBrush}" />
-                                    <ComboBox ItemsSource="{Binding Statuses}" SelectedItem="{Binding SelectedStatus}" />
-                                </StackPanel>
-                                <StackPanel Grid.Row="0" Grid.Column="2" Margin="0,0,0,8">
-                                    <TextBlock Text="区域" FontSize="11" Margin="0,0,0,4"
-                                               Foreground="{DynamicResource TextSecondaryBrush}" />
-                                    <ComboBox ItemsSource="{Binding RegionFilters}" SelectedItem="{Binding SelectedRegion}" />
-                                </StackPanel>
-                                <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,0,8">
-                                    <TextBlock Text="语言" FontSize="11" Margin="0,0,0,4"
-                                               Foreground="{DynamicResource TextSecondaryBrush}" />
-                                    <ComboBox ItemsSource="{Binding LanguageFilters}" SelectedItem="{Binding SelectedLanguage}" />
-                                </StackPanel>
-                                <StackPanel Grid.Row="1" Grid.Column="2" Margin="0,0,0,8">
-                                    <TextBlock Text="开发商" FontSize="11" Margin="0,0,0,4"
-                                               Foreground="{DynamicResource TextSecondaryBrush}" />
-                                    <ComboBox ItemsSource="{Binding DeveloperFilters}" SelectedItem="{Binding SelectedDeveloper}" />
-                                </StackPanel>
-                                <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3">
-                                    <TextBlock Text="标签" FontSize="11" Margin="0,0,0,4"
-                                               Foreground="{DynamicResource TextSecondaryBrush}" />
-                                    <ComboBox ItemsSource="{Binding Tags}" SelectedItem="{Binding SelectedTag}" />
-                                </StackPanel>
-                            </Grid>
-
-                            <CheckBox x:Name="EditModeToggle" Content="编辑模式（直接修改单元格）" IsChecked="False"
-                                      Margin="0,12,0,0" Checked="OnEditModeChanged" Unchecked="OnEditModeChanged"
-                                      ToolTip="开启后可直接在列表里修改单元格内容，回车或点击其他格即保存" />
-                            <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
-                                <CheckBox Content="仅收藏" IsChecked="{Binding OnlyFavorites}" />
-                                <CheckBox Content="仅缺失文件" IsChecked="{Binding OnlyMissing}" />
-                            </StackPanel>
-
-                            <DockPanel Margin="0,14,0,0">
-                                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                                    <Button Content="清除筛选" Style="{StaticResource ToolButtonStyle}"
-                                            Command="{Binding ClearFiltersCommand}" Margin="0,0,4,0" />
-                                    <Button Content="完成" Style="{StaticResource PrimaryButtonStyle}"
-                                            Click="CloseFilter_Click" Width="72" />
-                                </StackPanel>
-                                <TextBlock Text="筛选条件会随视图状态保存" FontSize="11" VerticalAlignment="Center"
-                                           Foreground="{DynamicResource TextSecondaryBrush}" />
+                        <!-- 外置盘未连接提示 -->
+                        <Border Grid.Row="1" Padding="12,7" Margin="14,0,14,8" CornerRadius="8"
+                                Background="{DynamicResource WarningBackgroundBrush}"
+                                BorderBrush="{DynamicResource WarningBrush}" BorderThickness="1"
+                                Visibility="{Binding HasLibraryWarning, Converter={StaticResource BoolToVis}}">
+                            <DockPanel>
+                                <Button DockPanel.Dock="Right" Content="刷新文件状态" Margin="12,0,0,0"
+                                        Style="{StaticResource ChipButtonStyle}"
+                                        Command="{Binding RefreshStatusCommand}" />
+                                <TextBlock Text="{Binding LibraryWarning}" VerticalAlignment="Center"
+                                           TextWrapping="Wrap" FontSize="12"
+                                           Foreground="{DynamicResource WarningBrush}" />
                             </DockPanel>
-                        </StackPanel>
-                    </Border>
-                </Popup>
+                        </Border>
+
+                        <DataGrid x:Name="GameGrid" Grid.Row="2" Style="{StaticResource GameGridStyleV2}"
+                                  IsReadOnly="True"
+                                  ItemsSource="{Binding GamesView}"
+                                  SelectionChanged="OnSelectionChanged"
+                                  MouseDoubleClick="OnRowDoubleClick"
+                                  CellEditEnding="OnCellEditEnding"
+                                  RowEditEnding="OnRowEditEnding"
+                                  CurrentCellChanged="OnCurrentCellChanged"
+                                  ContextMenuOpening="OnContextMenuOpening">
+                            <DataGrid.ContextMenu>
+                                <ContextMenu DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
+                                    <MenuItem Header="启动游戏" Command="{Binding LaunchSelectedCommand}" InputGestureText="Enter" />
+                                    <MenuItem Header="用指定模拟器启动" />
+                                    <MenuItem Header="编辑信息…" Command="{Binding EditSelectedCommand}" InputGestureText="F2" />
+                                    <MenuItem Header="刮削信息…" Command="{Binding ScrapeCommand}" />
+                                    <MenuItem Click="AiAsk_Click" ToolTip="把选中的游戏发送给右侧 AI 助手咨询">
+                                        <MenuItem.Header>
+                                            <StackPanel Orientation="Horizontal">
+                                                <Border CornerRadius="3" Padding="4,1" Margin="0,0,6,0" VerticalAlignment="Center">
+                                                    <Border.Background>
+                                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                                            <GradientStop Color="#7C4DFF" Offset="0" />
+                                                            <GradientStop Color="#13B5FF" Offset="1" />
+                                                        </LinearGradientBrush>
+                                                    </Border.Background>
+                                                    <TextBlock Text="AI" Foreground="White" FontSize="10" FontWeight="Bold" />
+                                                </Border>
+                                                <TextBlock Text="问问" VerticalAlignment="Center" />
+                                            </StackPanel>
+                                        </MenuItem.Header>
+                                    </MenuItem>
+                                    <MenuItem Header="推荐游戏…" Command="{Binding RecommendCommand}" />
+                                    <MenuItem Header="批量编辑…" Command="{Binding BatchEditCommand}" />
+                                    <MenuItem Header="合并为多碟游戏（选中多行，首行为主条目）" Command="{Binding MergeSelectedCommand}" />
+                                    <MenuItem Header="拆分多碟…" Command="{Binding SplitMultiDiscCommand}" />
+                                    <Separator />
+                                    <MenuItem Header="分享打包…" Command="{Binding ShareSelectedCommand}" />
+                                    <MenuItem Header="发送到设备…" Command="{Binding SendSelectedCommand}" />
+                                    <MenuItem Header="断开设备连接" Command="{Binding DisconnectDeviceCommand}" />
+                                    <MenuItem Header="打开所在文件夹" Command="{Binding OpenSelectedFolderCommand}" />
+                                    <MenuItem Header="复制文件路径" Command="{Binding CopySelectedPathCommand}" />
+                                    <MenuItem Header="设置封面…" Command="{Binding SetCoverCommand}" />
+                                    <MenuItem Header="收藏 / 取消收藏" Command="{Binding ToggleFavoriteCommand}" />
+                                    <MenuItem Header="刷新文件状态" Command="{Binding RefreshStatusCommand}" />
+                                    <Separator />
+                                    <MenuItem Header="从库中移除（不删文件）" Command="{Binding RemoveSelectedCommand}" />
+                                    <MenuItem Header="移到回收站并移除" Command="{Binding RecycleSelectedCommand}" />
+                                </ContextMenu>
+                            </DataGrid.ContextMenu>
+
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="★" Binding="{Binding FavoriteDisplay}" Width="36"
+                                                    ElementStyle="{StaticResource DataGridTextStyle}" />
+                                <DataGridTemplateColumn Header="标题" Width="288">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <Border Width="30" Height="30" CornerRadius="6" Margin="0,0,11,0"
+                                                        Background="#0D000000" ClipToBounds="True">
+                                                    <Image Source="{Binding CoverPath, Converter={StaticResource CoverThumbnailConverter}}"
+                                                           Stretch="UniformToFill" />
+                                                </Border>
+                                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding Title}" FontSize="13" FontWeight="Medium"
+                                                               TextTrimming="CharacterEllipsis" />
+                                                    <TextBlock Text="{Binding Publisher}" FontSize="11" Margin="0,2,0,0"
+                                                               Foreground="{DynamicResource TextSecondaryBrush}"
+                                                               TextTrimming="CharacterEllipsis" />
+                                                </StackPanel>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTemplateColumn Header="平台" Width="80" SortMemberPath="Platform">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding Platform}" VerticalAlignment="Center"
+                                                       TextTrimming="CharacterEllipsis" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                    <DataGridTemplateColumn.CellEditingTemplate>
+                                        <DataTemplate>
+                                            <ComboBox IsEditable="True" MinHeight="22" Padding="2,0"
+                                                      ItemsSource="{Binding DataContext.Platforms, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                      Text="{Binding Platform, UpdateSourceTrigger=PropertyChanged}" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellEditingTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTextColumn Header="类型" Binding="{Binding Genre}" Width="84"
+                                                    ElementStyle="{StaticResource DataGridTextStyle}" />
+                                <DataGridTextColumn Header="年份" Binding="{Binding ReleaseYear}" Width="76"
+                                                    ElementStyle="{StaticResource DataGridTextStyle}" />
+                                <DataGridTemplateColumn x:Name="RatingColumn" Header="评分" Width="88" SortMemberPath="Rating">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                <TextBlock FontSize="12" Cursor="Hand" Tag="1" MouseLeftButtonUp="RatingStar_Click"
+                                                           Text="{Binding Rating, Converter={StaticResource StarGlyphConverter}, ConverterParameter=1}"
+                                                           Foreground="{Binding Rating, Converter={StaticResource StarBrushConverter}, ConverterParameter=1}" />
+                                                <TextBlock FontSize="12" Cursor="Hand" Tag="2" MouseLeftButtonUp="RatingStar_Click"
+                                                           Text="{Binding Rating, Converter={StaticResource StarGlyphConverter}, ConverterParameter=2}"
+                                                           Foreground="{Binding Rating, Converter={StaticResource StarBrushConverter}, ConverterParameter=2}" />
+                                                <TextBlock FontSize="12" Cursor="Hand" Tag="3" MouseLeftButtonUp="RatingStar_Click"
+                                                           Text="{Binding Rating, Converter={StaticResource StarGlyphConverter}, ConverterParameter=3}"
+                                                           Foreground="{Binding Rating, Converter={StaticResource StarBrushConverter}, ConverterParameter=3}" />
+                                                <TextBlock FontSize="12" Cursor="Hand" Tag="4" MouseLeftButtonUp="RatingStar_Click"
+                                                           Text="{Binding Rating, Converter={StaticResource StarGlyphConverter}, ConverterParameter=4}"
+                                                           Foreground="{Binding Rating, Converter={StaticResource StarBrushConverter}, ConverterParameter=4}" />
+                                                <TextBlock FontSize="12" Cursor="Hand" Tag="5" MouseLeftButtonUp="RatingStar_Click"
+                                                           Text="{Binding Rating, Converter={StaticResource StarGlyphConverter}, ConverterParameter=5}"
+                                                           Foreground="{Binding Rating, Converter={StaticResource StarBrushConverter}, ConverterParameter=5}" />
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTemplateColumn Header="区域" Width="66" SortMemberPath="Region">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding Region}" VerticalAlignment="Center"
+                                                       TextTrimming="CharacterEllipsis" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                    <DataGridTemplateColumn.CellEditingTemplate>
+                                        <DataTemplate>
+                                            <ComboBox IsEditable="True" MinHeight="22" Padding="2,0"
+                                                      ItemsSource="{Binding DataContext.RegionFilters, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                      Text="{Binding Region, UpdateSourceTrigger=PropertyChanged}" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellEditingTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTemplateColumn Header="语言" Width="68" SortMemberPath="Language">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding Language}" VerticalAlignment="Center"
+                                                       TextTrimming="CharacterEllipsis" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                    <DataGridTemplateColumn.CellEditingTemplate>
+                                        <DataTemplate>
+                                            <ComboBox IsEditable="True" MinHeight="22" Padding="2,0"
+                                                      ItemsSource="{Binding DataContext.LanguageFilters, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                      Text="{Binding Language, UpdateSourceTrigger=PropertyChanged}" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellEditingTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTextColumn Header="特注" Binding="{Binding SpecialNote}" Width="92"
+                                                    ElementStyle="{StaticResource DataGridTextStyle}" />
+                                <DataGridTextColumn Header="光碟数" Binding="{Binding DiscCountText}" Width="60" SortMemberPath="DiscCount"
+                                                    ElementStyle="{StaticResource DataGridTextStyle}" />
+                                <DataGridTextColumn Header="格式" Binding="{Binding Format}" Width="60" SortMemberPath="Format"
+                                                    ElementStyle="{StaticResource DataGridTextStyle}" />
+                                <DataGridTemplateColumn Header="状态" Width="72" SortMemberPath="Status">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding Status}" VerticalAlignment="Center" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                    <DataGridTemplateColumn.CellEditingTemplate>
+                                        <DataTemplate>
+                                            <ComboBox MinHeight="22" Padding="2,0"
+                                                      ItemsSource="{Binding DataContext.EditStatuses, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                      SelectedItem="{Binding Status, Mode=TwoWay}" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellEditingTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTextColumn Header="次数" Binding="{Binding PlayCount}" Width="56"
+                                                    ElementStyle="{StaticResource DataGridTextStyle}" />
+                                <DataGridTextColumn Header="时长" Binding="{Binding PlaySecondsDisplay}" Width="72" SortMemberPath="PlaySeconds"
+                                                    ElementStyle="{StaticResource DataGridTextStyle}" />
+                                <DataGridTextColumn Header="最近游玩" Binding="{Binding LastPlayedDisplay}" Width="132" SortMemberPath="LastPlayedAt"
+                                                    ElementStyle="{StaticResource DataGridTextStyle}" />
+                                <DataGridTextColumn Header="大小" Binding="{Binding FileSizeDisplay}" Width="92" SortMemberPath="FileSize"
+                                                    ElementStyle="{StaticResource DataGridTextStyle}" />
+                                <DataGridTextColumn Header="标签" Binding="{Binding Tags}" Width="120"
+                                                    ElementStyle="{StaticResource DataGridTextStyle}" />
+                                <DataGridTextColumn Header="指纹" Binding="{Binding RomHash}" Width="340"
+                                                    SortMemberPath="RomHash"
+                                                    ElementStyle="{StaticResource DataGridTextStyle}">
+                                    <DataGridTextColumn.CellStyle>
+                                        <Style TargetType="DataGridCell" BasedOn="{StaticResource GameCellStyleV2}">
+                                            <Setter Property="ToolTip" Value="{Binding RomPath}" />
+                                        </Style>
+                                    </DataGridTextColumn.CellStyle>
+                                </DataGridTextColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Grid>
+                </Border>
             </Grid>
+
+            <Border Grid.Column="3" Background="{DynamicResource HairlineBrush}" />
+
+            <!-- 右侧：常驻助手（将来同位置显示刮削元数据） -->
+            <Border Grid.Column="4" x:Name="AssistantHost" Width="0" ClipToBounds="True"
+                    Background="{DynamicResource ShellPanelBrush}">
+                <views:AiAssistantView x:Name="AssistantPanel" Width="300" Visibility="Collapsed"
+                                       HorizontalAlignment="Right" />
+            </Border>
         </Grid>
 
-        <!-- AI 助手：浮层，不挤压表格 -->
-        <views:AiAssistantView x:Name="AssistantPanel" Grid.Row="2" Width="390"
-                               HorizontalAlignment="Right" VerticalAlignment="Stretch"
-                               Margin="0,0,16,0" Visibility="Collapsed" Panel.ZIndex="30" />
+        <!-- 筛选浮层 -->
+        <Popup x:Name="FilterPopup" PlacementTarget="{Binding ElementName=FilterButton}"
+               Placement="Bottom" StaysOpen="False" AllowsTransparency="True"
+               PopupAnimation="Fade" VerticalOffset="6">
+            <Border Width="372" Background="{DynamicResource FlyoutBrush}"
+                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                    CornerRadius="12" Padding="16">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="28" ShadowDepth="8" Opacity="0.20" />
+                </Border.Effect>
+                <StackPanel>
+                    <TextBlock Text="筛选条件" FontSize="13" FontWeight="SemiBold" />
+                    <TextBlock Text="条件会立即生效；可叠加使用。" FontSize="11" Margin="0,3,0,12"
+                               Foreground="{DynamicResource TextSecondaryBrush}" />
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="12" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,0,8">
+                            <TextBlock Text="状态" FontSize="11" Margin="0,0,0,4"
+                                       Foreground="{DynamicResource TextSecondaryBrush}" />
+                            <ComboBox ItemsSource="{Binding Statuses}" SelectedItem="{Binding SelectedStatus}" />
+                        </StackPanel>
+                        <StackPanel Grid.Row="0" Grid.Column="2" Margin="0,0,0,8">
+                            <TextBlock Text="区域" FontSize="11" Margin="0,0,0,4"
+                                       Foreground="{DynamicResource TextSecondaryBrush}" />
+                            <ComboBox ItemsSource="{Binding RegionFilters}" SelectedItem="{Binding SelectedRegion}" />
+                        </StackPanel>
+                        <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,0,8">
+                            <TextBlock Text="语言" FontSize="11" Margin="0,0,0,4"
+                                       Foreground="{DynamicResource TextSecondaryBrush}" />
+                            <ComboBox ItemsSource="{Binding LanguageFilters}" SelectedItem="{Binding SelectedLanguage}" />
+                        </StackPanel>
+                        <StackPanel Grid.Row="1" Grid.Column="2" Margin="0,0,0,8">
+                            <TextBlock Text="开发商" FontSize="11" Margin="0,0,0,4"
+                                       Foreground="{DynamicResource TextSecondaryBrush}" />
+                            <ComboBox ItemsSource="{Binding DeveloperFilters}" SelectedItem="{Binding SelectedDeveloper}" />
+                        </StackPanel>
+                        <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3">
+                            <TextBlock Text="标签" FontSize="11" Margin="0,0,0,4"
+                                       Foreground="{DynamicResource TextSecondaryBrush}" />
+                            <ComboBox ItemsSource="{Binding Tags}" SelectedItem="{Binding SelectedTag}" />
+                        </StackPanel>
+                    </Grid>
+
+                    <CheckBox x:Name="EditModeToggle" Content="编辑模式（直接修改单元格）" IsChecked="False"
+                              Margin="0,12,0,0" Checked="OnEditModeChanged" Unchecked="OnEditModeChanged"
+                              ToolTip="开启后可直接在列表里修改单元格内容，回车或点击其他格即保存" />
+                    <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                        <CheckBox Content="仅收藏" IsChecked="{Binding OnlyFavorites}" />
+                        <CheckBox Content="仅缺失文件" IsChecked="{Binding OnlyMissing}" />
+                    </StackPanel>
+
+                    <DockPanel Margin="0,16,0,0">
+                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                            <Button Content="清除筛选" Style="{StaticResource ChipButtonStyle}"
+                                    Command="{Binding ClearFiltersCommand}" Margin="0,0,4,0" />
+                            <Button Content="完成" Style="{StaticResource BarPrimaryButtonStyle}"
+                                    Click="CloseFilter_Click" Width="72" />
+                        </StackPanel>
+                        <TextBlock Text="筛选条件会随视图状态保存" FontSize="11" VerticalAlignment="Center"
+                                   Foreground="{DynamicResource TextSecondaryBrush}" />
+                    </DockPanel>
+                </StackPanel>
+            </Border>
+        </Popup>
 
         <!-- 状态栏 -->
-        <Grid Grid.Row="3" Margin="18,2,18,4" ToolTip="{Binding DataPathText}">
+        <Grid Grid.Row="3" Margin="20,0" ToolTip="{Binding DataPathText}">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
@@ -527,15 +568,15 @@
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
-            <TextBlock Grid.Column="0" Text="{Binding StatusMessage}" FontSize="11.5"
+            <TextBlock Grid.Column="0" Text="{Binding StatusMessage}" FontSize="11"
                        Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"
                        TextTrimming="CharacterEllipsis" MaxWidth="460" />
             <ProgressBar Grid.Column="1" Width="100" Height="3" VerticalAlignment="Center"
                          IsIndeterminate="True" Margin="10,0,0,0"
                          Visibility="{Binding IsBusy, Converter={StaticResource BoolToVis}}" />
-            <TextBlock Grid.Column="3" Text="{Binding CountText}" FontSize="11.5" Margin="12,0,16,0"
+            <TextBlock Grid.Column="3" Text="{Binding CountText}" FontSize="11" Margin="12,0,16,0"
                        Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center" />
-            <TextBlock Grid.Column="4" Text="{Binding LastRefreshText}" FontSize="11.5"
+            <TextBlock Grid.Column="4" Text="{Binding LastRefreshText}" FontSize="11"
                        Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center" />
         </Grid>
     </Grid>

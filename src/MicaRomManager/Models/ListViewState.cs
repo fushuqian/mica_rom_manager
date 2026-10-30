@@ -18,12 +18,12 @@ public sealed class ListViewState
     /// <summary>被隐藏的列（用列 Header 文本作键）；旧版本 JSON 没有该字段时视为空。</summary>
     public List<string> HiddenColumns { get; set; } = new();
 
-    /// <summary>视图布局版本：2 起默认隐藏低频列，避免一打开就横向滚动。</summary>
+    /// <summary>视图布局版本：2 起默认隐藏低频列；4 起换成新版两行式列表。</summary>
     public int LayoutVersion { get; set; }
 
     public static IReadOnlyList<string> DefaultHiddenColumns { get; } = new[]
     {
-        "指纹", "标签", "特注", "类型", "光碟数", "格式", "次数", "时长",
+        "指纹", "标签", "特注", "光碟数", "格式", "次数", "时长", "平台",
     };
 
     /// <summary>
