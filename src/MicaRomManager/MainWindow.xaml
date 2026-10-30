@@ -8,19 +8,19 @@
         Width="1280" Height="780"
         MinWidth="1080" MinHeight="640"
         WindowStartupLocation="CenterScreen"
-        WindowStyle="None"
+        WindowStyle="SingleBorderWindow"
         ResizeMode="CanResize"
         Background="Transparent"
         FontFamily="{StaticResource AppFontFamily}"
         FontSize="13"
-        Foreground="{StaticResource TextPrimaryBrush}"
+        Foreground="{DynamicResource TextPrimaryBrush}"
         AllowDrop="True"
         DragOver="OnDragOver"
         Drop="OnDrop"
         PreviewKeyDown="OnPreviewKeyDown">
     <shell:WindowChrome.WindowChrome>
         <shell:WindowChrome CaptionHeight="0" ResizeBorderThickness="6"
-                            GlassFrameThickness="0" CornerRadius="0"
+                            GlassFrameThickness="-1" CornerRadius="0"
                             UseAeroCaptionButtons="False" />
     </shell:WindowChrome.WindowChrome>
 
@@ -49,14 +49,14 @@
         <Border Grid.Row="1" Padding="16,4,16,8" Background="Transparent">
             <DockPanel>
                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Border Background="{StaticResource InputBrush}" BorderBrush="{StaticResource BorderBrush}"
+                    <Border Background="{DynamicResource InputBrush}" BorderBrush="{DynamicResource BorderBrush}"
                             BorderThickness="1" CornerRadius="12" Padding="9,4" Margin="0,0,4,0"
                             ToolTip="{Binding ConnectionText}">
                         <StackPanel Orientation="Horizontal">
                             <Ellipse Width="7" Height="7" Margin="0,0,7,0" VerticalAlignment="Center">
                                 <Ellipse.Style>
                                     <Style TargetType="Ellipse">
-                                        <Setter Property="Fill" Value="{StaticResource TextSecondaryBrush}" />
+                                        <Setter Property="Fill" Value="{DynamicResource TextSecondaryBrush}" />
                                         <Style.Triggers>
                                             <DataTrigger Binding="{Binding HasConnection}" Value="True">
                                                 <Setter Property="Fill" Value="#2E7D32" />
@@ -149,13 +149,13 @@
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
-            <Border Grid.Column="0" Background="{StaticResource CardBrush}"
-                    BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="10">
+            <Border Grid.Column="0" Background="{DynamicResource CardBrush}"
+                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="10">
                 <DockPanel Margin="10">
                     <StackPanel DockPanel.Dock="Top" Margin="4,2,4,8">
                         <TextBlock Text="平台" FontSize="15" FontWeight="SemiBold" />
                         <TextBlock Text="按平台筛选游戏库" FontSize="11" Margin="0,2,0,0"
-                                   Foreground="{StaticResource TextSecondaryBrush}" />
+                                   Foreground="{DynamicResource TextSecondaryBrush}" />
                     </StackPanel>
                     <ListBox x:Name="PlatformSidebar" BorderThickness="0" Background="Transparent"
                              ItemsSource="{Binding PlatformFilters}"
@@ -165,7 +165,7 @@
                                 <DockPanel MinWidth="160">
                                     <TextBlock DockPanel.Dock="Right" Text="{Binding Count}" Margin="8,0,0,0"
                                                VerticalAlignment="Center" FontSize="12"
-                                               Foreground="{StaticResource TextSecondaryBrush}" />
+                                               Foreground="{DynamicResource TextSecondaryBrush}" />
                                     <TextBlock Text="{Binding Display}" TextTrimming="CharacterEllipsis"
                                                VerticalAlignment="Center" />
                                 </DockPanel>
@@ -183,8 +183,8 @@
                 </Grid.RowDefinitions>
 
                 <!-- 搜索 + 筛选 -->
-                <Border Grid.Row="0" Background="{StaticResource CardBrush}"
-                        BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
+                <Border Grid.Row="0" Background="{DynamicResource CardBrush}"
+                        BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
                         CornerRadius="10" Padding="10,8" Margin="0,0,0,10">
                     <StackPanel Orientation="Horizontal">
                         <Grid Width="380" HorizontalAlignment="Left">
@@ -194,9 +194,9 @@
                                      ToolTip="搜索标题、文件名、路径、标签、开发商（Ctrl+F）" />
                             <TextBlock Text="&#xE721;" FontFamily="{StaticResource IconFontFamily}" FontSize="13"
                                        Margin="11,0,0,0" IsHitTestVisible="False"
-                                       VerticalAlignment="Center" Foreground="{StaticResource TextSecondaryBrush}" />
+                                       VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}" />
                             <TextBlock Text="搜索游戏名、文件名、标签…" Margin="34,0,0,0" IsHitTestVisible="False"
-                                       VerticalAlignment="Center" Foreground="{StaticResource TextSecondaryBrush}">
+                                       VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}">
                                 <TextBlock.Style>
                                     <Style TargetType="TextBlock">
                                         <Setter Property="Visibility" Value="Collapsed" />
@@ -219,10 +219,10 @@
                                                Margin="0,0,6,0" VerticalAlignment="Center" />
                                     <TextBlock Text="筛选" VerticalAlignment="Center" />
                                     <Border Margin="7,0,0,0" MinWidth="18" Height="18" CornerRadius="9"
-                                            Background="{StaticResource AccentBrush}" Padding="5,0"
+                                            Background="{DynamicResource AccentBrush}" Padding="5,0"
                                             VerticalAlignment="Center"
                                             Visibility="{Binding HasActiveFilters, Converter={StaticResource BoolToVis}}">
-                                        <TextBlock Text="{Binding ActiveFilterCount}" Foreground="White" FontSize="10.5"
+                                        <TextBlock Text="{Binding ActiveFilterCount}" Foreground="{DynamicResource OnAccentTextBrush}" FontSize="10.5"
                                                    FontWeight="SemiBold" HorizontalAlignment="Center"
                                                    VerticalAlignment="Center" />
                                     </Border>
@@ -234,7 +234,7 @@
                         </StackPanel>
 
                         <TextBlock VerticalAlignment="Center" Margin="14,0,2,0" FontSize="12"
-                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"
                                    ToolTip="{Binding CountText}">
                             <Run Text="{Binding FilteredCount}" /><Run Text=" / " /><Run Text="{Binding TotalCount}" /><Run Text=" 款" />
                         </TextBlock>
@@ -243,21 +243,21 @@
 
                 <!-- 外置盘未连接提示 -->
                 <Border Grid.Row="1" Padding="10,7" Margin="0,0,0,10" CornerRadius="8"
-                        Background="{StaticResource WarningBackgroundBrush}"
-                        BorderBrush="{StaticResource WarningBrush}" BorderThickness="1"
+                        Background="{DynamicResource WarningBackgroundBrush}"
+                        BorderBrush="{DynamicResource WarningBrush}" BorderThickness="1"
                         Visibility="{Binding HasLibraryWarning, Converter={StaticResource BoolToVis}}">
                     <DockPanel>
                         <Button DockPanel.Dock="Right" Content="刷新文件状态" Margin="12,0,0,0"
                                 Style="{StaticResource SecondaryButtonStyle}"
                                 Command="{Binding RefreshStatusCommand}" />
                         <TextBlock Text="{Binding LibraryWarning}" VerticalAlignment="Center"
-                                   TextWrapping="Wrap" Foreground="{StaticResource WarningBrush}" />
+                                   TextWrapping="Wrap" Foreground="{DynamicResource WarningBrush}" />
                     </DockPanel>
                 </Border>
 
                 <!-- 游戏列表卡片 -->
-                <Border Grid.Row="2" Background="{StaticResource CardBrush}"
-                        BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
+                <Border Grid.Row="2" Background="{DynamicResource CardBrush}"
+                        BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
                         CornerRadius="10" ClipToBounds="True">
                     <DataGrid x:Name="GameGrid" Style="{StaticResource AppDataGridStyle}" RowHeight="34"
                               IsReadOnly="True" Margin="2"
@@ -433,8 +433,8 @@
                 <Popup x:Name="FilterPopup" PlacementTarget="{Binding ElementName=FilterButton}"
                        Placement="Bottom" StaysOpen="False" AllowsTransparency="True"
                        PopupAnimation="Fade" VerticalOffset="6">
-                    <Border Width="372" Background="{StaticResource FlyoutBrush}"
-                            BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
+                    <Border Width="372" Background="{DynamicResource FlyoutBrush}"
+                            BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
                             CornerRadius="10" Padding="14">
                         <Border.Effect>
                             <DropShadowEffect BlurRadius="20" ShadowDepth="5" Opacity="0.18" />
@@ -442,7 +442,7 @@
                         <StackPanel>
                             <TextBlock Text="筛选条件" FontSize="15" FontWeight="SemiBold" />
                             <TextBlock Text="条件会立即生效；可叠加使用。" FontSize="11" Margin="0,3,0,10"
-                                       Foreground="{StaticResource TextSecondaryBrush}" />
+                                       Foreground="{DynamicResource TextSecondaryBrush}" />
 
                             <Grid>
                                 <Grid.ColumnDefinitions>
@@ -458,27 +458,27 @@
 
                                 <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,0,8">
                                     <TextBlock Text="状态" FontSize="11" Margin="0,0,0,4"
-                                               Foreground="{StaticResource TextSecondaryBrush}" />
+                                               Foreground="{DynamicResource TextSecondaryBrush}" />
                                     <ComboBox ItemsSource="{Binding Statuses}" SelectedItem="{Binding SelectedStatus}" />
                                 </StackPanel>
                                 <StackPanel Grid.Row="0" Grid.Column="2" Margin="0,0,0,8">
                                     <TextBlock Text="区域" FontSize="11" Margin="0,0,0,4"
-                                               Foreground="{StaticResource TextSecondaryBrush}" />
+                                               Foreground="{DynamicResource TextSecondaryBrush}" />
                                     <ComboBox ItemsSource="{Binding RegionFilters}" SelectedItem="{Binding SelectedRegion}" />
                                 </StackPanel>
                                 <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,0,8">
                                     <TextBlock Text="语言" FontSize="11" Margin="0,0,0,4"
-                                               Foreground="{StaticResource TextSecondaryBrush}" />
+                                               Foreground="{DynamicResource TextSecondaryBrush}" />
                                     <ComboBox ItemsSource="{Binding LanguageFilters}" SelectedItem="{Binding SelectedLanguage}" />
                                 </StackPanel>
                                 <StackPanel Grid.Row="1" Grid.Column="2" Margin="0,0,0,8">
                                     <TextBlock Text="开发商" FontSize="11" Margin="0,0,0,4"
-                                               Foreground="{StaticResource TextSecondaryBrush}" />
+                                               Foreground="{DynamicResource TextSecondaryBrush}" />
                                     <ComboBox ItemsSource="{Binding DeveloperFilters}" SelectedItem="{Binding SelectedDeveloper}" />
                                 </StackPanel>
                                 <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3">
                                     <TextBlock Text="标签" FontSize="11" Margin="0,0,0,4"
-                                               Foreground="{StaticResource TextSecondaryBrush}" />
+                                               Foreground="{DynamicResource TextSecondaryBrush}" />
                                     <ComboBox ItemsSource="{Binding Tags}" SelectedItem="{Binding SelectedTag}" />
                                 </StackPanel>
                             </Grid>
@@ -499,7 +499,7 @@
                                             Click="CloseFilter_Click" Width="72" />
                                 </StackPanel>
                                 <TextBlock Text="筛选条件会随视图状态保存" FontSize="11" VerticalAlignment="Center"
-                                           Foreground="{StaticResource TextSecondaryBrush}" />
+                                           Foreground="{DynamicResource TextSecondaryBrush}" />
                             </DockPanel>
                         </StackPanel>
                     </Border>
@@ -522,15 +522,15 @@
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <TextBlock Grid.Column="0" Text="{Binding StatusMessage}" FontSize="11.5"
-                       Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center"
+                       Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"
                        TextTrimming="CharacterEllipsis" MaxWidth="460" />
             <ProgressBar Grid.Column="1" Width="100" Height="3" VerticalAlignment="Center"
                          IsIndeterminate="True" Margin="10,0,0,0"
                          Visibility="{Binding IsBusy, Converter={StaticResource BoolToVis}}" />
             <TextBlock Grid.Column="3" Text="{Binding CountText}" FontSize="11.5" Margin="12,0,16,0"
-                       Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center" />
+                       Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center" />
             <TextBlock Grid.Column="4" Text="{Binding LastRefreshText}" FontSize="11.5"
-                       Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center" />
+                       Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center" />
         </Grid>
     </Grid>
 </Window>

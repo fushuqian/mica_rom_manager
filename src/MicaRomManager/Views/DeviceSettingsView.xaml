@@ -26,9 +26,9 @@
                             <TextBlock Text="{Binding Display}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="{Binding KindDisplay}" FontSize="11"
-                                           Foreground="{StaticResource TextSecondaryBrush}" />
+                                           Foreground="{DynamicResource TextSecondaryBrush}" />
                                 <TextBlock Text="{Binding SourceDisplay}" FontSize="11" Margin="8,0,0,0"
-                                           Foreground="{StaticResource TextSecondaryBrush}" />
+                                           Foreground="{DynamicResource TextSecondaryBrush}" />
                             </StackPanel>
                         </StackPanel>
                     </DataTemplate>
@@ -44,7 +44,7 @@
                         IsEnabled="{Binding AiBusy, Converter={StaticResource InverseBoolConverter}}"
                         ToolTip="只读扫描目录名与扩展名，不上传文件名或文件内容" />
                 <TextBlock Text="{Binding AiStatus}" Margin="0,4,0,0" TextWrapping="Wrap" FontSize="11"
-                           Foreground="{StaticResource TextSecondaryBrush}" />
+                           Foreground="{DynamicResource TextSecondaryBrush}" />
                 <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
                     <Button Content="新增" Width="76" Style="{StaticResource SecondaryButtonStyle}"
                             Command="{Binding NewProfileCommand}" />
@@ -104,7 +104,7 @@
                     <StackPanel Grid.Row="4" Grid.Column="1" Margin="0,0,0,8">
                         <TextBox x:Name="FolderTemplateBox"
                                  Text="{Binding SelectedProfile.FolderTemplate, UpdateSourceTrigger=PropertyChanged}" />
-                        <TextBlock Margin="0,4,0,0" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap"
+                        <TextBlock Margin="0,4,0,0" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"
                                    Text="可用占位符：{root} 盘根+根目录，{platform} 平台映射目录，{title} 游戏标题，{year} 年份。例如 {root}/{platform} 或 {root}/{platform}/{title}。" />
                     </StackPanel>
 
@@ -145,9 +145,9 @@
                             Command="{Binding DeleteProfileCommand}" />
                 </StackPanel>
 
-                <TextBlock Margin="0,10,0,0" TextWrapping="Wrap" Foreground="{StaticResource TextSecondaryBrush}"
+                <TextBlock Margin="0,10,0,0" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}"
                            Text="内置配置保存在 Resources\DeviceProfiles.json；想自定义可直接把 JSON 放到 data\devices\，文件名随意，一个文件一台设备。修改内置配置保存时会生成同 Id 的自定义覆盖，删掉覆盖即恢复内置。" />
-                <TextBlock Margin="0,8,0,0" TextWrapping="Wrap" Foreground="{StaticResource TextSecondaryBrush}"
+                <TextBlock Margin="0,8,0,0" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}"
                            Text="{Binding StatusMessage}" />
             </StackPanel>
         </ScrollViewer>

@@ -1,6 +1,7 @@
 using System.IO;
 using System.Windows;
 using System.Windows.Threading;
+using MicaRomManager.Themes;
 
 namespace MicaRomManager;
 
@@ -20,6 +21,8 @@ public partial class App : Application
 
         DispatcherUnhandledException += OnUnhandledException;
         AppDomain.CurrentDomain.UnhandledException += (_, args) => LogError(args.ExceptionObject as Exception);
+
+        ThemePalette.Apply();
 
         try
         {

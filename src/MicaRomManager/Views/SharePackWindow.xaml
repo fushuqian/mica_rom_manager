@@ -6,8 +6,8 @@
         WindowStartupLocation="CenterOwner"
         FontFamily="{StaticResource AppFontFamily}"
         FontSize="13"
-        Foreground="{StaticResource TextPrimaryBrush}"
-        Background="{StaticResource WindowBackgroundBrush}">
+        Foreground="{DynamicResource TextPrimaryBrush}"
+        Background="{DynamicResource WindowBackgroundBrush}">
     <Grid Margin="16">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -72,10 +72,10 @@
         </StackPanel>
 
         <StackPanel Grid.Row="4" Margin="0,10,0,0">
-            <TextBlock Text="{Binding EstimateText}" Foreground="{StaticResource TextSecondaryBrush}" />
-            <TextBlock Text="{Binding WarningText}" Foreground="{StaticResource DangerBrush}"
+            <TextBlock Text="{Binding EstimateText}" Foreground="{DynamicResource TextSecondaryBrush}" />
+            <TextBlock Text="{Binding WarningText}" Foreground="{DynamicResource DangerBrush}"
                        TextWrapping="Wrap" Margin="0,4,0,0" />
-            <TextBlock Text="{Binding StatusText}" Foreground="{StaticResource TextSecondaryBrush}"
+            <TextBlock Text="{Binding StatusText}" Foreground="{DynamicResource TextSecondaryBrush}"
                        TextWrapping="Wrap" Margin="0,6,0,0" />
         </StackPanel>
 

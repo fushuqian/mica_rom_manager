@@ -6,8 +6,8 @@
         WindowStartupLocation="CenterOwner"
         FontFamily="{StaticResource AppFontFamily}"
         FontSize="13"
-        Foreground="{StaticResource TextPrimaryBrush}"
-        Background="{StaticResource WindowBackgroundBrush}">
+        Foreground="{DynamicResource TextPrimaryBrush}"
+        Background="{DynamicResource WindowBackgroundBrush}">
     <Grid Margin="18">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -20,7 +20,7 @@
         <TextBlock Grid.Row="0" Style="{StaticResource SectionTitleStyle}"
                    Text="选择设备类型与目标路径" />
         <TextBlock Grid.Row="1" Margin="0,4,0,12" TextWrapping="Wrap"
-                   Foreground="{StaticResource TextSecondaryBrush}"
+                   Foreground="{DynamicResource TextSecondaryBrush}"
                    Text="连接后本次运行期间保持有效；之后在主界面多选游戏，点「发送」或右键「发送到设备」即可直接入队。" />
 
         <Grid Grid.Row="2">
@@ -50,15 +50,15 @@
 
             <TextBlock Grid.Row="2" Grid.Column="0" Text="目标位置" Style="{StaticResource FieldLabelStyle}" />
             <TextBlock Grid.Row="2" Grid.Column="1" VerticalAlignment="Center" TextWrapping="Wrap"
-                       Foreground="{StaticResource TextSecondaryBrush}" Text="{Binding TargetPreview}" />
+                       Foreground="{DynamicResource TextSecondaryBrush}" Text="{Binding TargetPreview}" />
         </Grid>
 
         <StackPanel Grid.Row="3" Margin="0,16,0,0">
             <CheckBox Content="同名文件覆盖（默认跳过已存在的文件）"
                       IsChecked="{Binding OverwriteSameName}" />
-            <TextBlock Margin="0,10,0,0" TextWrapping="Wrap" Foreground="{StaticResource TextSecondaryBrush}"
+            <TextBlock Margin="0,10,0,0" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}"
                        Text="发送只复制 ROM 文件，不动原库；多碟游戏的全部碟片一起发送。目录规则由「设置 → 设备」里的配置决定。" />
-            <TextBlock Margin="0,8,0,0" TextWrapping="Wrap" Foreground="{StaticResource DangerBrush}"
+            <TextBlock Margin="0,8,0,0" TextWrapping="Wrap" Foreground="{DynamicResource DangerBrush}"
                        Text="{Binding StatusText}" />
         </StackPanel>
 

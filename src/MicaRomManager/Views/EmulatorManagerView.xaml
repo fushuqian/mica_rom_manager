@@ -27,7 +27,7 @@
                         <StackPanel Margin="2,4">
                             <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
                             <TextBlock Text="{Binding Version}" FontSize="11"
-                                       Foreground="{StaticResource TextSecondaryBrush}" />
+                                       Foreground="{DynamicResource TextSecondaryBrush}" />
                         </StackPanel>
                     </DataTemplate>
                 </ListBox.ItemTemplate>
@@ -113,7 +113,7 @@
                         Command="{Binding DeleteSelectedCommand}" />
             </WrapPanel>
 
-            <TextBlock Margin="0,16,0,0" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap"
+            <TextBlock Margin="0,16,0,0" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"
                        Text="启动参数在「设置 → 平台」里按平台配置；这里负责程序文件、官网与 GitHub 更新。导入支持文件夹、zip、7z、rar、tar.gz / tgz。" />
         </StackPanel>
 
@@ -123,7 +123,7 @@
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
-            <TextBlock Text="{Binding StatusMessage}" Foreground="{StaticResource TextSecondaryBrush}"
+            <TextBlock Text="{Binding StatusMessage}" Foreground="{DynamicResource TextSecondaryBrush}"
                        TextWrapping="Wrap" VerticalAlignment="Center" />
             <ProgressBar Grid.Column="1" Width="140" Height="4" Margin="12,0,0,0" VerticalAlignment="Center"
                          Maximum="100" Value="{Binding DownloadProgress}"

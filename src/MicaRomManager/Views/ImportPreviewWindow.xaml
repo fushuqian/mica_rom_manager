@@ -6,8 +6,8 @@
         WindowStartupLocation="CenterOwner"
         FontFamily="{StaticResource AppFontFamily}"
         FontSize="13"
-        Foreground="{StaticResource TextPrimaryBrush}"
-        Background="{StaticResource WindowBackgroundBrush}">
+        Foreground="{DynamicResource TextPrimaryBrush}"
+        Background="{DynamicResource WindowBackgroundBrush}">
     <Grid Margin="16">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -25,7 +25,7 @@
                       IsEditable="True" ItemsSource="{Binding Platforms}" />
             <Button Content="应用到全部" Style="{StaticResource SecondaryButtonStyle}"
                     Click="ApplyToAll_Click" />
-            <TextBlock Margin="16,0,0,0" VerticalAlignment="Center" Foreground="{StaticResource TextSecondaryBrush}"
+            <TextBlock Margin="16,0,0,0" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}"
                        Text="{Binding Summary}" />
         </StackPanel>
 

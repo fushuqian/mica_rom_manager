@@ -6,8 +6,8 @@
         WindowStartupLocation="CenterOwner"
         FontFamily="{StaticResource AppFontFamily}"
         FontSize="13"
-        Foreground="{StaticResource TextPrimaryBrush}"
-        Background="{StaticResource WindowBackgroundBrush}">
+        Foreground="{DynamicResource TextPrimaryBrush}"
+        Background="{DynamicResource WindowBackgroundBrush}">
     <Grid Margin="16">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -18,7 +18,7 @@
 
         <StackPanel Grid.Row="0" Margin="0,0,0,10">
             <TextBlock Style="{StaticResource SectionTitleStyle}" Text="AI 标签与类型" />
-            <TextBlock Foreground="{StaticResource TextSecondaryBrush}" Text="{Binding AiHint}" TextWrapping="Wrap" />
+            <TextBlock Foreground="{DynamicResource TextSecondaryBrush}" Text="{Binding AiHint}" TextWrapping="Wrap" />
         </StackPanel>
 
         <Grid Grid.Row="1" Margin="0,0,0,10">
@@ -35,7 +35,7 @@
                     Style="{StaticResource SecondaryButtonStyle}"
                     IsEnabled="{Binding IsRunning, Converter={StaticResource InverseBoolConverter}}" />
             <TextBlock Grid.Column="2" Margin="12,0,0,0" VerticalAlignment="Center"
-                       Foreground="{StaticResource TextSecondaryBrush}" Text="{Binding ProgressText}"
+                       Foreground="{DynamicResource TextSecondaryBrush}" Text="{Binding ProgressText}"
                        TextTrimming="CharacterEllipsis" />
         </Grid>
 
@@ -51,7 +51,7 @@
         </DataGrid>
 
         <Grid Grid.Row="3" Margin="0,12,0,0">
-            <TextBlock VerticalAlignment="Center" Foreground="{StaticResource TextSecondaryBrush}"
+            <TextBlock VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}"
                        Text="{Binding Hint}" TextWrapping="Wrap" Margin="0,0,12,220" />
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                 <Button Content="取消" Width="88" Style="{StaticResource SecondaryButtonStyle}" IsCancel="True"

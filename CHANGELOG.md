@@ -1,5 +1,20 @@
 # 变更记录（CHANGELOG）
 
+## 2026-10-31 v0.28.1
+
+### 修复（深色系统 / 半透明）
+
+- 之前强制使用浅色画刷，24H2/26H1 深色系统下界面仍是白底，看起来“没有半透明”。现在跟随系统 `AppsUseLightTheme` 自动切浅色/深色。
+- 画刷全部改为 `DynamicResource`，运行时切换调色板不会因为 `StaticResource` 冻结而失效；新增 `ThemePalette` 深色配色（深灰卡片、浅色文字、青色强调）。
+- 窗口改为 `WindowStyle=SingleBorderWindow` + `WindowChrome GlassFrameThickness=-1`，去掉与 `WindowChrome` 冲突的 `DwmExtendFrameIntoClientArea`；在 `SourceInitialized` 和 `Loaded` 后各应用一次 DWM 背景，避免被 WindowChrome 覆盖。
+- 主窗口/设置窗口改用 **Acrylic** 系统背景；深色卡片透明度从 80% 降到 70%，让背景层次透出来。
+- 深色下主按钮/徽标文字改用 `OnAccentTextBrush`（深色文字压在青色强调上），修掉白字看不清。
+
+### 说明
+
+- Windows 11 的系统 Mica/Acrylic 采样的是**桌面壁纸**，不会透出窗口后面的其它窗口；壁纸较素时观感会接近纯色。这次至少保证深色主题、透明层次和强调色正确。
+- 如果仍希望“明显透出后面内容”，需要额外做壁纸模糊层或非系统 Acrylic 增强，下一步可以按你的偏好加。
+
 ## 2026-10-31 v0.28.0
 
 ### 界面（Win11 Fluent / 半透明）

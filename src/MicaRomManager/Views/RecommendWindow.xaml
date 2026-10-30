@@ -6,8 +6,8 @@
         WindowStartupLocation="CenterOwner"
         FontFamily="{StaticResource AppFontFamily}"
         FontSize="13"
-        Foreground="{StaticResource TextPrimaryBrush}"
-        Background="{StaticResource WindowBackgroundBrush}">
+        Foreground="{DynamicResource TextPrimaryBrush}"
+        Background="{DynamicResource WindowBackgroundBrush}">
     <Grid Margin="16">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -17,8 +17,8 @@
 
         <StackPanel Grid.Row="0" Margin="0,0,0,10">
             <TextBlock Style="{StaticResource SectionTitleStyle}" Text="猜你喜欢" />
-            <TextBlock Foreground="{StaticResource TextSecondaryBrush}" Text="{Binding Header}" TextWrapping="Wrap" />
-            <TextBlock Margin="0,4,0,0" Foreground="{StaticResource TextSecondaryBrush}"
+            <TextBlock Foreground="{DynamicResource TextSecondaryBrush}" Text="{Binding Header}" TextWrapping="Wrap" />
+            <TextBlock Margin="0,4,0,0" Foreground="{DynamicResource TextSecondaryBrush}"
                        Text="本地打分：同平台、同开发商、同类型、同标签、未玩过优先。双击可定位到主列表。" />
         </StackPanel>
 

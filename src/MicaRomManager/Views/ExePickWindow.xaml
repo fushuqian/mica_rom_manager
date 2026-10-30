@@ -6,8 +6,8 @@
         WindowStartupLocation="CenterOwner"
         FontFamily="{StaticResource AppFontFamily}"
         FontSize="13"
-        Foreground="{StaticResource TextPrimaryBrush}"
-        Background="{StaticResource WindowBackgroundBrush}">
+        Foreground="{DynamicResource TextPrimaryBrush}"
+        Background="{DynamicResource WindowBackgroundBrush}">
     <Grid Margin="16">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -19,7 +19,7 @@
                    Text="在安装目录中找到多个 exe，请选择启动用的可执行文件：" />
 
         <ListBox x:Name="ExeList" Grid.Row="1" ItemsSource="{Binding Options}"
-                 DisplayMemberPath="Display" BorderBrush="{StaticResource BorderBrush}" />
+                 DisplayMemberPath="Display" BorderBrush="{DynamicResource BorderBrush}" />
 
         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
             <Button Content="确定" Width="88" Style="{StaticResource PrimaryButtonStyle}" Click="Ok_Click" IsDefault="True" />

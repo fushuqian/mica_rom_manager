@@ -6,8 +6,8 @@
         WindowStartupLocation="CenterOwner"
         FontFamily="{StaticResource AppFontFamily}"
         FontSize="13"
-        Foreground="{StaticResource TextPrimaryBrush}"
-        Background="{StaticResource WindowBackgroundBrush}">
+        Foreground="{DynamicResource TextPrimaryBrush}"
+        Background="{DynamicResource WindowBackgroundBrush}">
     <Grid Margin="18">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -19,7 +19,7 @@
 
         <StackPanel Grid.Row="0" Margin="0,0,0,10">
             <TextBlock Style="{StaticResource SectionTitleStyle}" Text="用自然语言查库" />
-            <TextBlock Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap"
+            <TextBlock Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"
                        Text="模型只把请求转换成受控筛选条件或白名单操作，不会生成 SQL，也不会删除或启动游戏。" />
         </StackPanel>
 
@@ -28,7 +28,7 @@
                  ToolTip="例如：找出所有未通关的 PS1 游戏" />
 
         <WrapPanel Grid.Row="2" Margin="0,8,0,10">
-            <TextBlock Text="示例：" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center" />
+            <TextBlock Text="示例：" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center" />
             <Button Content="找出所有未通关的 PS1 游戏" Style="{StaticResource ToolButtonStyle}"
                     Tag="找出所有未通关的 PS1 游戏" Click="Example_Click" FontSize="12" />
             <Button Content="把 SNES 里没玩过的加标签 待补" Style="{StaticResource ToolButtonStyle}"
@@ -37,18 +37,18 @@
                     Tag="显示今年收藏的 RPG" Click="Example_Click" FontSize="12" />
         </WrapPanel>
 
-        <Border Grid.Row="3" Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource BorderBrush}"
+        <Border Grid.Row="3" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}"
                 BorderThickness="1" Padding="12">
             <StackPanel>
                 <TextBlock Text="{Binding Explanation}" TextWrapping="Wrap" FontWeight="SemiBold" />
                 <TextBlock Text="{Binding Summary}" TextWrapping="Wrap" Margin="0,6,0,0"
-                           Foreground="{StaticResource TextSecondaryBrush}" />
-                <TextBlock Margin="0,8,0,0" Foreground="{StaticResource AccentBrush}">
+                           Foreground="{DynamicResource TextSecondaryBrush}" />
+                <TextBlock Margin="0,8,0,0" Foreground="{DynamicResource AccentBrush}">
                     <Run Text="预计命中：" />
                     <Run Text="{Binding HitCount, Mode=OneWay}" FontWeight="SemiBold" />
                     <Run Text=" 条" />
                 </TextBlock>
-                <TextBlock Text="{Binding Error}" Foreground="{StaticResource DangerBrush}"
+                <TextBlock Text="{Binding Error}" Foreground="{DynamicResource DangerBrush}"
                            TextWrapping="Wrap" Margin="0,8,0,0" />
             </StackPanel>
         </Border>

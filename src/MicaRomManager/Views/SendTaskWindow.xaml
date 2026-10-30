@@ -6,8 +6,8 @@
         WindowStartupLocation="CenterOwner"
         FontFamily="{StaticResource AppFontFamily}"
         FontSize="13"
-        Foreground="{StaticResource TextPrimaryBrush}"
-        Background="{StaticResource WindowBackgroundBrush}">
+        Foreground="{DynamicResource TextPrimaryBrush}"
+        Background="{DynamicResource WindowBackgroundBrush}">
     <Grid Margin="14">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -18,7 +18,7 @@
         <DockPanel Grid.Row="0" Margin="0,0,0,8">
             <TextBlock Style="{StaticResource SectionTitleStyle}" Text="发送任务" VerticalAlignment="Center" />
             <TextBlock Margin="12,0,0,0" VerticalAlignment="Center"
-                       Foreground="{StaticResource TextSecondaryBrush}"
+                       Foreground="{DynamicResource TextSecondaryBrush}"
                        Text="每个游戏按顺序在后台处理，不阻塞主界面；关闭窗口不影响任务继续执行。" />
         </DockPanel>
 
@@ -44,7 +44,7 @@
                                              Value="{Binding Progress}" VerticalAlignment="Center" />
                                 <TextBlock Text="{Binding ProgressText}" Margin="6,0,0,0" FontSize="11"
                                            VerticalAlignment="Center"
-                                           Foreground="{StaticResource TextSecondaryBrush}" />
+                                           Foreground="{DynamicResource TextSecondaryBrush}" />
                             </StackPanel>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>

@@ -27,7 +27,7 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
-        WindowBackdrop.Apply(this);
+        WindowBackdrop.Apply(this, WindowBackdrop.BackdropKind.Acrylic);
         _viewModel = new MainViewModel();
         DataContext = _viewModel;
         FilterPopup.DataContext = _viewModel;

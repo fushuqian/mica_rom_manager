@@ -8,8 +8,8 @@
         ResizeMode="CanResize"
         FontFamily="{StaticResource AppFontFamily}"
         FontSize="13"
-        Foreground="{StaticResource TextPrimaryBrush}"
-        Background="{StaticResource WindowBackgroundBrush}">
+        Foreground="{DynamicResource TextPrimaryBrush}"
+        Background="{DynamicResource WindowBackgroundBrush}">
     <Grid Margin="16">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -19,7 +19,7 @@
 
         <StackPanel Grid.Row="0" Margin="0,0,0,10">
             <TextBlock x:Name="TitleText" FontSize="15" FontWeight="SemiBold" TextWrapping="Wrap" />
-            <TextBlock x:Name="HintText" Margin="0,4,0,0" Foreground="{StaticResource TextSecondaryBrush}"
+            <TextBlock x:Name="HintText" Margin="0,4,0,0" Foreground="{DynamicResource TextSecondaryBrush}"
                        TextWrapping="Wrap" />
         </StackPanel>
 

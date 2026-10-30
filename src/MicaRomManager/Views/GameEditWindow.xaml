@@ -8,8 +8,8 @@
         ResizeMode="CanResize"
         FontFamily="{StaticResource AppFontFamily}"
         FontSize="13"
-        Foreground="{StaticResource TextPrimaryBrush}"
-        Background="{StaticResource WindowBackgroundBrush}">
+        Foreground="{DynamicResource TextPrimaryBrush}"
+        Background="{DynamicResource WindowBackgroundBrush}">
     <Grid Margin="18">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -19,7 +19,7 @@
 
         <TextBlock Grid.Row="0" Style="{StaticResource SectionTitleStyle}">
             <Run Text="游戏信息" />
-            <Run Text="（双击列表行可再次编辑）" Foreground="{StaticResource TextSecondaryBrush}" FontWeight="Normal" FontSize="12" />
+            <Run Text="（双击列表行可再次编辑）" Foreground="{DynamicResource TextSecondaryBrush}" FontWeight="Normal" FontSize="12" />
         </TextBlock>
 
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
@@ -119,7 +119,7 @@
                 </StackPanel>
 
                 <Border Grid.Row="9" Grid.Column="1" Grid.ColumnSpan="3" Height="96" Margin="0,0,0,10"
-                        Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource BorderBrush}"
+                        Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}"
                         BorderThickness="1" HorizontalAlignment="Left" Width="96">
                     <Image Stretch="UniformToFill"
                            Source="{Binding Model.CoverPath, Converter={StaticResource CoverThumbnailConverter}}" />
@@ -154,7 +154,7 @@
                           SelectedValuePath="Value" SelectedValue="{Binding Model.Rating, Mode=TwoWay}" />
 
                 <TextBlock Grid.Row="14" Grid.Column="1" Grid.ColumnSpan="3" Text="{Binding Error}"
-                           Foreground="{StaticResource DangerBrush}" TextWrapping="Wrap" />
+                           Foreground="{DynamicResource DangerBrush}" TextWrapping="Wrap" />
             </Grid>
         </ScrollViewer>
 

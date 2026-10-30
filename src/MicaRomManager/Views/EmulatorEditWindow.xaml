@@ -6,8 +6,8 @@
         WindowStartupLocation="CenterOwner"
         FontFamily="{StaticResource AppFontFamily}"
         FontSize="13"
-        Foreground="{StaticResource TextPrimaryBrush}"
-        Background="{StaticResource WindowBackgroundBrush}">
+        Foreground="{DynamicResource TextPrimaryBrush}"
+        Background="{DynamicResource WindowBackgroundBrush}">
     <Grid Margin="18">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -65,11 +65,11 @@
                          Text="{Binding Model.GithubRepo, UpdateSourceTrigger=PropertyChanged}"
                          ToolTip="owner/repo，例如 libretro/RetroArch；填了才能在模拟器管理里一键检查更新" />
                 <TextBlock Grid.Row="6" Grid.Column="1" Grid.ColumnSpan="2" Margin="0,0,0,10" FontSize="12"
-                           Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap"
+                           Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"
                            Text="填了 GitHub 仓库（owner/repo）后可一键检查更新、下载并安装；官网地址作为手动下载的兜底。" />
 
                 <TextBlock Grid.Row="7" Grid.Column="1" Grid.ColumnSpan="2" Margin="0,4,0,0"
-                           Text="{Binding Error}" Foreground="{StaticResource DangerBrush}" TextWrapping="Wrap" />
+                           Text="{Binding Error}" Foreground="{DynamicResource DangerBrush}" TextWrapping="Wrap" />
             </Grid>
         </ScrollViewer>
 

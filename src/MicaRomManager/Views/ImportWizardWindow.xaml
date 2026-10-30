@@ -7,8 +7,8 @@
         WindowStartupLocation="CenterOwner"
         FontFamily="{StaticResource AppFontFamily}"
         FontSize="13"
-        Foreground="{StaticResource TextPrimaryBrush}"
-        Background="{StaticResource WindowBackgroundBrush}"
+        Foreground="{DynamicResource TextPrimaryBrush}"
+        Background="{DynamicResource WindowBackgroundBrush}"
         AllowDrop="True" Drop="OnDrop" DragOver="OnDragOver">
     <Grid Margin="16">
         <Grid.RowDefinitions>
@@ -45,7 +45,7 @@
             </StackPanel>
         </Grid>
 
-        <TextBlock Grid.Row="2" Margin="0,0,0,6" Foreground="{StaticResource TextSecondaryBrush}"
+        <TextBlock Grid.Row="2" Margin="0,0,0,6" Foreground="{DynamicResource TextSecondaryBrush}"
                    Text="{Binding Summary}" />
 
         <DataGrid x:Name="CandidateGrid" Grid.Row="3" Style="{StaticResource AppDataGridStyle}"
@@ -82,14 +82,14 @@
             <RadioButton x:Name="LinkRadio" Content="仅链接：只记录路径，不移动也不复制文件" Margin="0,0,0,6" />
             <RadioButton x:Name="CopyRadio" Content="复制到库目录（原文件保留）" Margin="0,0,0,6" />
             <RadioButton x:Name="MoveRadio" Content="移动到库目录（原位置文件会被移走）" Margin="0,0,0,6" />
-            <TextBlock Margin="20,2,0,0" TextWrapping="Wrap" Foreground="{StaticResource TextSecondaryBrush}"
+            <TextBlock Margin="20,2,0,0" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}"
                        Text="{Binding LibraryHint}" />
             <CheckBox x:Name="RecursiveCheck" Content="包含子文件夹中的 ROM" IsChecked="True" Margin="0,8,0,0" />
         </StackPanel>
 
         <StackPanel Grid.Row="7" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,14,0,0">
             <TextBlock x:Name="BusyText" VerticalAlignment="Center" Margin="0,0,12,0"
-                       Foreground="{StaticResource TextSecondaryBrush}" />
+                       Foreground="{DynamicResource TextSecondaryBrush}" />
             <Button x:Name="ConfirmButton" Content="开始导入" Width="104"
                     Style="{StaticResource PrimaryButtonStyle}" Click="Confirm_Click" IsDefault="True" />
             <Button Content="取消" Width="88" Margin="8,0,0,0"

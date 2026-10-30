@@ -2,6 +2,7 @@ using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Media;
+using Microsoft.Win32;
 
 namespace MicaRomManager.Services;
 
@@ -20,20 +21,8 @@ public static class WindowBackdrop
     private const int DwmwaSystemBackdropType = 38;
     private const int DwmcpRound = 2;
 
-    [StructLayout(LayoutKind.Sequential)]
-    private struct Margins
-    {
-        public int Left;
-        public int Top;
-        public int Right;
-        public int Bottom;
-    }
-
     [DllImport("dwmapi.dll")]
     private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attribute, ref int value, int size);
-
-    [DllImport("dwmapi.dll")]
-    private static extern int DwmExtendFrameIntoClientArea(IntPtr hwnd, ref Margins margins);
 
     public static void Apply(Window window, BackdropKind kind = BackdropKind.Mica)
     {
@@ -55,6 +44,13 @@ public static class WindowBackdrop
         }
 
         window.SourceInitialized += (_, _) => ApplyCore(window, kind);
+        // WindowChrome 会在 SourceInitialized 之后接管非客户区，Loaded 再补一次，避免 backdrop 被覆盖
+        window.Loaded += (_, _) =>
+        {
+            ApplyCore(window, kind);
+            window.Dispatcher.BeginInvoke(() => ApplyCore(window, kind),
+                System.Windows.Threading.DispatcherPriority.Loaded);
+        };
     }
 
     private static void ApplyCore(Window window, BackdropKind kind)
@@ -88,12 +84,9 @@ public static class WindowBackdrop
                 applied = DwmSetWindowAttribute(hwnd, DwmwaSystemBackdropType, ref backdrop, sizeof(int)) == 0;
             }
 
-            // 应用内部统一浅色，避免系统深色模式把 Mica 变暗后与文字冲突
-            var light = 0;
-            DwmSetWindowAttribute(hwnd, DwmwaUseImmersiveDarkMode, ref light, sizeof(int));
-
-            var margins = new Margins { Left = -1, Top = -1, Right = -1, Bottom = -1 };
-            DwmExtendFrameIntoClientArea(hwnd, ref margins);
+            // 跟随系统深色模式，否则深色系统上会出现刺眼的浅色标题栏
+            var dark = IsSystemDark() ? 1 : 0;
+            DwmSetWindowAttribute(hwnd, DwmwaUseImmersiveDarkMode, ref dark, sizeof(int));
         }
         catch
         {
@@ -102,7 +95,24 @@ public static class WindowBackdrop
 
         if (!applied)
         {
-            window.Background = new SolidColorBrush(Color.FromRgb(0xF4, 0xF6, 0xF9));
+            window.Background = new SolidColorBrush(IsSystemDark()
+                ? Color.FromRgb(0x1A, 0x1A, 0x1A)
+                : Color.FromRgb(0xF4, 0xF6, 0xF9));
+        }
+    }
+
+    public static bool IsSystemDark()
+    {
+        try
+        {
+            var value = Registry.GetValue(
+                @"HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize",
+                "AppsUseLightTheme", 1);
+            return value is int i && i == 0;
+        }
+        catch
+        {
+            return false;
         }
     }
 }

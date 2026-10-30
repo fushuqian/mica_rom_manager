@@ -4,7 +4,7 @@
              FontFamily="{StaticResource AppFontFamily}"
              FontSize="13"
              Background="Transparent">
-    <Border Background="{StaticResource PanelBrush}" BorderBrush="{StaticResource BorderBrush}"
+    <Border Background="{DynamicResource PanelBrush}" BorderBrush="{DynamicResource BorderBrush}"
             BorderThickness="1" CornerRadius="12" ClipToBounds="True">
     <Grid>
         <Grid.RowDefinitions>
@@ -13,8 +13,8 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <Border Grid.Row="0" Background="{StaticResource SurfaceBrush}"
-                BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1" Padding="10,8">
+        <Border Grid.Row="0" Background="{DynamicResource SurfaceBrush}"
+                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1" Padding="10,8">
             <DockPanel>
                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
                     <Button Content="清空" Command="{Binding ClearCommand}" Style="{StaticResource ToolButtonStyle}"
@@ -25,7 +25,7 @@
                 <StackPanel>
                     <TextBlock Text="AI 助手" FontWeight="SemiBold" FontSize="14" />
                     <TextBlock Text="{Binding ModelText}" FontSize="11"
-                               Foreground="{StaticResource TextSecondaryBrush}" />
+                               Foreground="{DynamicResource TextSecondaryBrush}" />
                 </StackPanel>
             </DockPanel>
         </Border>
@@ -38,13 +38,13 @@
                         <DataTemplate>
                             <Grid Margin="0,5">
                                 <Border Visibility="{Binding IsUser, Converter={StaticResource BoolToVis}}"
-                                        Background="{StaticResource AccentBrush}" CornerRadius="8"
+                                        Background="{DynamicResource AccentBrush}" CornerRadius="8"
                                         Padding="10,7" MaxWidth="300" HorizontalAlignment="Right">
-                                    <TextBlock Text="{Binding Text}" Foreground="White" TextWrapping="Wrap" />
+                                    <TextBlock Text="{Binding Text}" Foreground="{DynamicResource OnAccentTextBrush}" TextWrapping="Wrap" />
                                 </Border>
 
                                 <Border Visibility="{Binding IsAssistant, Converter={StaticResource BoolToVis}}"
-                                        Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource BorderBrush}"
+                                        Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}"
                                         BorderThickness="1" CornerRadius="8" Padding="10,7"
                                         MaxWidth="340" HorizontalAlignment="Left">
                                     <TextBlock Text="{Binding Text}" TextWrapping="Wrap" />
@@ -52,22 +52,22 @@
 
                                 <TextBlock Visibility="{Binding IsTool, Converter={StaticResource BoolToVis}}"
                                            Text="{Binding Text}" FontSize="11" TextWrapping="Wrap"
-                                           Foreground="{StaticResource TextSecondaryBrush}"
+                                           Foreground="{DynamicResource TextSecondaryBrush}"
                                            HorizontalAlignment="Left" Margin="2,2,0,0" />
 
                                 <TextBlock Visibility="{Binding IsError, Converter={StaticResource BoolToVis}}"
                                            Text="{Binding Text}" TextWrapping="Wrap"
-                                           Foreground="{StaticResource DangerBrush}" Margin="2,2,0,0" />
+                                           Foreground="{DynamicResource DangerBrush}" Margin="2,2,0,0" />
 
                                 <Border Visibility="{Binding IsPending, Converter={StaticResource BoolToVis}}"
-                                        Background="{StaticResource SurfaceBrush}" BorderThickness="1"
+                                        Background="{DynamicResource SurfaceBrush}" BorderThickness="1"
                                         CornerRadius="8" Padding="10" Margin="0,2">
                                     <Border.Style>
                                         <Style TargetType="Border">
-                                            <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+                                            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding Pending.IsDestructive}" Value="True">
-                                                    <Setter Property="BorderBrush" Value="{StaticResource DangerBrush}" />
+                                                    <Setter Property="BorderBrush" Value="{DynamicResource DangerBrush}" />
                                                 </DataTrigger>
                                             </Style.Triggers>
                                         </Style>
@@ -75,12 +75,12 @@
                                     <StackPanel>
                                         <StackPanel Orientation="Horizontal">
                                             <TextBlock Text="危险操作" FontSize="11" FontWeight="SemiBold"
-                                                       Foreground="{StaticResource DangerBrush}" Margin="0,0,6,0"
+                                                       Foreground="{DynamicResource DangerBrush}" Margin="0,0,6,0"
                                                        Visibility="{Binding Pending.IsDestructive, Converter={StaticResource BoolToVis}}" />
                                             <TextBlock Text="{Binding Pending.Title}" FontWeight="SemiBold" TextWrapping="Wrap" />
                                         </StackPanel>
                                         <TextBlock Text="{Binding Pending.Summary}" TextWrapping="Wrap"
-                                                   Margin="0,6,0,0" Foreground="{StaticResource TextSecondaryBrush}" />
+                                                   Margin="0,6,0,0" Foreground="{DynamicResource TextSecondaryBrush}" />
                                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0">
                                             <StackPanel.Style>
                                                 <Style TargetType="StackPanel">
@@ -144,7 +144,7 @@
                     </Style>
                 </StackPanel.Style>
                 <TextBlock Text="可以让我筛选游戏、改元数据、介绍游戏、识别设备或修改设置。"
-                           TextWrapping="Wrap" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,10" />
+                           TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,10" />
                 <ItemsControl ItemsSource="{Binding Suggestions}">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
@@ -162,8 +162,8 @@
             </StackPanel>
         </Grid>
 
-        <Border Grid.Row="2" Background="{StaticResource SurfaceBrush}"
-                BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0" Padding="8">
+        <Border Grid.Row="2" Background="{DynamicResource SurfaceBrush}"
+                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0" Padding="8">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
@@ -186,7 +186,7 @@
                                 Margin="6,0,0,0" />
                     </StackPanel>
                     <TextBlock Text="{Binding StatusText}" VerticalAlignment="Center" FontSize="11"
-                               Foreground="{StaticResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis" />
+                               Foreground="{DynamicResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis" />
                 </DockPanel>
             </Grid>
         </Border>
