@@ -1,12 +1,33 @@
+# 构建产物
 bin/
 obj/
+*_wpftmp.csproj
+
+# 运行期数据与发布目录
+# /data/ 必须带前导斜杠锚定根目录：不加会匹配任意层级的 data 目录，
+# 在 Windows 大小写不敏感的文件系统上会把 src/MicaRomManager/Data/ 整个数据层忽略掉。
 /data/
 /toberemoved/
 /publish/
-.vs/
-*.user
-*.suo
-*_wpftmp.csproj
+/dist/
+
+# 日志与测试输出
 *.log
 TestResults/
+*.trx
+*.binlog
+
+# 数据库（用户数据，绝不入库）
+*.db
+*.db-wal
+*.db-shm
+
+# 同步盘冲突文件
+*sync-conflict*
+
+# 编辑器
+.vs/
+.idea/
 .vscode/
+*.user
+*.suo

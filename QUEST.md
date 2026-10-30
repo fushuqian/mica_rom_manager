@@ -1,5 +1,13 @@
 # 需求清单（QUEST）
 
+## Q-034 工作区与仓库卫生
+
+- 描述：清同步盘冲突文件与 WPF 临时工程残留；补齐 `.gitignore`（db / trx / binlog / sync-conflict / .idea 等）；CI action 升到 checkout@v7 / setup-dotnet@v6 / upload-artifact@v7。
+- 状态：已完成（未发版，程序行为未变；230+ 测试照旧全绿）
+- 优先级：中
+- 创建时间：2026-10-30
+- 更新时间：2026-10-30
+
 ## Q-033 AI 回复策略收口
 
 - 描述：把 `AiAssistantService` 里散落的中文关键词启发式（反问拦截、介绍先出正文、补提示话术）抽成 `AiReplyPolicy`，标记表与长度阈值可配置、可注入；触发时写 `ai.log`。

@@ -1,5 +1,19 @@
 # 变更记录（CHANGELOG）
 
+## 2026-10-30 工程清理（未发版）
+
+不涉及程序行为，因此没有切版本、没有发布新 Release。
+
+### 变更
+
+- 清掉 `obj` 里的 223 个同步盘冲突文件、WPF 中断编译残留的 `*_wpftmp.csproj` 与空的 `.screenshots` 目录；清理后从零全量重建，0 警告、233 测试通过。
+- `.gitignore` 补齐 `*.db` / `*.db-wal` / `*.db-shm` / `*.trx` / `*.binlog` / `*sync-conflict*` / `.idea/` / `/dist/`，并写清 `/data/` 为什么必须锚定根目录（否则会误伤 `src/MicaRomManager/Data/`）。
+- CI 的 action 升级：`checkout@v7`、`setup-dotnet@v6`、`upload-artifact@v7`，消除 Node 20 弃用警告。
+
+### 说明
+
+- `publish\data` 下仍有 2 个同步盘冲突文件（`mica.sync-conflict-*.db`、RetroArch 的 `.lpl`），属于运行数据，未动；建议把 `publish\data` 排除在同步工具之外。
+
 ## 2026-10-30 v0.25.4
 
 ### 变更
