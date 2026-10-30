@@ -339,7 +339,7 @@
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
-                                <DataGridTemplateColumn Header="标题" Width="*" MaxWidth="460">
+                                <DataGridTemplateColumn Header="标题" Width="Auto" MaxWidth="460">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <StackPanel VerticalAlignment="Center">
