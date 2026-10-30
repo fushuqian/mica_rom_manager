@@ -23,7 +23,8 @@
 ## 发布
 
 - 构建/发布前需 .NET 9 SDK：`winget install Microsoft.DotNet.SDK.9`（本机 9.0.320）。
-- 发布命令：`powershell -File tools\publish.ps1`（内部执行 `dotnet publish src\MicaRomManager -c Release -r win-x64 --self-contained true -o publish`，随后自动跑 `tools\verify-publish.ps1`）。
+- 发布命令：`powershell.exe -NoProfile -ExecutionPolicy Bypass -File tools\publish.ps1`（内部执行 `dotnet publish src\MicaRomManager -c Release -r win-x64 --self-contained true -o publish`，随后自动跑 `tools\verify-publish.ps1`）。
+- 本机 PowerShell 执行策略为 Restricted，脚本必须带 `-ExecutionPolicy Bypass` 才能运行。
 - 校验内容：`publish\Resources\` 下 `EmulatorTemplates.json` 与 `DeviceProfiles.json` 必须都在；exe `FileVersion` 等于 csproj `<Version>`；`ProductVersion` 含当前 git HEAD。任一不满足直接失败。
 - 产物：`publish\` 打包为 `MicaRomManager-<版本>-win-x64.zip`；release note 取自 CHANGELOG。
 - Release 页：`https://github.com/fushuqian/mica_rom_manager/releases`
