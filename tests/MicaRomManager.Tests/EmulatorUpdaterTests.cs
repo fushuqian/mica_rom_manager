@@ -63,4 +63,31 @@ public class EmulatorUpdaterTests
     {
         Assert.Equal(expected, EmulatorUpdater.IsNewer(latest, current));
     }
+
+    [Theory]
+    [InlineData("libretro/RetroArch", "libretro/RetroArch")]
+    [InlineData("  https://github.com/stenzek/duckstation/releases  ", "stenzek/duckstation")]
+    [InlineData("https://github.com/PCSX2/pcsx2", "PCSX2/pcsx2")]
+    [InlineData("https://github.com/a/b.git", "a/b")]
+    [InlineData("owner/repo/", "owner/repo")]
+    [InlineData("only-one", "")]
+    [InlineData("https://gitlab.com/a/b", "")]
+    [InlineData("", "")]
+    [InlineData(null, "")]
+    public void NormalizeRepository_AcceptsOwnerRepoAndGitHubUrls(string? input, string expected)
+    {
+        Assert.Equal(expected, EmulatorUpdater.NormalizeRepository(input));
+    }
+
+    [Theory]
+    [InlineData("v0.25.4", "0.25.4")]
+    [InlineData("V1.2", "1.2")]
+    [InlineData("1.2.3", "1.2.3")]
+    [InlineData("  v2  ", "2")]
+    [InlineData("", "")]
+    [InlineData(null, "")]
+    public void VersionFromTag_TrimsLeadingV(string? tag, string expected)
+    {
+        Assert.Equal(expected, EmulatorUpdater.VersionFromTag(tag));
+    }
 }

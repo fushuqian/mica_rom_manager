@@ -71,6 +71,13 @@ public partial class MainViewModel : ObservableObject, IAiAppHost
     [ObservableProperty] private int filteredCount;
     [ObservableProperty] private string lastRefreshText = "";
 
+    /// <summary>ROM 所在盘未连接时的顶部提示；空串表示不显示。</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasLibraryWarning))]
+    private string libraryWarning = "";
+
+    public bool HasLibraryWarning => LibraryWarning.Length > 0;
+
     private bool _syncingPlatformFilter;
     private SendTaskWindow? _taskWindow;
 
@@ -114,6 +121,20 @@ public partial class MainViewModel : ObservableObject, IAiAppHost
         TotalCount = Games.Count;
         LastRefreshText = $"上次刷新：{DateTime.Now:HH:mm:ss}";
         ApplyFilter();
+        RefreshLibraryWarning();
+    }
+
+    /// <summary>
+    /// 检查 ROM 所在盘是否可用；外置盘没插时给出提示，避免把「盘没连」误当成「文件失效」。
+    /// 不做自动清理，只提示。
+    /// </summary>
+    public void RefreshLibraryWarning()
+    {
+        var report = LibraryHealth.Inspect(Games);
+        LibraryWarning = report.HasUnavailableRoots
+            ? $"{string.Join("、", report.UnavailableRoots)} 未连接，{report.MissingGames} 条 ROM 暂不可用；"
+              + "插好后点「刷新文件状态」重新检查。"
+            : "";
     }
 
     /// <summary>主界面行内编辑后落库；只追加新选项，避免清空下拉导致绑定被置空。</summary>
@@ -1093,6 +1114,7 @@ public partial class MainViewModel : ObservableObject, IAiAppHost
     {
         foreach (var game in Games) game.RefreshFileState();
         ApplyFilter();
+        RefreshLibraryWarning();
         LastRefreshText = $"上次刷新：{DateTime.Now:HH:mm:ss}";
         StatusMessage = "已刷新文件状态";
     }

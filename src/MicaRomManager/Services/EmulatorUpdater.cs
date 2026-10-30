@@ -22,17 +22,15 @@ public sealed class EmulatorUpdater
     /// <summary>调用 GitHub 公共 Release API（免费、无需 Token，未认证 60 次/小时）。</summary>
     public async Task<UpdateCheckResult> CheckAsync(string repository, string currentVersion)
     {
-        if (string.IsNullOrWhiteSpace(repository))
+        var repo = NormalizeRepository(repository);
+        if (repo.Length == 0)
         {
-            return new UpdateCheckResult(false, "未配置 GitHub 仓库（格式：owner/repo），无法检查更新。");
+            return new UpdateCheckResult(false, string.IsNullOrWhiteSpace(repository)
+                ? "未配置 GitHub 仓库（格式：owner/repo），无法检查更新。"
+                : "GitHub 仓库格式不正确，应为 owner/repo。");
         }
 
-        var parts = repository.Split('/', StringSplitOptions.RemoveEmptyEntries);
-        if (parts.Length != 2)
-        {
-            return new UpdateCheckResult(false, "GitHub 仓库格式不正确，应为 owner/repo。");
-        }
-
+        var parts = repo.Split('/', StringSplitOptions.RemoveEmptyEntries);
         var url = $"https://api.github.com/repos/{parts[0]}/{parts[1]}/releases/latest";
         try
         {
@@ -165,8 +163,45 @@ public sealed class EmulatorUpdater
         }
     }
 
-    private static string NormalizeVersion(string? version) =>
-        string.IsNullOrWhiteSpace(version) ? "" : version.Trim().TrimStart('v', 'V');
+    /// <summary>
+    /// 把用户输入统一成 owner/repo：兼容完整 GitHub 网址、/releases 后缀与 .git 后缀。
+    /// 允许留空（返回空串）；格式不合法也返回空串，由调用方给出中文提示。
+    /// </summary>
+    public static string NormalizeRepository(string? repository)
+    {
+        if (string.IsNullOrWhiteSpace(repository)) return "";
+
+        var text = repository.Trim();
+        const string host = "github.com/";
+        var index = text.IndexOf(host, StringComparison.OrdinalIgnoreCase);
+        if (index >= 0) text = text[(index + host.Length)..];
+
+        foreach (var suffix in new[] { "/releases/latest", "/releases", "/tags" })
+        {
+            if (text.EndsWith(suffix, StringComparison.OrdinalIgnoreCase))
+                text = text[..^suffix.Length];
+        }
+
+        text = text.Trim().TrimEnd('/');
+        if (text.EndsWith(".git", StringComparison.OrdinalIgnoreCase)) text = text[..^4];
+
+        var parts = text.Split('/', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        if (parts.Length != 2) return "";
+
+        foreach (var part in parts)
+        {
+            if (part.Length == 0) return "";
+            if (part.Any(c => !(char.IsLetterOrDigit(c) || c is '-' or '_' or '.'))) return "";
+        }
+
+        return $"{parts[0]}/{parts[1]}";
+    }
+
+    /// <summary>Release tag 转版本号文本（去掉前导 v/V）；空 tag 返回空串。</summary>
+    public static string VersionFromTag(string? tag) =>
+        string.IsNullOrWhiteSpace(tag) ? "" : tag.Trim().TrimStart('v', 'V');
+
+    private static string NormalizeVersion(string? version) => VersionFromTag(version);
 
     /// <summary>
     /// 从 Release 资产里挑 Windows 包：win64 &gt; windows &gt; -win &gt; 任意 zip &gt; 任意 7z &gt; 第一个资产。

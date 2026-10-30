@@ -203,7 +203,12 @@
                                     Style="{StaticResource SecondaryButtonStyle}" Click="ScanPlatformLibrary_Click" />
                             <Button x:Name="OrganizePlatformButton" Content="整理该平台库文件…" Margin="8,0,0,0"
                                     Style="{StaticResource SecondaryButtonStyle}" Click="OrganizePlatform_Click" />
+                            <Button x:Name="CancelScanButton" Content="取消扫描" Margin="8,0,0,0"
+                                    Style="{StaticResource SecondaryButtonStyle}" IsEnabled="False"
+                                    Click="CancelScan_Click" />
                         </StackPanel>
+                        <ProgressBar x:Name="PlatformScanProgress" Height="4" Margin="0,8,0,0" Width="420"
+                                     HorizontalAlignment="Left" Maximum="100" Value="0" Visibility="Collapsed" />
                         <TextBlock x:Name="PlatformScanHint" Margin="0,6,0,0" MaxWidth="380" TextWrapping="Wrap"
                                    Foreground="{StaticResource TextSecondaryBrush}"
                                    Text="扫描会补入未登记的 ROM，并清理该平台中文件已不存在的条目；整理会按「标题 (区域)(语言)」重命名子库内的文件（多碟自动带 Disc 号）。" />
@@ -373,7 +378,11 @@
                         <Button Content="导出 CSV…" Style="{StaticResource SecondaryButtonStyle}" Click="ExportCsv_Click" />
                         <Button Content="清理失效路径记录" Style="{StaticResource SecondaryButtonStyle}" Click="CleanMissing_Click" />
                         <Button Content="补算缺失指纹" Style="{StaticResource SecondaryButtonStyle}" Click="HashMissing_Click" />
+                        <Button x:Name="CancelHashButton" Content="取消补算" Style="{StaticResource SecondaryButtonStyle}"
+                                IsEnabled="False" Click="CancelHash_Click" />
                     </WrapPanel>
+                    <ProgressBar x:Name="MaintenanceProgress" Height="4" Margin="0,12,0,0" Maximum="100"
+                                 Value="0" Visibility="Collapsed" />
                     <TextBlock x:Name="MaintenanceStatus" Margin="0,16,0,0" TextWrapping="Wrap"
                                Foreground="{StaticResource TextSecondaryBrush}" />
                 </StackPanel>

@@ -18,12 +18,8 @@ public sealed class EmulatorInstaller
 
     public EmulatorInstaller(PathService paths) => _paths = paths;
 
-    public InstallResult InstallFromFolder(string sourceDirectory, string emulatorName)
-    {
-        var target = PrepareTarget(emulatorName);
-        CopyDirectory(sourceDirectory, target);
-        return new InstallResult(target, FindExeCandidates(target, emulatorName));
-    }
+    public InstallResult InstallFromFolder(string sourceDirectory, string emulatorName) =>
+        InstallInto(sourceDirectory, emulatorName);
 
     public InstallResult InstallFromZip(string zipPath, string emulatorName)
     {
@@ -32,9 +28,7 @@ public sealed class EmulatorInstaller
         {
             ZipFile.ExtractToDirectory(zipPath, temp, true);
             var source = FindExtractedRoot(temp);
-            var target = PrepareTarget(emulatorName);
-            CopyDirectory(source, target);
-            return new InstallResult(target, FindExeCandidates(target, emulatorName));
+            return InstallInto(source, emulatorName);
         }
         finally
         {
@@ -88,9 +82,7 @@ public sealed class EmulatorInstaller
             }
 
             var source = FindExtractedRoot(temp);
-            var target = PrepareTarget(emulatorName);
-            CopyDirectory(source, target);
-            return new InstallResult(target, FindExeCandidates(target, emulatorName));
+            return InstallInto(source, emulatorName);
         }
         finally
         {
@@ -98,20 +90,66 @@ public sealed class EmulatorInstaller
         }
     }
 
+    /// <summary>把解压/文件夹内容装进目标目录；复制失败时回滚到旧的安装目录。</summary>
+    private InstallResult InstallInto(string source, string emulatorName)
+    {
+        var (target, backup) = PrepareTargetWithBackup(emulatorName);
+        try
+        {
+            CopyDirectory(source, target);
+            return new InstallResult(target, FindExeCandidates(target, emulatorName));
+        }
+        catch
+        {
+            RollbackInstall(target, backup);
+            throw;
+        }
+    }
+
     /// <summary>同名旧安装目录整体移到 data\emulators\.backup，不直接删除。</summary>
-    public string PrepareTarget(string emulatorName)
+    public string PrepareTarget(string emulatorName) => PrepareTargetWithBackup(emulatorName).Target;
+
+    /// <summary>准备目标目录并返回被移走的旧安装路径，供安装失败时回滚。</summary>
+    internal (string Target, string? Backup) PrepareTargetWithBackup(string emulatorName)
     {
         var safeName = RomImporter.SanitizeFolderName(emulatorName);
         var target = Path.Combine(_paths.EmulatorsDir, safeName);
+        string? backup = null;
         if (Directory.Exists(target))
         {
             Directory.CreateDirectory(_paths.BackupsDir);
-            var backup = Path.Combine(_paths.BackupsDir, $"{safeName}-{DateTime.Now:yyyyMMddHHmmss}");
+            var baseBackup = Path.Combine(_paths.BackupsDir, $"{safeName}-{DateTime.Now:yyyyMMddHHmmss}");
+            backup = baseBackup;
+            var suffix = 1;
+            while (Directory.Exists(backup)) backup = $"{baseBackup}-{suffix++}";
             Directory.Move(target, backup);
         }
 
         Directory.CreateDirectory(target);
-        return target;
+        return (target, backup);
+    }
+
+    /// <summary>安装失败：删掉半成品目录，把旧安装移回原位；任何一步失败都保留 .backup 供手动恢复。</summary>
+    internal static void RollbackInstall(string target, string? backup)
+    {
+        try
+        {
+            if (Directory.Exists(target)) Directory.Delete(target, true);
+        }
+        catch
+        {
+            // 半成品删不掉时保留现场，下面的回滚仍尝试进行
+        }
+
+        if (string.IsNullOrWhiteSpace(backup) || !Directory.Exists(backup)) return;
+        try
+        {
+            Directory.Move(backup, target);
+        }
+        catch
+        {
+            // 回滚失败时旧安装仍在 .backup，用户可手动找回
+        }
     }
 
     public static List<string> FindExeCandidates(string directory, string emulatorName)

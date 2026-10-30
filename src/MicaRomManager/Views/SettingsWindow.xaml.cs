@@ -14,6 +14,8 @@ namespace MicaRomManager.Views;
 public partial class SettingsWindow : Window
 {
     private List<Emulator> _emulators = new();
+    private CancellationTokenSource? _scanCts;
+    private CancellationTokenSource? _hashCts;
 
     public SettingsWindow()
     {
@@ -330,7 +332,22 @@ public partial class SettingsWindow : Window
             return;
         }
 
+        var originalHint = PlatformScanHint.Text;
+        var cancelled = false;
+        _scanCts?.Dispose();
+        _scanCts = new CancellationTokenSource();
+        var token = _scanCts.Token;
+        var progress = new Progress<RomImporter.ScanProgress>(value =>
+        {
+            if (_scanCts == null) return;
+            PlatformScanHint.Text = $"正在扫描并计算指纹（{value.Processed}/{value.Total}）：{Path.GetFileName(value.FilePath)}";
+            PlatformScanProgress.Value = value.Total == 0 ? 0 : value.Processed * 100d / value.Total;
+        });
+
         ScanPlatformButton.IsEnabled = false;
+        CancelScanButton.IsEnabled = true;
+        PlatformScanProgress.Visibility = Visibility.Visible;
+        PlatformScanProgress.Value = 0;
         MaintenanceStatus.Text = "正在扫描并计算指纹…";
 
         try
@@ -339,6 +356,7 @@ public partial class SettingsWindow : Window
             var allowed = PlatformFormats.Parse(PlatformFormatsBox.Text);
             var (scan, removed) = await Task.Run(() =>
             {
+                token.ThrowIfCancellationRequested();
                 var platformGames = AppServices.GameRepo.ListAll()
                     .Where(g => string.Equals(g.Platform, setting.Name, StringComparison.OrdinalIgnoreCase))
                     .ToList();
@@ -348,7 +366,7 @@ public partial class SettingsWindow : Window
                 var existingPaths = AppServices.GameRepo.ListAll().Select(g => g.RomPath).ToList();
                 var existingHashes = AppServices.GameRepo.ListHashes();
                 return (RomImporter.Scan(new[] { dir }, true, existingPaths, existingHashes,
-                    allowed.Count > 0 ? allowed : null), cleaned);
+                    allowed.Count > 0 ? allowed : null, null, progress, token), cleaned);
             });
 
             if (scan.Candidates.Count == 0)
@@ -406,6 +424,12 @@ public partial class SettingsWindow : Window
 
             (Owner as MainWindow)?.RefreshGames();
         }
+        catch (OperationCanceledException)
+        {
+            cancelled = true;
+            MaintenanceStatus.Text = "";
+            PlatformScanHint.Text = "已取消扫描，未新增任何记录。";
+        }
         catch (Exception ex)
         {
             MaintenanceStatus.Text = "";
@@ -414,7 +438,20 @@ public partial class SettingsWindow : Window
         finally
         {
             ScanPlatformButton.IsEnabled = true;
+            CancelScanButton.IsEnabled = false;
+            PlatformScanProgress.Visibility = Visibility.Collapsed;
+            PlatformScanProgress.Value = 0;
+            _scanCts?.Dispose();
+            _scanCts = null;
+            if (!cancelled) PlatformScanHint.Text = originalHint;
         }
+    }
+
+    private void CancelScan_Click(object sender, RoutedEventArgs e)
+    {
+        _scanCts?.Cancel();
+        CancelScanButton.IsEnabled = false;
+        PlatformScanHint.Text = "正在取消扫描…";
     }
 
     private async void OrganizePlatform_Click(object sender, RoutedEventArgs e)
@@ -505,32 +542,73 @@ public partial class SettingsWindow : Window
             return;
         }
 
-        MaintenanceStatus.Text = $"正在补算指纹（0/{games.Count}）…";
         var computed = 0;
         var skipped = 0;
-
-        await Task.Run(() =>
+        _hashCts?.Dispose();
+        _hashCts = new CancellationTokenSource();
+        var token = _hashCts.Token;
+        var progress = new Progress<(int Completed, int Total)>(value =>
         {
-            for (var i = 0; i < games.Count; i++)
-            {
-                var hash = RomHasher.Compute(games[i].RomPath);
-                if (hash.Length == 0)
-                {
-                    skipped++;
-                }
-                else
-                {
-                    AppServices.GameRepo.SetHash(games[i].Id, hash);
-                    computed++;
-                }
-
-                var progress = i + 1;
-                Dispatcher.BeginInvoke(() => MaintenanceStatus.Text = $"正在补算指纹（{progress}/{games.Count}）…");
-            }
+            if (_hashCts == null) return;
+            MaintenanceStatus.Text = $"正在补算指纹（{value.Completed}/{value.Total}）…";
+            MaintenanceProgress.Value = value.Total == 0 ? 0 : value.Completed * 100d / value.Total;
         });
+        IProgress<(int Completed, int Total)> reporter = progress;
+
+        CancelHashButton.IsEnabled = true;
+        MaintenanceProgress.Visibility = Visibility.Visible;
+        MaintenanceProgress.Value = 0;
+        MaintenanceStatus.Text = $"正在补算指纹（0/{games.Count}）…";
+
+        try
+        {
+            await Task.Run(() =>
+            {
+                for (var i = 0; i < games.Count; i++)
+                {
+                    token.ThrowIfCancellationRequested();
+
+                    var hash = RomHasher.Compute(games[i].RomPath);
+                    if (hash.Length == 0)
+                    {
+                        skipped++;
+                    }
+                    else
+                    {
+                        AppServices.GameRepo.SetHash(games[i].Id, hash);
+                        computed++;
+                    }
+
+                    reporter.Report((i + 1, games.Count));
+                    token.ThrowIfCancellationRequested();
+                }
+            }, token);
+        }
+        catch (OperationCanceledException)
+        {
+            MaintenanceStatus.Text = $"已取消补算：已补算 {computed} 条，跳过 {skipped} 条。";
+            (Owner as MainWindow)?.RefreshGames();
+            return;
+        }
+        finally
+        {
+            CancelHashButton.IsEnabled = false;
+            MaintenanceProgress.Visibility = Visibility.Collapsed;
+            MaintenanceProgress.Value = 0;
+            _hashCts?.Dispose();
+            _hashCts = null;
+        }
 
         MaintenanceStatus.Text = $"指纹补算完成：{computed} 条，跳过 {skipped} 条。";
+        (Owner as MainWindow)?.RefreshGames();
         MessageBox.Show(MaintenanceStatus.Text, "补算指纹", MessageBoxButton.OK, MessageBoxImage.Information);
+    }
+
+    private void CancelHash_Click(object sender, RoutedEventArgs e)
+    {
+        _hashCts?.Cancel();
+        CancelHashButton.IsEnabled = false;
+        MaintenanceStatus.Text = "正在取消补算…";
     }
 
     private void SaveGeneral_Click(object sender, RoutedEventArgs e)
@@ -731,7 +809,21 @@ public partial class SettingsWindow : Window
 
     private void CleanMissing_Click(object sender, RoutedEventArgs e)
     {
-        var missing = AppServices.GameRepo.ListAll().Where(g => !File.Exists(g.RomPath)).ToList();
+        var all = AppServices.GameRepo.ListAll();
+        var health = LibraryHealth.Inspect(all);
+        if (!health.CanCleanMissing)
+        {
+            var roots = string.Join("、", health.UnavailableRoots);
+            MaintenanceStatus.Text = $"已中止清理：{roots} 未连接。";
+            MessageBox.Show(
+                $"这些盘当前未连接：{roots}\n\n"
+                + "无法判断文件是否真的失效；为避免误删记录（进度、评分、元数据会一起丢失），已中止清理。\n"
+                + "请插上盘后重试，或先到主界面点「刷新文件状态」确认。",
+                "清理失效记录", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        var missing = all.Where(g => !File.Exists(g.RomPath)).ToList();
         if (missing.Count == 0)
         {
             MaintenanceStatus.Text = "没有失效路径记录。";

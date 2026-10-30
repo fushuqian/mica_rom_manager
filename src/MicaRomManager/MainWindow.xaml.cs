@@ -3,6 +3,7 @@ using System.IO;
 using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
@@ -179,7 +180,76 @@ public partial class MainWindow : Window
             if (width >= 24) column.Width = new DataGridLength(width);
         }
 
+        ApplyHiddenColumns(state);
+
         RestoreSort(state);
+    }
+
+    /// <summary>还原列显隐；未知列名（改过列名）自动忽略，且至少保留一列。</summary>
+    private void ApplyHiddenColumns(ListViewState state)
+    {
+        var headers = GameGrid.Columns
+            .Where(column => column.Header is string)
+            .Select(column => (string)column.Header)
+            .ToList();
+
+        state.PruneHidden(headers);
+
+        foreach (var column in GameGrid.Columns)
+        {
+            if (column.Header is not string header) continue;
+            column.Visibility = state.HiddenColumns.Contains(header, StringComparer.Ordinal)
+                ? Visibility.Collapsed
+                : Visibility.Visible;
+        }
+    }
+
+    /// <summary>工具栏「列设置」：列出所有列，勾选切换显隐。</summary>
+    private void ColumnMenu_Click(object sender, RoutedEventArgs e)
+    {
+        var menu = new ContextMenu
+        {
+            PlacementTarget = ColumnMenuButton,
+            Placement = PlacementMode.Bottom,
+        };
+
+        foreach (var column in GameGrid.Columns.Where(column => column.Header is string))
+        {
+            var item = new MenuItem
+            {
+                Header = column.Header,
+                IsCheckable = true,
+                IsChecked = column.Visibility == Visibility.Visible,
+                StaysOpenOnClick = true,
+            };
+            item.Click += (_, _) => ToggleColumn(column, item);
+            menu.Items.Add(item);
+        }
+
+        menu.IsOpen = true;
+    }
+
+    private void ToggleColumn(DataGridColumn column, MenuItem item)
+    {
+        if (column.Visibility == Visibility.Visible)
+        {
+            var visibleCount = GameGrid.Columns.Count(entry => entry.Visibility == Visibility.Visible);
+            if (visibleCount <= 1)
+            {
+                item.IsChecked = true;
+                _viewModel.StatusMessage = "至少要保留一列。";
+                return;
+            }
+
+            column.Visibility = Visibility.Collapsed;
+        }
+        else
+        {
+            column.Visibility = Visibility.Visible;
+        }
+
+        item.IsChecked = column.Visibility == Visibility.Visible;
+        SaveViewState();
     }
 
     private void RestoreSort(ListViewState state)
@@ -211,7 +281,15 @@ public partial class MainWindow : Window
             OnlyMissing = _viewModel.OnlyMissing,
             ColumnWidths = GameGrid.Columns
                 .Where(c => c.Header is string)
-                .ToDictionary(c => (string)c.Header, c => c.ActualWidth),
+                .ToDictionary(
+                    c => (string)c.Header,
+                    c => c.Visibility == Visibility.Visible
+                        ? c.ActualWidth
+                        : c.Width.IsAbsolute ? c.Width.Value : c.ActualWidth),
+            HiddenColumns = GameGrid.Columns
+                .Where(c => c.Header is string && c.Visibility != Visibility.Visible)
+                .Select(c => (string)c.Header)
+                .ToList(),
         };
 
         var sorted = GameGrid.Columns.FirstOrDefault(c => c.SortDirection != null);

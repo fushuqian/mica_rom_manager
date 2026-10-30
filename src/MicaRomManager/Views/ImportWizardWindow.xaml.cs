@@ -90,8 +90,12 @@ public partial class ImportWizardWindow : Window, INotifyPropertyChanged
                 var snapshot = Sources.ToList();
                 var recursive = RecursiveCheck.IsChecked == true;
                 BusyText.Text = "正在计算指纹…";
+                var hashProgress = new Progress<RomImporter.ScanProgress>(value =>
+                {
+                    if (_scanning) BusyText.Text = $"正在计算指纹（{value.Processed}/{value.Total}）…";
+                });
                 var scan = await Task.Run(() => RomImporter.Scan(snapshot, recursive, _existingPaths,
-                    _existingHashes, null, _platformFormats));
+                    _existingHashes, null, _platformFormats, hashProgress));
 
                 if (!Sources.SequenceEqual(snapshot))
                 {

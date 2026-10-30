@@ -18,7 +18,10 @@ public partial class EmulatorManagerViewModel : ObservableObject
     [ObservableProperty] private Emulator? selectedEmulator;
     [ObservableProperty] private string statusMessage = "选择模拟器后可导入、调试或更新。";
     [ObservableProperty] private bool isBusy;
+    [ObservableProperty] private bool isDownloading;
     [ObservableProperty] private double downloadProgress;
+
+    private CancellationTokenSource? _updateCts;
 
     public EmulatorManagerViewModel()
     {
@@ -38,14 +41,26 @@ public partial class EmulatorManagerViewModel : ObservableObject
     [RelayCommand]
     private void AddEmulator()
     {
-        var name = "新模拟器";
-        var index = 2;
-        while (Emulators.Any(e => string.Equals(e.Name, name, StringComparison.OrdinalIgnoreCase)))
+        var existingNames = Emulators.Select(e => e.Name).ToList();
+        var templates = EmulatorTemplateStore.Load(AppServices.Paths);
+        var emulator = EmulatorTemplateFactory.CreateBlank(existingNames);
+        var fromTemplate = false;
+
+        if (templates.Count > 0)
         {
-            name = $"新模拟器 {index++}";
+            var window = new EmulatorTemplateWindow(templates) { Owner = Application.Current?.MainWindow };
+            if (window.ShowDialog() != true) return;
+
+            if (window.SelectedTemplate != null)
+            {
+                emulator = EmulatorTemplateFactory.CreateFromTemplate(
+                    window.SelectedTemplate,
+                    existingNames,
+                    AppServices.Platforms.ListAll().Select(platform => platform.Name).ToList());
+                fromTemplate = true;
+            }
         }
 
-        var emulator = new Emulator { Name = name, Enabled = true };
         try
         {
             AppServices.EmulatorRepo.Save(emulator);
@@ -58,7 +73,9 @@ public partial class EmulatorManagerViewModel : ObservableObject
 
         Reload();
         SelectedEmulator = Emulators.FirstOrDefault(e => e.Id == emulator.Id);
-        StatusMessage = $"已新增「{name}」，可用「编辑配置」改名称/官网，或直接导入程序文件。";
+        StatusMessage = fromTemplate
+            ? $"已按模板新增「{emulator.Name}」，平台绑定按同名匹配；改名过的平台请到「设置 → 平台」手动绑定。"
+            : $"已新增「{emulator.Name}」，可用「编辑配置」改名称/官网，或直接导入程序文件。";
     }
 
     [RelayCommand]
@@ -170,19 +187,213 @@ public partial class EmulatorManagerViewModel : ObservableObject
         if (emulator == null) return;
         if (string.IsNullOrWhiteSpace(emulator.WebsiteUrl))
         {
-            MessageBox.Show("该模拟器还没有配置官网地址，请先在「编辑配置」里填写。", "版本更新",
+            MessageBox.Show("该模拟器还没有配置官网地址，请先在「编辑配置」里填写。", "打开官网",
                 MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
 
+        if (OpenUrl(emulator.WebsiteUrl)) StatusMessage = $"已打开「{emulator.Name}」的官网 / 发布页";
+    }
+
+    /// <summary>
+    /// 用 GitHub Release 检查更新：确认后下载 Windows 资产并覆盖安装，版本号写回。
+    /// 下载可取消；安装失败时安装器会自动回滚到旧目录。
+    /// </summary>
+    [RelayCommand]
+    private async Task CheckUpdateAsync()
+    {
+        var emulator = SelectedEmulator;
+        if (emulator == null)
+        {
+            MessageBox.Show("请先在左侧选择模拟器。", "检查更新",
+                MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        if (IsBusy) return;
+
+        var repo = EmulatorUpdater.NormalizeRepository(
+            string.IsNullOrWhiteSpace(emulator.GithubRepo) ? emulator.WebsiteUrl : emulator.GithubRepo);
+        if (repo.Length == 0)
+        {
+            MessageBox.Show(
+                "该模拟器还没有配置 GitHub 仓库。\n\n"
+                + "请在「编辑配置」里填写 owner/repo（例如 libretro/RetroArch），"
+                + "或点「打开官网」手动下载更新。",
+                "检查更新", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        IsBusy = true;
+        DownloadProgress = 0;
+        StatusMessage = $"正在检查「{emulator.Name}」的更新…";
+
+        UpdateCheckResult result;
         try
         {
-            Process.Start(new ProcessStartInfo(emulator.WebsiteUrl) { UseShellExecute = true });
-            StatusMessage = $"已打开「{emulator.Name}」的官网 / 发布页";
+            result = await AppServices.Updater.CheckAsync(repo, emulator.Version);
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+
+        StatusMessage = result.Message;
+        if (!result.Success)
+        {
+            MessageBox.Show(result.Message, "检查更新", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        var latestVersion = EmulatorUpdater.VersionFromTag(result.LatestTag);
+        if (!EmulatorUpdater.IsNewer(result.LatestTag, emulator.Version))
+        {
+            MessageBox.Show(result.Message, "检查更新", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(result.AssetUrl))
+        {
+            var open = MessageBox.Show(
+                result.Message + "\n\n没有找到可自动安装的 Windows 资产，是否打开 Release 页面手动下载？",
+                "检查更新", MessageBoxButton.YesNo, MessageBoxImage.Question);
+            if (open == MessageBoxResult.Yes) OpenUrl(result.ReleaseUrl ?? emulator.WebsiteUrl);
+            return;
+        }
+
+        var targetDir = Path.Combine(AppServices.Paths.EmulatorsDir, RomImporter.SanitizeFolderName(emulator.Name));
+        var confirm = MessageBox.Show(
+            $"{result.Message}\n\n"
+            + $"下载资产：{result.AssetName}\n"
+            + $"安装到：{targetDir}\n"
+            + "旧版本会整体移到 data\\emulators\\.backup。\n\n现在下载并安装？",
+            "检查更新", MessageBoxButton.YesNo, MessageBoxImage.Question);
+        if (confirm != MessageBoxResult.Yes) return;
+
+        await DownloadAndInstallAsync(emulator, result, latestVersion);
+    }
+
+    private async Task DownloadAndInstallAsync(Emulator emulator, UpdateCheckResult result, string latestVersion)
+    {
+        var assetName = string.IsNullOrWhiteSpace(result.AssetName)
+            ? $"{emulator.Name}-{latestVersion}"
+            : result.AssetName;
+        var fileName = RomImporter.SanitizeFolderName(assetName);
+        if (Path.GetExtension(fileName).Length == 0) fileName += ".zip";
+
+        var downloadPath = Path.Combine(AppServices.Paths.DownloadsDir, fileName);
+        _updateCts = new CancellationTokenSource();
+        IsDownloading = true;
+        IsBusy = true;
+        DownloadProgress = 0;
+        StatusMessage = $"正在下载 {assetName}…";
+
+        var progress = new Progress<double>(value => DownloadProgress = value < 0 ? 0 : value);
+
+        try
+        {
+            var (downloaded, message, _) = await AppServices.Updater.DownloadAsync(
+                result.AssetUrl!, downloadPath, progress, _updateCts.Token);
+            if (!downloaded)
+            {
+                if (_updateCts?.IsCancellationRequested == true)
+                {
+                    StatusMessage = "已取消下载";
+                    return;
+                }
+
+                StatusMessage = message;
+                MessageBox.Show(message, "下载更新", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            IsDownloading = false;
+            DownloadProgress = 100;
+            StatusMessage = "下载完成，正在安装…";
+
+            EmulatorInstaller.InstallResult install;
+            try
+            {
+                install = await Task.Run(() => AppServices.Installer.InstallFromArchive(downloadPath, emulator.Name));
+            }
+            catch (Exception ex)
+            {
+                StatusMessage = $"安装失败：{ex.Message}";
+                MessageBox.Show(
+                    $"下载完成，但安装失败：{ex.Message}\n\n安装包保留在：{downloadPath}",
+                    "安装更新", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            if (latestVersion.Length > 0) emulator.Version = latestVersion;
+            if (string.IsNullOrWhiteSpace(emulator.WebsiteUrl) && !string.IsNullOrWhiteSpace(result.ReleaseUrl))
+                emulator.WebsiteUrl = result.ReleaseUrl!;
+
+            FinishInstall(emulator, install);
+            var updated = Emulators.FirstOrDefault(e => e.Id == emulator.Id);
+            if (updated != null && EmulatorPaths.ResolveExe(updated) == null)
+            {
+                MessageBox.Show(
+                    "安装完成，但没有自动找到可执行文件。请用「编辑配置」指定主程序。",
+                    "安装更新", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+
+            TryDeleteFile(downloadPath);
+            StatusMessage = $"「{emulator.Name}」已更新到 {emulator.Version}";
+            MessageBox.Show(StatusMessage, "更新完成", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+        catch (OperationCanceledException)
+        {
+            StatusMessage = "已取消下载";
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"打开网页失败：{ex.Message}", "版本更新", MessageBoxButton.OK, MessageBoxImage.Error);
+            StatusMessage = $"更新失败：{ex.Message}";
+            MessageBox.Show(StatusMessage, "更新失败", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+        finally
+        {
+            IsDownloading = false;
+            IsBusy = false;
+            DownloadProgress = 0;
+            _updateCts?.Dispose();
+            _updateCts = null;
+        }
+    }
+
+    [RelayCommand]
+    private void CancelUpdate()
+    {
+        if (!IsDownloading) return;
+        StatusMessage = "正在取消下载…";
+        _updateCts?.Cancel();
+    }
+
+    private bool OpenUrl(string? url)
+    {
+        if (string.IsNullOrWhiteSpace(url)) return false;
+
+        try
+        {
+            Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+            return true;
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"打开网页失败：{ex.Message}", "打开官网", MessageBoxButton.OK, MessageBoxImage.Error);
+            return false;
+        }
+    }
+
+    private static void TryDeleteFile(string path)
+    {
+        try
+        {
+            if (File.Exists(path)) File.Delete(path);
+        }
+        catch
+        {
+            // 清理下载包失败不影响更新结果
         }
     }
 

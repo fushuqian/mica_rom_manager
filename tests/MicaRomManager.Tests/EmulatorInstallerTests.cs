@@ -104,4 +104,47 @@ public class EmulatorInstallerTests : IDisposable
         Assert.True(File.Exists(Path.Combine(result.InstallDir, "Languages", "en.po")));
         Assert.Contains(result.ExeCandidates, path => Path.GetFileName(path) == "Dolphin.exe");
     }
+
+    [Fact]
+    public void PrepareTargetWithBackup_ReturnsDistinctBackupPaths()
+    {
+        Write(Path.Combine(_paths.EmulatorsDir, "RetroArch") + "\\", "old.exe", "old");
+
+        var first = _installer.PrepareTargetWithBackup("RetroArch");
+        var second = _installer.PrepareTargetWithBackup("RetroArch");
+
+        Assert.NotNull(first.Backup);
+        Assert.NotNull(second.Backup);
+        Assert.NotEqual(first.Backup, second.Backup);
+        Assert.True(Directory.Exists(first.Backup));
+        Assert.True(Directory.Exists(second.Backup));
+        Assert.True(File.Exists(Path.Combine(first.Backup!, "old.exe")));
+    }
+
+    [Fact]
+    public void RollbackInstall_RemovesPartialTargetAndRestoresBackup()
+    {
+        var target = Path.Combine(_paths.EmulatorsDir, "RetroArch");
+        Write(target + "\\", "partial.exe", "partial");
+
+        var backup = Path.Combine(_paths.BackupsDir, "RetroArch-old");
+        Write(backup + "\\", "retroarch.exe", "old");
+
+        EmulatorInstaller.RollbackInstall(target, backup);
+
+        Assert.True(File.Exists(Path.Combine(target, "retroarch.exe")));
+        Assert.False(File.Exists(Path.Combine(target, "partial.exe")));
+        Assert.False(Directory.Exists(backup));
+    }
+
+    [Fact]
+    public void RollbackInstall_DoesNotThrowWithoutBackup()
+    {
+        var target = Path.Combine(_paths.EmulatorsDir, "RetroArch");
+        Directory.CreateDirectory(target);
+
+        EmulatorInstaller.RollbackInstall(target, null);
+
+        Assert.False(Directory.Exists(target));
+    }
 }

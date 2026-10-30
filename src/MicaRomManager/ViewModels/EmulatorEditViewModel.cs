@@ -63,6 +63,17 @@ public partial class EmulatorEditViewModel : ObservableObject
             }
         }
 
+        var repo = EmulatorUpdater.NormalizeRepository(Model.GithubRepo);
+        if (Model.GithubRepo.Trim().Length > 0 && repo.Length == 0)
+        {
+            Error = "GitHub 仓库格式不对，应填 owner/repo（例如 libretro/RetroArch）。";
+            return;
+        }
+
+        Model.GithubRepo = repo;
+        if (repo.Length > 0 && string.IsNullOrWhiteSpace(Model.WebsiteUrl))
+            Model.WebsiteUrl = $"https://github.com/{repo}/releases";
+
         try
         {
             AppServices.EmulatorRepo.Save(Model);

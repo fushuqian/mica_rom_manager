@@ -27,13 +27,18 @@ public static class RomImporter
         int ExcludedCount,
         int FormatSkippedCount = 0);
 
+    /// <summary>扫描进度（处理到第几个、共几个、当前文件）。</summary>
+    public sealed record ScanProgress(int Processed, int Total, string FilePath);
+
     public static ScanResult Scan(
         IEnumerable<string> inputs,
         bool recursive,
         IEnumerable<string> existingPaths,
         IReadOnlyCollection<string>? existingHashes = null,
         IReadOnlyCollection<string>? allowedExtensions = null,
-        IReadOnlyDictionary<string, IReadOnlyCollection<string>>? platformFormats = null)
+        IReadOnlyDictionary<string, IReadOnlyCollection<string>>? platformFormats = null,
+        IProgress<ScanProgress>? progress = null,
+        CancellationToken cancellationToken = default)
     {
         var existing = new HashSet<string>(existingPaths, StringComparer.OrdinalIgnoreCase);
         var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -55,11 +60,14 @@ public static class RomImporter
         var excluded = 0;
         var formatSkipped = 0;
 
+        // 先收集文件清单，才能给出「已处理 / 总数」的进度；过滤器仍按原语义在 AddFile 里处理。
+        var files = new List<(string Path, bool Explicit)>();
         foreach (var input in inputs)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             if (File.Exists(input))
             {
-                AddFile(input, true);
+                files.Add((input, true));
             }
             else if (Directory.Exists(input))
             {
@@ -71,9 +79,28 @@ public static class RomImporter
                 };
                 foreach (var file in Directory.EnumerateFiles(input, "*", options))
                 {
-                    AddFile(file, false);
+                    cancellationToken.ThrowIfCancellationRequested();
+                    files.Add((file, false));
                 }
             }
+        }
+
+        var reportEvery = Math.Max(1, files.Count / 200);
+        for (var index = 0; index < files.Count; index++)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var (path, explicitSelection) = files[index];
+            AddFile(path, explicitSelection);
+
+            var processed = index + 1;
+            if (progress != null &&
+                (processed == files.Count || processed == 1 || processed % reportEvery == 0))
+            {
+                progress.Report(new ScanProgress(processed, files.Count, path));
+            }
+
+            cancellationToken.ThrowIfCancellationRequested();
         }
 
         return new ScanResult(candidates, duplicates, excluded, formatSkipped);
