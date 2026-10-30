@@ -50,8 +50,8 @@
     "extensions": [ ".iso", ".pkg", ".elf", ".self" ],
     "argsTemplate": "\"{rom}\"",
     "corePath": "",
-    "githubRepo": "RPCS3/rpcs3",
-    "notes": "PS3 模拟器，需要额外固件。"
+    "githubRepo": "RPCS3/rpcs3-binaries-win",
+    "notes": "PS3 模拟器，需要额外固件；更新来自 RPCS3 官方 Windows 构建仓库。"
   },
   {
     "name": "mGBA",

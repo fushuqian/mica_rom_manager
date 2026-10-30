@@ -245,8 +245,8 @@ public partial class EmulatorManagerViewModel : ObservableObject
             return;
         }
 
-        var latestVersion = EmulatorUpdater.VersionFromTag(result.LatestTag);
-        if (!EmulatorUpdater.IsNewer(result.LatestTag, emulator.Version))
+        var latestVersion = EmulatorUpdater.ResolveVersion(result.LatestTag, result.AssetName);
+        if (!EmulatorUpdater.IsNewer(latestVersion, emulator.Version))
         {
             MessageBox.Show(result.Message, "检查更新", MessageBoxButton.OK, MessageBoxImage.Information);
             return;

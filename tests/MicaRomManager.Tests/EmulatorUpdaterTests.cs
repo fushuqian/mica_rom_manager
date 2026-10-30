@@ -90,4 +90,38 @@ public class EmulatorUpdaterTests
     {
         Assert.Equal(expected, EmulatorUpdater.VersionFromTag(tag));
     }
+
+    [Theory]
+    [InlineData("rpcs3-v0.0.43-20511-9508444d_win64_msvc.7z", "0.0.43-20511")]
+    [InlineData("pcsx2-v2.0.2-windows-x64-Qt.7z", "2.0.2")]
+    [InlineData("mGBA-0.10.3-win64.7z", "0.10.3")]
+    [InlineData("RetroArch-Win64.7z", "")]
+    [InlineData("RetroArch-Win64.zip", "")]
+    [InlineData("", "")]
+    [InlineData(null, "")]
+    public void VersionFromAssetName_ExtractsDottedVersion(string? assetName, string expected)
+    {
+        Assert.Equal(expected, EmulatorUpdater.VersionFromAssetName(assetName));
+    }
+
+    [Theory]
+    [InlineData("build-9508444d31338e89a4f4cee1d0cee1800c96d2c1",
+        "rpcs3-v0.0.43-20511-9508444d_win64_msvc.7z", "0.0.43-20511")]
+    [InlineData("v0.25.4", "whatever.zip", "0.25.4")]
+    [InlineData(null, "app-1.2.3.zip", "1.2.3")]
+    [InlineData("nightly", "RetroArch-Win64.7z", "nightly")]
+    [InlineData("build-x", null, "build-x")]
+    public void ResolveVersion_PrefersTagUnlessTagIsNotAVersion(string? tag, string? asset, string expected)
+    {
+        Assert.Equal(expected, EmulatorUpdater.ResolveVersion(tag, asset));
+    }
+
+    [Theory]
+    [InlineData("0.0.43-20511", "build-9508444d", true)]   // 旧的非数字版本应提示更新一次
+    [InlineData("build-9508444d", "0.0.43-20511", false)]
+    [InlineData("nightly", "1.2.3", false)]
+    public void IsNewer_NumericLatestBeatsNonNumericCurrent(string latest, string current, bool expected)
+    {
+        Assert.Equal(expected, EmulatorUpdater.IsNewer(latest, current));
+    }
 }

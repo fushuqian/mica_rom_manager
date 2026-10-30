@@ -2,6 +2,7 @@ using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 
 namespace MicaRomManager.Services;
 
@@ -76,13 +77,14 @@ public sealed class EmulatorUpdater
                 }
             }
 
-            var isNewer = IsNewer(tag, currentVersion);
+            var displayVersion = ResolveVersion(tag, assetName);
+            var isNewer = IsNewer(displayVersion, currentVersion);
 
             var message = string.IsNullOrWhiteSpace(currentVersion)
-                ? $"最新版本：{tag ?? "未知"}。"
+                ? $"最新版本：{displayVersion}。"
                 : isNewer
-                    ? $"发现新版本：{tag}（本地：{currentVersion}）。"
-                    : $"已是最新版本（本地：{currentVersion}，最新：{tag}）。";
+                    ? $"发现新版本：{displayVersion}（本地：{currentVersion}）。"
+                    : $"已是最新版本（本地：{currentVersion}，最新：{displayVersion}）。";
 
             return new UpdateCheckResult(true, message, tag, releaseUrl, assetName, assetUrl);
         }
@@ -201,6 +203,41 @@ public sealed class EmulatorUpdater
     public static string VersionFromTag(string? tag) =>
         string.IsNullOrWhiteSpace(tag) ? "" : tag.Trim().TrimStart('v', 'V');
 
+    /// <summary>
+    /// 从资产文件名里提取版本号。例如 RPCS3 的
+    /// rpcs3-v0.0.43-20511-9508444d_win64_msvc.7z → 0.0.43-20511。
+    /// 没有点分数字时返回空串。
+    /// </summary>
+    public static string VersionFromAssetName(string? assetName)
+    {
+        if (string.IsNullOrWhiteSpace(assetName)) return "";
+
+        // 去掉压缩包扩展名，避免把 RetroArch-Win64.7z 里的 “64.7” 误当成版本号。
+        var name = Regex.Replace(assetName.Trim(), @"\.(zip|7z|rar|tar\.gz|tgz)$", "",
+            RegexOptions.IgnoreCase);
+
+        var match = Regex.Match(name, @"[vV]?(\d+(?:\.\d+)+(?:-\d+)?)");
+        if (!match.Success) return "";
+
+        return match.Groups[1].Value.Trim('-', '_', '.');
+    }
+
+    /// <summary>
+    /// 写回与比较用的版本：tag 本身是版本号时用 tag；
+    /// tag 不是版本号（例如 RPCS3 的 build-&lt;hash&gt;）时从资产名里取。
+    /// </summary>
+    public static string ResolveVersion(string? tag, string? assetName)
+    {
+        var tagVersion = VersionFromTag(tag);
+        if (LooksLikeVersion(tagVersion)) return tagVersion;
+
+        var assetVersion = VersionFromAssetName(assetName);
+        return assetVersion.Length > 0 ? assetVersion : tagVersion;
+    }
+
+    private static bool LooksLikeVersion(string? value) =>
+        !string.IsNullOrWhiteSpace(value) && char.IsDigit(value[0]);
+
     private static string NormalizeVersion(string? version) => VersionFromTag(version);
 
     /// <summary>
@@ -240,12 +277,19 @@ public sealed class EmulatorUpdater
     {
         var left = ParseVersion(latest);
         var right = ParseVersion(current);
-        if (left != null && right != null) return left > right;
+
+        // latest 能解析成数字版本、current 不能（例如旧的 build-<hash>）时，
+        // 视为有更新：让用户装一次，把版本号顺便修正成可比较的形式。
+        if (left != null) return right == null || left > right;
+
+        // latest 不是数字版本、current 是数字版本时不提示更新，避免 nightly/build 标签永远「更新」。
+        if (right != null) return false;
 
         var leftText = NormalizeVersion(latest);
         if (leftText.Length == 0) return false;
         var rightText = NormalizeVersion(current);
-        return rightText.Length == 0 || string.CompareOrdinal(leftText, rightText) > 0;
+        if (rightText.Length == 0) return true;
+        return string.CompareOrdinal(leftText, rightText) > 0;
     }
 
     private static Version? ParseVersion(string? value)

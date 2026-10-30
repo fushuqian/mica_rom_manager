@@ -1,5 +1,24 @@
 # 变更记录（CHANGELOG）
 
+## 2026-10-30 v0.26.1
+
+### 修复
+
+- RPCS3 的更新源改为官方 Windows 构建仓库 `RPCS3/rpcs3-binaries-win`（原 `RPCS3/rpcs3` 只有源码 tag、没有可下载资产，检查更新拿不到安装包）；内置模板与默认官网同步修正。
+- 非语义化 Release tag（如 RPCS3 的 `build-<hash>`）改为从资产文件名提取版本：`rpcs3-v0.0.43-20511-9508444d_win64_msvc.7z` → `0.0.43-20511`；版本写回与新旧比较都使用提取后的版本。旧的本机 `build-<hash>` 版本会提示更新一次并自动修正。
+- `IsNewer` 不再把非数字 tag 与数字版本做字典序比较，避免 `nightly` / `build-*` 被误判成永远有新版本。
+
+### 变更
+
+- 本机运行数据已修正：RPCS3 的 `github_repo`、`website_url` 与版本号（修改前已备份到 `publish\data\backups\`）。
+- 已有安装的 `data\EmulatorTemplates.json` 不会自动覆盖；如需刷新内置模板，删除该文件后重启，程序会从 `Resources\EmulatorTemplates.json` 重新复制。
+
+### 验证
+
+- `dotnet build`：0 警告 0 错误。
+- `dotnet test`：288 个用例全部通过（273 + 15：资产版本提取、版本比较、URL 归一化）。
+- `tools\publish.ps1` 发布并校验通过；`publish` 启动冒烟通过。
+
 ## 2026-10-30 v0.26.0
 
 ### 新增
