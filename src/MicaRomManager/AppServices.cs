@@ -54,6 +54,16 @@ public static class AppServices
         {
             // 规范化失败不影响启动
         }
+
+        // 早期版本把 API Key 明文存进 settings，启动时就地加密（幂等）
+        try
+        {
+            SecretProtector.Migrate(Settings, AiOptions.ApiKeyKey);
+        }
+        catch
+        {
+            // 迁移失败不影响启动，下次保存时仍会加密
+        }
     }
 
     /// <summary>当前库目录（已按便携模式展开为绝对路径）。</summary>

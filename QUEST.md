@@ -1,5 +1,13 @@
 # 需求清单（QUEST）
 
+## Q-032 AI 可观测性、并发安全与密钥加密
+
+- 描述：1）AI 工具异常写入 `ai.log`；2）`AiChatClient.Rebuild` 加锁，避免改代理时与标签/翻译并发冲突；3）API Key 用 DPAPI 加密落库，兼容旧明文并启动时迁移；4）补 `README.md` / `LICENSE` / `tools\release.ps1`。
+- 状态：已完成 v0.25.3（212 单测通过，0 警告）
+- 优先级：中高
+- 创建时间：2026-10-30
+- 更新时间：2026-10-30
+
 ## Q-031 CI 门禁与高风险模块补测
 
 - 描述：1）加 GitHub Actions，push/PR 自动 restore → build → test；2）补 `RomHasher`、`EmulatorPaths`、`RomLauncher`、`EmulatorInstaller`、`EmulatorUpdater`、`PathService`、`FileRecycleBin` 的单测（这些模块会覆盖或删除用户文件）；3）统一构建配置（Directory.Build.props / global.json / .editorconfig）。

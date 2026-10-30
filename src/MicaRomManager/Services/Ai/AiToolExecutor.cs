@@ -60,6 +60,8 @@ public sealed class AiToolExecutor : IAiToolExecutor
         }
         catch (Exception ex)
         {
+            // 工具异常以前只回给模型，界面和日志里都看不到，排查时等于瞎猜。
+            AiLog.Write($"工具异常 tool={call.Name} type={ex.GetType().Name} msg={ex.Message}");
             return Error(call, $"工具执行失败：{ex.Message}");
         }
     }

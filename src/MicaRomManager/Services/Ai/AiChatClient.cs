@@ -20,6 +20,7 @@ public sealed class AiChatClient : IAiChatClient
 {
     private readonly Data.SettingsRepository _settings;
     private readonly NetworkClientProvider _network;
+    private readonly object _clientGate = new();
     private HttpClient _client;
 
     /// <summary>null 字段一律不写进请求体：部分端点对 `tool_call_id: null`、`tool_calls: null` 直接报 400。</summary>
@@ -44,8 +45,12 @@ public sealed class AiChatClient : IAiChatClient
 
     public void Rebuild()
     {
-        _client.Dispose();
-        _client = CreateClient();
+        lock (_clientGate)
+        {
+            // 不 Dispose 旧实例：可能还有请求正握着它（标签/翻译是 2 路并发），
+            // 直接换新实例让旧请求自然跑完，代价只是多留一个连接池。
+            _client = CreateClient();
+        }
     }
 
     public AiOptions Options => AiOptions.Load(_settings);
@@ -144,13 +149,16 @@ public sealed class AiChatClient : IAiChatClient
         timeout.CancelAfter(TimeSpan.FromSeconds(options.TimeoutSeconds));
 
         var stopwatch = Stopwatch.StartNew();
+        HttpClient client;
+        lock (_clientGate) client = _client;
+
         try
         {
             using var request = new HttpRequestMessage(HttpMethod.Post, url);
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", options.ApiKey);
             request.Content = new StringContent(JsonSerializer.Serialize(body, BodyOptions), Encoding.UTF8, "application/json");
 
-            using var response = await _client.SendAsync(request, timeout.Token);
+            using var response = await client.SendAsync(request, timeout.Token);
             var text = await response.Content.ReadAsStringAsync(timeout.Token);
             stopwatch.Stop();
 

@@ -1,5 +1,26 @@
 # 变更记录（CHANGELOG）
 
+## 2026-10-30 v0.25.3
+
+### 安全
+
+- AI API Key 落库前用 Windows DPAPI（当前用户）加密，密文带 `dpapi:` 前缀；启动时把旧库里的明文 Key 就地加密，读取兼容明文。换机器或换用户后解不开时按未配置处理，不会崩。
+
+### 修复
+
+- AI 工具执行异常现在会写进 `data\logs\ai.log`（记录工具名、异常类型与消息）。此前只回给模型，界面和日志都看不到，排查基本靠猜。
+- `AiChatClient.Rebuild()` 加锁并改为替换实例而非释放旧实例；改代理时若标签/翻译正在并发请求，不会再抛 `ObjectDisposedException`。
+
+### 新增
+
+- `README.md`（功能、上手、数据目录、AI 配置、构建与发布）与 `LICENSE`（MIT）。
+- `tools\release.ps1`：一条命令完成「发布 → 打包 zip → 从 CHANGELOG 取 note → 建 GitHub Release」。
+
+### 验证
+
+- `dotnet build`：0 警告 0 错误。
+- `dotnet test`：212 个用例全部通过（204 + 8：密钥加密 6、客户端重建 2）。
+
 ## 2026-10-30 v0.25.2
 
 ### 修复

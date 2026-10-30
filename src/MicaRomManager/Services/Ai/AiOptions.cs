@@ -37,7 +37,7 @@ public sealed class AiOptions
         return new AiOptions
         {
             BaseUrl = settings.Get(BaseUrlKey)?.Trim() ?? "",
-            ApiKey = settings.Get(ApiKeyKey)?.Trim() ?? "",
+            ApiKey = SecretProtector.Unprotect(settings.Get(ApiKeyKey)?.Trim()),
             Model = settings.Get(ModelKey)?.Trim() ?? "",
             TimeoutSeconds = timeout,
             BatchLimit = limit,

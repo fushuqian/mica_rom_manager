@@ -1,5 +1,14 @@
 # 经验记录（MEMORIES）
 
+## 2026-10-30（安全与发布）
+
+- **PowerShell 脚本里不要写中文**：无 BOM 的 `.ps1` 被系统按 ANSI 读，中文字符串会被截断成非法引号，直接 ParserError。`tools\*.ps1` 一律只用英文，中文提示放到 C# 或文档里。
+- API Key 这类只在本机用的敏感值，用 `ProtectedData.Protect(..., DataProtectionScope.CurrentUser)` 加密即可，net9.0-windows 直接可用，不必额外加包；密文带 `dpapi:` 前缀，读取时前缀判断能同时兼容旧明文。
+- 加密迁移要幂等：`Migrate` 里先判断 `IsProtected` 再写，否则每次启动都重写 settings。
+- 换机器/换用户后 DPAPI 解不开属正常，返回空值让用户重填，不能抛异常阻断启动。
+- `HttpClient` 的「改配置重建」不要 `Dispose` 旧实例：可能还有并发请求握着它（标签/翻译是 2 路）。加锁换引用即可，泄漏一个连接池比 `ObjectDisposedException` 便宜。
+- 工具/后台异常一定要落日志：只回给模型或只弹一次提示，事后完全无法复盘。
+
 ## 2026-10-30（CI 与补测）
 
 - GitHub Actions 用 `windows-latest` 可以跑 `net9.0-windows` + `UseWPF` 的测试工程；`dotnet test --no-build` 必须和前一步 build 用同一个 `-c`，否则找不到产物。

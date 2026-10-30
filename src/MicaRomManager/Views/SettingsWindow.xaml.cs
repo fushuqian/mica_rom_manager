@@ -839,7 +839,8 @@ public partial class SettingsWindow : Window
         }
 
         AppServices.Settings.Set(AiOptions.BaseUrlKey, baseUrl);
-        AppServices.Settings.Set(AiOptions.ApiKeyKey, CurrentAiKey());
+        // Key 落库前用 DPAPI 加密，避免明文躺在 mica.db 里（目录还可能被同步盘带走）
+        AppServices.Settings.Set(AiOptions.ApiKeyKey, SecretProtector.Protect(CurrentAiKey()));
         AppServices.Settings.Set(AiOptions.ModelKey, AiModelBox.Text.Trim());
         AppServices.Settings.Set(AiOptions.TimeoutKey, timeout.ToString());
         AppServices.Settings.Set(AiOptions.BatchLimitKey, limit.ToString());
