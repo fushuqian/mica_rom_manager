@@ -1,5 +1,27 @@
 # 变更记录（CHANGELOG）
 
+## 2026-10-30 v0.25.2
+
+### 修复
+
+- 「检查更新」的版本比较改为按数字段解析。原实现用字符串字典序，会把 `0.9` 判定成比 `0.10` 新，导致漏报更新。
+
+### 变更
+
+- 抽出 `EmulatorUpdater.PickWindowsAsset`（Release 资产选择）与 `IsNewer`（版本比较）两个纯函数，行为不变、可单测。
+- `RomHasher` 的采样阈值、`PathService` 的基目录改为可注入，便于测试便携与采样分支。
+- 新增 `Directory.Build.props`（LangVersion / Nullable / ImplicitUsings / 确定性构建）、`global.json`（SDK 9.0.x 滚动）、`.editorconfig`；两个 csproj 去掉重复声明。
+
+### 新增
+
+- GitHub Actions CI：push 与 PR 自动 `restore → build → test`，测试结果以 artifact 上传。172 → 204 个用例从此有门禁。
+- 补 32 个单测，覆盖此前零测试的「会动用户文件」模块：`RomHasher`、`EmulatorPaths`、`RomLauncher`、`EmulatorInstaller`、`EmulatorUpdater`、`PathService`、`FileRecycleBin`。
+
+### 验证
+
+- `dotnet build`：0 警告 0 错误。
+- `dotnet test`：204 个用例全部通过（172 + 32）。
+
 ## 2026-10-30 v0.25.1
 
 ### 修复

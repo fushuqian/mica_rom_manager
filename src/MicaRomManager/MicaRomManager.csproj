@@ -3,12 +3,10 @@
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net9.0-windows</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
     <RootNamespace>MicaRomManager</RootNamespace>
     <AssemblyName>MicaRomManager</AssemblyName>
-    <Version>0.25.1</Version>
+    <Version>0.25.2</Version>
     <ApplicationIcon>app.ico</ApplicationIcon>
     <Platforms>AnyCPU</Platforms>
     <PublishSingleFile>true</PublishSingleFile>
@@ -25,6 +23,11 @@
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
     <PackageReference Include="Microsoft.Data.Sqlite" Version="9.0.0" />
     <PackageReference Include="SharpCompress" Version="0.50.7" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- 测试需要直接验证采样哈希、资产选择、版本比较等内部实现 -->
+    <InternalsVisibleTo Include="MicaRomManager.Tests" />
   </ItemGroup>
 
   <ItemGroup>

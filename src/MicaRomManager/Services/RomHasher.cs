@@ -13,7 +13,10 @@ public static class RomHasher
     private const long FullHashLimit = 128L * 1024 * 1024;
     private const int SampleSize = 1024 * 1024;
 
-    public static string Compute(string path)
+    public static string Compute(string path) => Compute(path, FullHashLimit);
+
+    /// <summary>阈值可注入，便于测试采样分支（生产统一走 <see cref="FullHashLimit"/>）。</summary>
+    internal static string Compute(string path, long fullHashLimit)
     {
         if (string.IsNullOrWhiteSpace(path)) return "";
 
@@ -22,7 +25,7 @@ public static class RomHasher
             var info = new FileInfo(path);
             if (!info.Exists) return "";
 
-            if (info.Length <= FullHashLimit) return HashFull(path);
+            if (info.Length <= fullHashLimit) return HashFull(path);
             return "fast:" + HashSampled(path, info.Length);
         }
         catch

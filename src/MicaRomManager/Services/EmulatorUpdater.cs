@@ -64,37 +64,21 @@ public sealed class EmulatorUpdater
             if (root.TryGetProperty("assets", out var assets) && assets.ValueKind == JsonValueKind.Array)
             {
                 var candidates = assets.EnumerateArray()
-                    .Select(a => new
-                    {
-                        Name = a.TryGetProperty("name", out var nameElement) ? nameElement.GetString() : null,
-                        Url = a.TryGetProperty("browser_download_url", out var downloadElement) ? downloadElement.GetString() : null,
-                    })
+                    .Select(a => (
+                        Name: a.TryGetProperty("name", out var nameElement) ? nameElement.GetString() : null,
+                        Url: a.TryGetProperty("browser_download_url", out var downloadElement) ? downloadElement.GetString() : null))
                     .Where(a => !string.IsNullOrWhiteSpace(a.Url))
                     .ToList();
 
-                // 优先 Windows 版压缩包（zip 优先于 7z），其它格式不自动安装
-                var archives = candidates
-                    .Where(a => a.Name?.EndsWith(".zip", StringComparison.OrdinalIgnoreCase) == true ||
-                                a.Name?.EndsWith(".7z", StringComparison.OrdinalIgnoreCase) == true)
-                    .ToList();
-                var picked =
-                    archives.FirstOrDefault(a => a.Name!.Contains("win64", StringComparison.OrdinalIgnoreCase)) ??
-                    archives.FirstOrDefault(a => a.Name!.Contains("windows", StringComparison.OrdinalIgnoreCase)) ??
-                    archives.FirstOrDefault(a => a.Name!.Contains("-win", StringComparison.OrdinalIgnoreCase)) ??
-                    archives.FirstOrDefault(a => a.Name!.EndsWith(".zip", StringComparison.OrdinalIgnoreCase)) ??
-                    archives.FirstOrDefault() ??
-                    candidates.FirstOrDefault();
+                var picked = PickWindowsAsset(candidates);
                 if (picked != null)
                 {
-                    assetName = picked.Name;
-                    assetUrl = picked.Url;
+                    assetName = picked.Value.Name;
+                    assetUrl = picked.Value.Url;
                 }
             }
 
-            var normalizedCurrent = NormalizeVersion(currentVersion);
-            var normalizedLatest = NormalizeVersion(tag);
-            var isNewer = !string.IsNullOrEmpty(normalizedLatest) &&
-                          (string.IsNullOrEmpty(normalizedCurrent) || string.CompareOrdinal(normalizedLatest, normalizedCurrent) > 0);
+            var isNewer = IsNewer(tag, currentVersion);
 
             var message = string.IsNullOrWhiteSpace(currentVersion)
                 ? $"最新版本：{tag ?? "未知"}。"
@@ -183,4 +167,74 @@ public sealed class EmulatorUpdater
 
     private static string NormalizeVersion(string? version) =>
         string.IsNullOrWhiteSpace(version) ? "" : version.Trim().TrimStart('v', 'V');
+
+    /// <summary>
+    /// 从 Release 资产里挑 Windows 包：win64 &gt; windows &gt; -win &gt; 任意 zip &gt; 任意 7z &gt; 第一个资产。
+    /// 抽成纯函数便于测试，避免误装 3DS / Switch 构建。
+    /// </summary>
+    internal static (string? Name, string? Url)? PickWindowsAsset(
+        IReadOnlyList<(string? Name, string? Url)> assets)
+    {
+        if (assets.Count == 0) return null;
+
+        var archives = assets
+            .Where(a => a.Name?.EndsWith(".zip", StringComparison.OrdinalIgnoreCase) == true
+                        || a.Name?.EndsWith(".7z", StringComparison.OrdinalIgnoreCase) == true)
+            .ToList();
+
+        foreach (var marker in new[] { "win64", "windows", "-win" })
+        {
+            var hit = archives.FirstOrDefault(a =>
+                a.Name!.Contains(marker, StringComparison.OrdinalIgnoreCase));
+            if (hit.Name != null) return hit;
+        }
+
+        var zip = archives.FirstOrDefault(a =>
+            a.Name!.EndsWith(".zip", StringComparison.OrdinalIgnoreCase));
+        if (zip.Name != null) return zip;
+        if (archives.Count > 0) return archives[0];
+
+        return assets[0];
+    }
+
+    /// <summary>
+    /// latest 是否比 current 新。按数字段比较，避免 "0.9" 与 "0.10" 的字典序误判
+    /// （原实现用 CompareOrdinal，会把 0.9 判成比 0.10 新）。
+    /// </summary>
+    internal static bool IsNewer(string? latest, string? current)
+    {
+        var left = ParseVersion(latest);
+        var right = ParseVersion(current);
+        if (left != null && right != null) return left > right;
+
+        var leftText = NormalizeVersion(latest);
+        if (leftText.Length == 0) return false;
+        var rightText = NormalizeVersion(current);
+        return rightText.Length == 0 || string.CompareOrdinal(leftText, rightText) > 0;
+    }
+
+    private static Version? ParseVersion(string? value)
+    {
+        var text = NormalizeVersion(value);
+        if (text.Length == 0) return null;
+
+        var parts = text.Split(new[] { '.', '-', '+', '_' }, StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length == 0) return null;
+
+        var numbers = new int[4];
+        for (var index = 0; index < parts.Length && index < 4; index++)
+        {
+            var digits = new string(parts[index].TakeWhile(char.IsDigit).ToArray());
+            if (digits.Length == 0)
+            {
+                if (index == 0) return null;
+                break;
+            }
+
+            if (!int.TryParse(digits, out var parsed)) return null;
+            numbers[index] = parsed;
+        }
+
+        return new Version(numbers[0], numbers[1], numbers[2], numbers[3]);
+    }
 }

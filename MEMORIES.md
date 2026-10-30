@@ -1,5 +1,14 @@
 # 经验记录（MEMORIES）
 
+## 2026-10-30（CI 与补测）
+
+- GitHub Actions 用 `windows-latest` 可以跑 `net9.0-windows` + `UseWPF` 的测试工程；`dotnet test --no-build` 必须和前一步 build 用同一个 `-c`，否则找不到产物。
+- 需要测内部实现时用 csproj 的 `<InternalsVisibleTo Include="MicaRomManager.Tests" />` Item，比手写 AssemblyInfo 干净。
+- 版本比较别用 `string.CompareOrdinal`：`0.9` 会被判成比 `0.10` 新。按数字段解析成 `Version` 再比。
+- `Directory.Build.props` 一旦集中了 `Nullable`/`ImplicitUsings`，各 csproj 里的同名项要删掉，否则以后改一处忘一处。
+- 给路径/哈希这类静态服务加「可注入阈值或基目录」的 internal 重载，成本很低，但让采样分支和便携分支第一次变得可测。
+- 测试里造文件必须真实落到断言期望的目录：`CreateFile("RetroArch\\retroarch.exe")` 与 `Path.Combine(_dir, "retroarch.exe")` 是两个地方，写错不会报错，只会 Null。
+
 ## 2026-10-30
 
 - AI 助手：取消或失败要在**同一次循环里**把本轮所有 tool_call 的响应补齐；只 append 了带 `tool_calls` 的 assistant 消息就抛 `OperationCanceledException`，历史里就会留下没有配对 tool 响应的消息，之后每次请求都会被端点 400 拒绝，且用户看不出来原因。

@@ -18,9 +18,14 @@ public sealed class PathService
     public static string TemplatesPath => Path.Combine(AppContext.BaseDirectory, "Resources", "EmulatorTemplates.json");
     public static string DeviceProfilesPath => Path.Combine(AppContext.BaseDirectory, "Resources", "DeviceProfiles.json");
 
-    public PathService()
+    public PathService() : this(AppContext.BaseDirectory)
     {
-        var portable = Path.Combine(AppContext.BaseDirectory, "data");
+    }
+
+    /// <summary>基目录可注入，便于测试便携模式（生产固定在程序目录）。</summary>
+    internal PathService(string baseDirectory)
+    {
+        var portable = Path.Combine(baseDirectory, "data");
         DataDir = IsWritable(portable)
             ? portable
             : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "MicaRomManager");

@@ -1,5 +1,13 @@
 # 需求清单（QUEST）
 
+## Q-031 CI 门禁与高风险模块补测
+
+- 描述：1）加 GitHub Actions，push/PR 自动 restore → build → test；2）补 `RomHasher`、`EmulatorPaths`、`RomLauncher`、`EmulatorInstaller`、`EmulatorUpdater`、`PathService`、`FileRecycleBin` 的单测（这些模块会覆盖或删除用户文件）；3）统一构建配置（Directory.Build.props / global.json / .editorconfig）。
+- 状态：已完成 v0.25.2（204 单测通过，0 警告；CI 首次运行见 GitHub Actions）
+- 优先级：高
+- 创建时间：2026-10-30
+- 更新时间：2026-10-30
+
 ## Q-030 P0 缺陷修复批次（发布一致性 / AI 会话 / 发送空间 / 数据库恢复）
 
 - 描述：修掉 5 个 P0：1）publish 目录缺 `Resources\DeviceProfiles.json`、exe 落后源码，补发布校验脚本并重发；2）AI 工具执行中取消会破坏对话历史；3）待确认操作执行失败被回写成「用户取消」；4）发送前不校验空间、失败留半截文件；5）恢复数据库直接覆盖活动文件，无备份无校验。
