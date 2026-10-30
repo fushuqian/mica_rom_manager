@@ -22,13 +22,15 @@ public partial class MainWindow : Window
     private readonly AiAssistantViewModel _assistantViewModel;
 
     private const string ViewStateKey = "list_view_state";
-    private const string AssistantOpenKey = "ui.assistant_open";
+    private const string AssistantOpenKey = "ui.assistant_open_v2";
 
     public MainWindow()
     {
         InitializeComponent();
+        WindowBackdrop.Apply(this);
         _viewModel = new MainViewModel();
         DataContext = _viewModel;
+        FilterPopup.DataContext = _viewModel;
         _assistantViewModel = new AiAssistantViewModel(_viewModel);
         AssistantPanel.DataContext = _assistantViewModel;
         AssistantPanel.CloseRequested += (_, _) => SetAssistantOpen(false);
@@ -48,7 +50,31 @@ public partial class MainWindow : Window
         SetAssistantOpen(AppServices.Settings.GetBool(AssistantOpenKey), persist: false);
 
     private void ToggleAssistant_Click(object sender, RoutedEventArgs e) =>
-        SetAssistantOpen(AssistantColumn.Width.Value < 1);
+        SetAssistantOpen(AssistantPanel.Visibility != Visibility.Visible);
+
+    /// <summary>工具栏「AI 工具」：把低频的 AI 动作收进菜单。</summary>
+    private void AiTools_Click(object sender, RoutedEventArgs e)
+    {
+        var menu = new ContextMenu
+        {
+            PlacementTarget = AiToolsButton,
+            Placement = PlacementMode.Bottom,
+        };
+
+        AddMenuCommand(menu, "AI 刮削信息", _viewModel.ScrapeCommand);
+        AddMenuCommand(menu, "AI 生成标签", _viewModel.AiTagsCommand);
+        AddMenuCommand(menu, "AI 翻译", _viewModel.AiTranslateCommand);
+        AddMenuCommand(menu, "推荐游戏", _viewModel.RecommendCommand);
+        menu.IsOpen = true;
+    }
+
+    private static void AddMenuCommand(ContextMenu menu, string header, ICommand command) =>
+        menu.Items.Add(new MenuItem { Header = header, Command = command });
+
+    private void FilterButton_Click(object sender, RoutedEventArgs e) =>
+        FilterPopup.IsOpen = !FilterPopup.IsOpen;
+
+    private void CloseFilter_Click(object sender, RoutedEventArgs e) => FilterPopup.IsOpen = false;
 
     /// <summary>右键「AI 问问」：把选中游戏推进助手并直接咨询。</summary>
     private void AiAsk_Click(object sender, RoutedEventArgs e)
@@ -67,10 +93,7 @@ public partial class MainWindow : Window
 
     private void SetAssistantOpen(bool open, bool persist = true)
     {
-        AssistantColumn.Width = new GridLength(open ? 370 : 0);
-        AssistantSplitterColumn.Width = new GridLength(open ? 6 : 0);
         AssistantPanel.Visibility = open ? Visibility.Visible : Visibility.Collapsed;
-        AssistantSplitter.Visibility = open ? Visibility.Visible : Visibility.Collapsed;
 
         if (persist) AppServices.Settings.Set(AssistantOpenKey, open.ToString());
 
@@ -142,7 +165,15 @@ public partial class MainWindow : Window
     private void RestoreViewState()
     {
         var json = AppServices.Settings.Get(ViewStateKey);
-        if (string.IsNullOrWhiteSpace(json)) return;
+        if (string.IsNullOrWhiteSpace(json))
+        {
+            ApplyHiddenColumns(new ListViewState
+            {
+                LayoutVersion = 2,
+                HiddenColumns = ListViewState.DefaultHiddenColumns.ToList(),
+            });
+            return;
+        }
 
         ListViewState? state;
         try
@@ -155,6 +186,13 @@ public partial class MainWindow : Window
         }
 
         if (state == null) return;
+
+        var legacyLayout = state.LayoutVersion < 2;
+
+        // 旧布局没有版本号且没自定义隐藏列：套用新的默认列集合
+        if (legacyLayout && state.HiddenColumns.Count == 0)
+            state.HiddenColumns.AddRange(ListViewState.DefaultHiddenColumns);
+        state.LayoutVersion = 2;
 
         _viewModel.OnlyFavorites = state.OnlyFavorites;
         _viewModel.OnlyMissing = state.OnlyMissing;
@@ -173,11 +211,15 @@ public partial class MainWindow : Window
         if (!string.IsNullOrEmpty(state.Search))
             _viewModel.SearchText = state.Search;
 
-        foreach (var column in GameGrid.Columns)
+        // 旧布局的列宽是给旧列/旧密度用的，直接套新默认宽度，避免状态列被压成一条
+        if (!legacyLayout)
         {
-            if (column.Header is not string header) continue;
-            if (!state.ColumnWidths.TryGetValue(header, out var width)) continue;
-            if (width >= 24) column.Width = new DataGridLength(width);
+            foreach (var column in GameGrid.Columns)
+            {
+                if (column.Header is not string header) continue;
+                if (!state.ColumnWidths.TryGetValue(header, out var width)) continue;
+                if (width >= 24) column.Width = new DataGridLength(width);
+            }
         }
 
         ApplyHiddenColumns(state);
@@ -270,6 +312,7 @@ public partial class MainWindow : Window
     {
         var state = new ListViewState
         {
+            LayoutVersion = 2,
             Search = _viewModel.SearchText,
             Platform = _viewModel.SelectedPlatform,
             Status = _viewModel.SelectedStatus,

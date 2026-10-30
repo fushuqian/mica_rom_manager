@@ -1,5 +1,14 @@
 # 经验记录（MEMORIES）
 
+## 2026-10-31（Win11 Mica + WPF）
+
+- WPF 做 Win11 Mica：`WindowStyle=None` + `WindowChrome CaptionHeight=0` + `Background=Transparent`，然后 `DwmSetWindowAttribute(hwnd, 38, DWMSBT_MAINWINDOW=2)` 和 `DwmExtendFrameIntoClientArea(-1)`；圆角用属性 33 = 2。`AllowsTransparency=True` 会让 Mica 失效，不能用。
+- `PrintWindow` 抓不到 DWM 背景，透明区域会是黑色，不能拿截图判断 Mica 是否生效；用 `DwmGetWindowAttribute(hwnd, 38)` 验证返回值（2 = Mica）。
+- `WindowChrome` 最大化会向外溢出一圈（本机 200% 缩放是 12px），根 Grid 在 `WindowState=Maximized` 时加 6px Margin 即可。
+- 透明背景上的 ToolButton 在 `PrintWindow` 里文字会显灰，容易被误判成 Disabled；先查 UIA `IsEnabled`，再看控件模板 Foreground。
+- 中文 XAML 绝对不要用 `Get-Content` + `Set-Content` 批量替换（Windows PowerShell 默认 ANSI 会把 UTF-8 中文写成乱码且丢字节）；用 edit/write 工具改。
+- 旧列宽会在新布局里把状态列压成一条；用 `LayoutVersion` 做一次性列宽重置，再保存新版本。
+
 ## 2026-10-30（模拟器模板扩充）
 
 - 模板平台名要和用户可能改过的字典对齐：只做同名精确匹配，老板把 `Game Boy` 改成 `GB`、`PlayStation` 改成 `PS1` 后就绑不上。加「常见简称别名 + 去空格符号归一化」后，`Xbox 360→XBOX360`、`WonderSwan→WS` 也能命中；匹配顺序仍是精确名优先。

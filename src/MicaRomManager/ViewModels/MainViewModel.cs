@@ -93,6 +93,26 @@ public partial class MainViewModel : ObservableObject, IAiAppHost
     public string CountText => $"共 {TotalCount} 款 / 已筛选 {FilteredCount} 款";
     public string DataPathText => $"数据：{AppServices.Paths.DbPath}";
 
+    /// <summary>当前生效的筛选条件数量（用于「筛选」按钮上的徽标）。</summary>
+    public int ActiveFilterCount
+    {
+        get
+        {
+            var count = 0;
+            if (!string.IsNullOrWhiteSpace(SearchText)) count++;
+            if (!string.Equals(SelectedStatus, AllStatuses, StringComparison.Ordinal)) count++;
+            if (!string.Equals(SelectedRegion, AllRegions, StringComparison.Ordinal)) count++;
+            if (!string.Equals(SelectedLanguage, AllLanguages, StringComparison.Ordinal)) count++;
+            if (!string.Equals(SelectedDeveloper, AllDevelopers, StringComparison.Ordinal)) count++;
+            if (!string.Equals(SelectedTag, AllTags, StringComparison.Ordinal)) count++;
+            if (OnlyFavorites) count++;
+            if (OnlyMissing) count++;
+            return count;
+        }
+    }
+
+    public bool HasActiveFilters => ActiveFilterCount > 0;
+
     public bool HasConnection => DeviceConnection != null;
 
     public string ConnectButtonText => HasConnection ? "更换设备" : "连接到设备";
@@ -228,6 +248,8 @@ public partial class MainViewModel : ObservableObject, IAiAppHost
 
         GamesView.Refresh();
         FilteredCount = GamesView.Cast<object>().Count();
+        OnPropertyChanged(nameof(ActiveFilterCount));
+        OnPropertyChanged(nameof(HasActiveFilters));
         _refreshPending = false;
     }
 

@@ -1,5 +1,13 @@
 # 需求清单（QUEST）
 
+## Q-039 Win11 半透明 UI 重构
+
+- 描述：老板对 UI 不满意，希望整个界面适配 Win11 半透明效果。完成主窗口/设置窗口 Mica + 圆角 + 自绘标题栏；统一 Fluent 控件模板；主界面单行命令栏、筛选浮层、表格卡片、AI 浮层抽屉；设置改左侧导航 + 卡片。
+- 状态：已完成 v0.28.0（0 警告、302 单测通过、publish 冒烟通过、DWM backdrop=2/corner=2；实际 Mica 观感与对话框统一待老板验收）
+- 优先级：高
+- 创建时间：2026-10-31
+- 更新时间：2026-10-31
+
 ## Q-038 扩充模拟器模板与平台绑定
 
 - 描述：老板反馈「模拟器种类选择太少」。内置模板从 9 个扩到 21 个（Cemu、Xenia、Xemu、Ymir、Flycast、Azahar、melonDS、DeSmuME、FCEUX、Snes9x、BizHawk、ares 等）；Mesen 切到 MesenCE；模板窗口加搜索；平台绑定支持 GB/MD/PS1/DC/SS/PCE/VB/WS/XBOX360 等简称别名；新增 websiteUrl，RetroArch/Dolphin/Project64 改为官网手动更新；平台字典与默认格式补 Wii U、Xbox、Xbox 360、WonderSwan。

@@ -20,6 +20,7 @@ public partial class SettingsWindow : Window
     public SettingsWindow()
     {
         InitializeComponent();
+        WindowBackdrop.Apply(this);
         LoadGeneral();
         LoadAiSettings();
         LoadLookupKinds();

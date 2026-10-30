@@ -18,6 +18,14 @@ public sealed class ListViewState
     /// <summary>被隐藏的列（用列 Header 文本作键）；旧版本 JSON 没有该字段时视为空。</summary>
     public List<string> HiddenColumns { get; set; } = new();
 
+    /// <summary>视图布局版本：2 起默认隐藏低频列，避免一打开就横向滚动。</summary>
+    public int LayoutVersion { get; set; }
+
+    public static IReadOnlyList<string> DefaultHiddenColumns { get; } = new[]
+    {
+        "指纹", "标签", "特注", "类型", "光碟数", "格式", "次数", "时长",
+    };
+
     /// <summary>
     /// 过滤掉已经不存在/已改名的列，并保证至少保留一列；
     /// 避免旧配置或全部隐藏把表格变成空白。

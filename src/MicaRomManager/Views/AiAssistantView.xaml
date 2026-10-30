@@ -3,7 +3,9 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              FontFamily="{StaticResource AppFontFamily}"
              FontSize="13"
-             Background="{StaticResource WindowBackgroundBrush}">
+             Background="Transparent">
+    <Border Background="{StaticResource PanelBrush}" BorderBrush="{StaticResource BorderBrush}"
+            BorderThickness="1" CornerRadius="12" ClipToBounds="True">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -189,4 +191,5 @@
             </Grid>
         </Border>
     </Grid>
+    </Border>
 </UserControl>
