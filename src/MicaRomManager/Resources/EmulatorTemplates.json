@@ -1,12 +1,13 @@
 [
   {
     "name": "RetroArch",
-    "platforms": [ "NES", "SNES", "Game Boy", "GBC", "GBA", "NDS", "N64", "Mega Drive", "Master System", "Game Gear", "PC Engine", "PlayStation", "PSP", "Virtual Boy", "街机" ],
+    "platforms": [ "NES", "SNES", "N64", "Game Boy", "GBC", "GBA", "NDS", "Mega Drive", "Master System", "Game Gear", "PC Engine", "PlayStation", "PSP", "Saturn", "Dreamcast", "Virtual Boy", "街机" ],
     "extensions": [ ".nes", ".sfc", ".smc", ".gb", ".gbc", ".gba", ".nds", ".n64", ".z64", ".v64", ".md", ".gen", ".sms", ".gg", ".pce", ".cue", ".chd", ".iso", ".pbp", ".vb", ".zip" ],
     "argsTemplate": "-L \"{core}\" \"{rom}\"",
     "corePath": "",
-    "githubRepo": "libretro/RetroArch",
-    "notes": "需把对应核心 dll 放到 cores 目录，并在配置里填写核心相对路径（如 cores\\snes9x_libretro.dll）。"
+    "githubRepo": "",
+    "websiteUrl": "https://www.retroarch.com/?page=platforms",
+    "notes": "需把对应核心 dll 放到 cores 目录，并在「设置 → 平台」里选核心；Windows 包请从官网 / Buildbot 手动更新。"
   },
   {
     "name": "Dolphin",
@@ -14,8 +15,9 @@
     "extensions": [ ".iso", ".gcm", ".rvz", ".wbfs", ".dol", ".elf" ],
     "argsTemplate": "-b -e \"{rom}\"",
     "corePath": "",
-    "githubRepo": "dolphin-emu/dolphin",
-    "notes": "GameCube/Wii 模拟器。"
+    "githubRepo": "",
+    "websiteUrl": "https://dolphin-emu.org/download/",
+    "notes": "GameCube / Wii 模拟器；版本请从官网下载（GitHub 仓库没有 Windows Release 资产）。"
   },
   {
     "name": "PCSX2",
@@ -24,12 +26,12 @@
     "argsTemplate": "\"{rom}\" --fullscreen",
     "corePath": "",
     "githubRepo": "PCSX2/pcsx2",
-    "notes": "PS2 模拟器。"
+    "notes": "PS2 模拟器；需要自备 BIOS。"
   },
   {
     "name": "PPSSPP",
     "platforms": [ "PSP" ],
-    "extensions": [ ".iso", ".cso", ".pbp" ],
+    "extensions": [ ".iso", ".cso", ".pbp", ".chd" ],
     "argsTemplate": "\"{rom}\"",
     "corePath": "",
     "githubRepo": "hrydgard/ppsspp",
@@ -42,7 +44,7 @@
     "argsTemplate": "\"{rom}\"",
     "corePath": "",
     "githubRepo": "stenzek/duckstation",
-    "notes": "PS1 模拟器。"
+    "notes": "PS1 模拟器；需要自备 BIOS 才能获得最佳兼容性。"
   },
   {
     "name": "RPCS3",
@@ -51,25 +53,133 @@
     "argsTemplate": "\"{rom}\"",
     "corePath": "",
     "githubRepo": "RPCS3/rpcs3-binaries-win",
-    "notes": "PS3 模拟器，需要额外固件；更新来自 RPCS3 官方 Windows 构建仓库。"
+    "notes": "PS3 模拟器；需要额外固件；更新来自 RPCS3 官方 Windows 构建仓库。"
+  },
+  {
+    "name": "Cemu",
+    "platforms": [ "Wii U" ],
+    "extensions": [ ".wud", ".wux", ".wua", ".rpx", ".elf" ],
+    "argsTemplate": "-g \"{rom}\"",
+    "corePath": "",
+    "githubRepo": "Cemu-project/Cemu",
+    "notes": "Wii U 模拟器；图形包、密钥与系统文件需自行配置。"
+  },
+  {
+    "name": "Xenia Canary",
+    "platforms": [ "Xbox 360" ],
+    "extensions": [ ".iso", ".xex", ".zar" ],
+    "argsTemplate": "\"{rom}\"",
+    "corePath": "",
+    "githubRepo": "xenia-canary/xenia-canary",
+    "notes": "Xbox 360 模拟器（滚动构建）；需要自备主机系统文件。"
+  },
+  {
+    "name": "Xemu",
+    "platforms": [ "Xbox" ],
+    "extensions": [ ".iso" ],
+    "argsTemplate": "-dvd_path \"{rom}\"",
+    "corePath": "",
+    "githubRepo": "xemu-project/xemu",
+    "notes": "初代 Xbox 模拟器；需要自备 MCPX 引导与硬盘镜像。"
+  },
+  {
+    "name": "Ymir",
+    "platforms": [ "Saturn" ],
+    "extensions": [ ".chd", ".cue", ".ccd", ".mds", ".iso" ],
+    "argsTemplate": "\"{rom}\"",
+    "corePath": "",
+    "githubRepo": "ymir-emu/Ymir",
+    "notes": "Sega Saturn 模拟器；需要自备 IPL/BIOS，并安装 VC++ 运行库。"
+  },
+  {
+    "name": "Flycast",
+    "platforms": [ "Dreamcast" ],
+    "extensions": [ ".iso", ".cue", ".bin", ".chd", ".gdi", ".cdi" ],
+    "argsTemplate": "\"{rom}\"",
+    "corePath": "",
+    "githubRepo": "flyinghead/flycast",
+    "notes": "Dreamcast / Naomi 模拟器；部分游戏需要 BIOS。"
+  },
+  {
+    "name": "Azahar",
+    "platforms": [ "3DS" ],
+    "extensions": [ ".3ds", ".cia", ".cci", ".cxi" ],
+    "argsTemplate": "\"{rom}\"",
+    "corePath": "",
+    "githubRepo": "azahar-emu/azahar",
+    "notes": "3DS 模拟器（Citra 后续）；需要自备 3DS 系统文件。"
+  },
+  {
+    "name": "melonDS",
+    "platforms": [ "NDS" ],
+    "extensions": [ ".nds", ".zip" ],
+    "argsTemplate": "\"{rom}\"",
+    "corePath": "",
+    "githubRepo": "melonDS-emu/melonDS",
+    "notes": "NDS 模拟器；需要自备 BIOS / firmware 才能使用加密游戏或联机。"
+  },
+  {
+    "name": "DeSmuME",
+    "platforms": [ "NDS" ],
+    "extensions": [ ".nds", ".zip" ],
+    "argsTemplate": "\"{rom}\"",
+    "corePath": "",
+    "githubRepo": "TASEmulators/desmume",
+    "notes": "NDS 模拟器；老牌兼容方案，适合作为 melonDS 的备选。"
   },
   {
     "name": "mGBA",
     "platforms": [ "Game Boy", "GBC", "GBA" ],
-    "extensions": [ ".gba", ".gb", ".gbc" ],
+    "extensions": [ ".gba", ".gb", ".gbc", ".zip" ],
     "argsTemplate": "\"{rom}\"",
     "corePath": "",
     "githubRepo": "mgba-emu/mgba",
-    "notes": "GB/GBC/GBA 模拟器。"
+    "notes": "GB / GBC / GBA 模拟器。"
   },
   {
     "name": "Mesen",
-    "platforms": [ "NES", "SNES" ],
-    "extensions": [ ".nes", ".sfc", ".smc" ],
+    "platforms": [ "NES", "SNES", "Game Boy", "GBC", "GBA", "PC Engine", "Master System", "Game Gear", "WonderSwan", "WonderSwan Color" ],
+    "extensions": [ ".nes", ".unf", ".sfc", ".smc", ".gb", ".gbc", ".gba", ".pce", ".sms", ".gg", ".ws", ".wsc", ".zip" ],
     "argsTemplate": "\"{rom}\"",
     "corePath": "",
-    "githubRepo": "SourMesen/Mesen2",
-    "notes": "NES/SNES 高精度模拟器。"
+    "githubRepo": "nesdev-org/MesenCE",
+    "notes": "多机种高精度模拟器（NES / SNES / GB / GBA / PCE / SMS / GG / WS）。"
+  },
+  {
+    "name": "FCEUX",
+    "platforms": [ "NES" ],
+    "extensions": [ ".nes", ".unf", ".zip" ],
+    "argsTemplate": "\"{rom}\"",
+    "corePath": "",
+    "githubRepo": "TASEmulators/fceux",
+    "notes": "NES 模拟器，带 TAS 与调试工具。"
+  },
+  {
+    "name": "Snes9x",
+    "platforms": [ "SNES" ],
+    "extensions": [ ".sfc", ".smc", ".zip" ],
+    "argsTemplate": "\"{rom}\"",
+    "corePath": "",
+    "githubRepo": "snes9xgit/snes9x",
+    "notes": "SNES 模拟器，轻量、兼容性好。"
+  },
+  {
+    "name": "BizHawk",
+    "platforms": [ "NES", "SNES", "N64", "Game Boy", "GBC", "GBA", "NDS", "Mega Drive", "Master System", "Game Gear", "Saturn", "PlayStation", "Virtual Boy", "WonderSwan" ],
+    "extensions": [ ".nes", ".sfc", ".smc", ".gb", ".gbc", ".gba", ".nds", ".n64", ".z64", ".v64", ".md", ".gen", ".sms", ".gg", ".pce", ".cue", ".bin", ".iso", ".chd", ".vb", ".ws", ".zip" ],
+    "argsTemplate": "\"{rom}\"",
+    "corePath": "",
+    "githubRepo": "TASEmulators/BizHawk",
+    "notes": "多机种模拟器，偏 TAS 与调试；包内带运行说明。"
+  },
+  {
+    "name": "ares",
+    "platforms": [ "NES", "SNES", "N64", "Game Boy", "GBC", "GBA", "NDS", "Mega Drive", "Master System", "Game Gear", "Saturn", "PlayStation", "PC Engine", "Virtual Boy" ],
+    "extensions": [ ".nes", ".sfc", ".smc", ".gb", ".gbc", ".gba", ".nds", ".n64", ".z64", ".v64", ".md", ".gen", ".sms", ".gg", ".pce", ".cue", ".bin", ".iso", ".chd", ".vb", ".zip" ],
+    "argsTemplate": "\"{rom}\"",
+    "corePath": "",
+    "githubRepo": "ares-emulator/ares",
+    "notes": "多机种高精度模拟器（NES / SNES / N64 / GB / GBA / NDS / MD / Saturn / PS1 等）。"
   },
   {
     "name": "Project64",
@@ -77,7 +187,8 @@
     "extensions": [ ".n64", ".z64", ".v64", ".rom" ],
     "argsTemplate": "\"{rom}\"",
     "corePath": "",
-    "githubRepo": "project64/project64",
-    "notes": "N64 模拟器。"
+    "githubRepo": "",
+    "websiteUrl": "https://www.pj64-emu.com/",
+    "notes": "N64 模拟器；版本请从官网下载（GitHub 仓库没有已发布的 Release）。"
   }
 ]

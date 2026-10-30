@@ -1,5 +1,12 @@
 # 经验记录（MEMORIES）
 
+## 2026-10-30（模拟器模板扩充）
+
+- 模板平台名要和用户可能改过的字典对齐：只做同名精确匹配，老板把 `Game Boy` 改成 `GB`、`PlayStation` 改成 `PS1` 后就绑不上。加「常见简称别名 + 去空格符号归一化」后，`Xbox 360→XBOX360`、`WonderSwan→WS` 也能命中；匹配顺序仍是精确名优先。
+- 有 GitHub 仓库不等于有 Windows Release：RetroArch 的 latest 只有 sourceonly tar.xz，Dolphin/Project64 没有 latest release。模板里加 `websiteUrl` 并留空仓库，比让「检查更新」误报更清楚。
+- 同一项目的资产可能是 MSVC/MXE/AVX2/SSE2 多套：Azahar 官方推荐 MXE、Ymir 在不确定 CPU 时优先 SSE2；按发布方建议在评分里加偏好，而不是按资产顺序取第一个。
+- 模板数量变多后，纯 ListBox 不好找；加搜索框要防 XAML 初始化时 `TextChanged` 先于其他控件触发（先判空）。
+
 ## 2026-10-30（更新选错资产 / 用户数据保留）
 
 - GitHub Release 资产不能按「包含 win64 / windows 的第一个」来选：DuckStation 的 `windows-arm64-release-symbols.7z` 排在前面，会装成一堆 PDB；PCSX2 的 `windows-x64-Qt-symbols.7z` 同理。必须同时判断 Windows + x64 + release，并排除 symbols/pdb、source、arm64/armhf、macOS、Linux/AppImage。

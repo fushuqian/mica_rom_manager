@@ -21,6 +21,7 @@ public static class PlatformFormats
             ["Switch"] = new[] { "nsp", "xci" },
             ["GameCube"] = new[] { "gcm", "iso", "rvz" },
             ["Wii"] = new[] { "iso", "wbfs", "rvz" },
+            ["Wii U"] = new[] { "wud", "wux", "rpx" },
             ["Mega Drive"] = new[] { "md", "gen", "smd", "bin" },
             ["Master System"] = new[] { "sms" },
             ["Game Gear"] = new[] { "gg" },
@@ -32,6 +33,10 @@ public static class PlatformFormats
             ["PSP"] = new[] { "iso", "cso", "pbp", "chd" },
             ["PC Engine"] = new[] { "pce" },
             ["Virtual Boy"] = new[] { "vb" },
+            ["WonderSwan"] = new[] { "ws" },
+            ["WonderSwan Color"] = new[] { "wsc" },
+            ["Xbox"] = new[] { "iso" },
+            ["Xbox 360"] = new[] { "iso", "xex", "zar" },
         };
 
     public static string GetDefault(string platform) =>

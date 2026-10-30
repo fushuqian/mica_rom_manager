@@ -17,4 +17,11 @@
     <ProjectReference Include="..\..\src\MicaRomManager\MicaRomManager.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- 模板目录校验：确保内置模板 JSON 可反序列化、字段完整 -->
+    <None Include="..\..\src\MicaRomManager\Resources\EmulatorTemplates.json"
+          Link="Resources\EmulatorTemplates.json"
+          CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

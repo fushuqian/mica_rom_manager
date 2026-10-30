@@ -34,16 +34,59 @@ public class EmulatorTemplateFactoryTests
     }
 
     [Fact]
-    public void CreateFromTemplate_BindsOnlySameNamePlatforms()
+    public void CreateFromTemplate_BindsShortPlatformAliases()
     {
         var emulator = EmulatorTemplateFactory.CreateFromTemplate(
             RetroArchTemplate(),
             Array.Empty<string>(),
             new[] { "nes", "GB", "SNES" });
 
-        // 模板里的 "Game Boy" 与库里的 "GB" 不同名，不做猜测，留给用户手绑。
-        Assert.Equal(new[] { "nes" }, emulator.Platforms);
+        // 模板里的 "Game Boy" 会按别名绑定到用户字典里的 "GB"。
+        Assert.Equal(new[] { "nes", "GB" }, emulator.Platforms);
         Assert.Empty(emulator.DefaultPlatforms);
+    }
+
+    [Fact]
+    public void CreateFromTemplate_BindsCommonRenamedPlatforms()
+    {
+        var template = new EmulatorTemplate
+        {
+            Name = "Multi",
+            Platforms = new List<string> { "PlayStation", "Dreamcast", "Xbox 360", "WonderSwan", "Mega Drive" },
+        };
+
+        var emulator = EmulatorTemplateFactory.CreateFromTemplate(
+            template, Array.Empty<string>(), new[] { "PS1", "DC", "XBOX360", "WS", "MD" });
+
+        Assert.Equal(new[] { "PS1", "DC", "XBOX360", "WS", "MD" }, emulator.Platforms);
+    }
+
+    [Fact]
+    public void CreateFromTemplate_PrefersExactPlatformNameOverAlias()
+    {
+        var emulator = EmulatorTemplateFactory.CreateFromTemplate(
+            new EmulatorTemplate { Name = "GB", Platforms = new List<string> { "Game Boy" } },
+            Array.Empty<string>(),
+            new[] { "Game Boy", "GB" });
+
+        Assert.Equal(new[] { "Game Boy" }, emulator.Platforms);
+    }
+
+    [Fact]
+    public void CreateFromTemplate_ExplicitWebsiteOverridesRepository()
+    {
+        var template = new EmulatorTemplate
+        {
+            Name = "Manual",
+            GithubRepo = "owner/repo",
+            WebsiteUrl = "https://example.com/download",
+        };
+
+        var emulator = EmulatorTemplateFactory.CreateFromTemplate(
+            template, Array.Empty<string>(), Array.Empty<string>());
+
+        Assert.Equal("owner/repo", emulator.GithubRepo);
+        Assert.Equal("https://example.com/download", emulator.WebsiteUrl);
     }
 
     [Fact]

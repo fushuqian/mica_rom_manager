@@ -1,5 +1,25 @@
 # 变更记录（CHANGELOG）
 
+## 2026-10-30 v0.27.0
+
+### 新增
+
+- 内置模拟器模板从 9 个扩到 21 个：新增 Cemu（Wii U）、Xenia Canary（Xbox 360）、Xemu（Xbox）、Ymir（Saturn）、Flycast（Dreamcast）、Azahar（3DS）、melonDS / DeSmuME（NDS）、FCEUX（NES）、Snes9x（SNES）、BizHawk / ares（多机种）；Mesen 更新为仍在维护的 `nesdev-org/MesenCE`，并补充 GB/GBA/PCE/SMS/GG/WonderSwan 支持。
+- 「新增模拟器」模板窗口增加搜索框与数量统计，可按名称、平台、备注筛选。
+- 模板平台绑定支持常见简称别名与去空格匹配：`Game Boy→GB`、`Mega Drive→MD`、`PlayStation→PS1`、`Dreamcast→DC`、`Saturn→SS`、`PC Engine→PCE`、`Virtual Boy→VB`、`WonderSwan→WS`、`Xbox 360→XBOX360` 等，老板改名过的字典也能自动绑定。
+- 模板新增 `websiteUrl` 字段：RetroArch / Dolphin / Project64 这类没有 Windows Release 资产的模拟器改为官网手动更新，不再误报“检查更新”。
+
+### 变更
+
+- 平台字典补充 `Wii U`、`Xbox`，默认格式补充 Wii U（wud/wux/wua/rpx）、Xbox（iso）、Xbox 360（iso/xex/zar）、WonderSwan（ws/wsc）；新安装与本地字典均已同步。
+- 模拟器更新资产评分补充：优先 MXE（Azahar 官方推荐）、兼容版 SSE2（Ymir）、排除 `dbg` / BSD 资产。
+
+### 验证
+
+- `dotnet build`：0 警告 0 错误。
+- `dotnet test`：302 个用例全部通过（296 + 6：模板目录校验、别名绑定、新资产选择）。
+- `tools\publish.ps1` 发布并校验通过；`publish` 启动冒烟通过（模板窗口需人工点开验收）。
+
 ## 2026-10-30 v0.26.2
 
 ### 修复

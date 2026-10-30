@@ -1,5 +1,13 @@
 # 需求清单（QUEST）
 
+## Q-038 扩充模拟器模板与平台绑定
+
+- 描述：老板反馈「模拟器种类选择太少」。内置模板从 9 个扩到 21 个（Cemu、Xenia、Xemu、Ymir、Flycast、Azahar、melonDS、DeSmuME、FCEUX、Snes9x、BizHawk、ares 等）；Mesen 切到 MesenCE；模板窗口加搜索；平台绑定支持 GB/MD/PS1/DC/SS/PCE/VB/WS/XBOX360 等简称别名；新增 websiteUrl，RetroArch/Dolphin/Project64 改为官网手动更新；平台字典与默认格式补 Wii U、Xbox、Xbox 360、WonderSwan。
+- 状态：已完成 v0.27.0（Release 0 警告、302 单测通过、publish 校验通过；模板窗口与新增模拟器实机待老板验收）
+- 优先级：中高
+- 创建时间：2026-10-30
+- 更新时间：2026-10-30
+
 ## Q-037 模拟器更新选错资产与用户数据丢失
 
 - 描述：DuckStation 检查更新时装成 ARM64 符号包（只有 PDB），PPSSPP 装成 ARM64；原因是资产选择按关键字取第一个匹配，未排除 symbols / ARM / macOS / Linux，也没有优先 x64。同时覆盖安装会整体替换安装目录，导致存档/设置只剩在 `.backup`。改为「Windows + x64 + release」评分并排除符号/跨平台资产；无 Windows 包时不再装第一个资产；滚动发布用发布日期作版本；覆盖安装后把旧目录中缺失的用户数据合并回新目录。

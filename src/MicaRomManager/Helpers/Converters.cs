@@ -93,7 +93,9 @@ public static class PlatformCatalog
     public static IReadOnlyList<string> Common { get; } = new[]
     {
         "NES", "SNES", "N64", "Game Boy", "GBC", "GBA", "NDS", "3DS", "Switch",
-        "GameCube", "Wii", "Mega Drive", "Master System", "Game Gear", "Saturn", "Dreamcast",
-        "PlayStation", "PS2", "PS3", "PSP", "PC Engine", "Virtual Boy", "街机", "其他",
+        "GameCube", "Wii", "Wii U", "Mega Drive", "Master System", "Game Gear",
+        "Saturn", "Dreamcast", "PlayStation", "PS2", "PS3", "PSP",
+        "PC Engine", "Virtual Boy", "WonderSwan", "WonderSwan Color",
+        "Xbox", "Xbox 360", "街机", "其他",
     };
 }

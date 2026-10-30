@@ -210,6 +210,53 @@ public class EmulatorUpdaterTests
     }
 
     [Fact]
+    public void PickWindowsAsset_NewCatalogEntries_PickCorrectBuilds()
+    {
+        var fceux = EmulatorUpdater.PickWindowsAsset(new List<(string?, string?)>
+        {
+            ("fceux-2.7.0-macos-arm64.dmg", "https://x/1"),
+            ("fceux-2.7.0-win32.zip", "https://x/2"),
+            ("fceux-2.7.0-win64-QtSDL.zip", "https://x/3"),
+            ("fceux-2.7.0-win64.zip", "https://x/4"),
+        });
+        Assert.Equal("fceux-2.7.0-win64.zip", fceux!.Value.Name);
+
+        var azahar = EmulatorUpdater.PickWindowsAsset(new List<(string?, string?)>
+        {
+            ("azahar-windows-msvc-2126.2.zip", "https://x/1"),
+            ("azahar-windows-msys2-2126.2.zip", "https://x/2"),
+            ("azahar-windows-mxe-2126.2.zip", "https://x/3"),
+        });
+        Assert.Equal("azahar-windows-mxe-2126.2.zip", azahar!.Value.Name);
+
+        var ymir = EmulatorUpdater.PickWindowsAsset(new List<(string?, string?)>
+        {
+            ("ymir-windows-ARM64-v0.4.1.zip", "https://x/1"),
+            ("ymir-windows-x86_64-AVX2-v0.4.1.zip", "https://x/2"),
+            ("ymir-windows-x86_64-SSE2-v0.4.1.zip", "https://x/3"),
+        });
+        Assert.Equal("ymir-windows-x86_64-SSE2-v0.4.1.zip", ymir!.Value.Name);
+
+        var xemu = EmulatorUpdater.PickWindowsAsset(new List<(string?, string?)>
+        {
+            ("xemu-0.8.139-dbg-windows-x86_64.zip", "https://x/1"),
+            ("xemu-0.8.139-windows-arm64.zip", "https://x/2"),
+            ("xemu-0.8.139-windows-x86_64.zip", "https://x/3"),
+            ("xemu-win-x86_64-release.zip", "https://x/4"),
+        });
+        Assert.Equal("xemu-win-x86_64-release.zip", xemu!.Value.Name);
+
+        var ares = EmulatorUpdater.PickWindowsAsset(new List<(string?, string?)>
+        {
+            ("ares-macos-universal.zip", "https://x/1"),
+            ("ares-windows-clang-cl-arm64.zip", "https://x/2"),
+            ("ares-windows-x64-PDBs.zip", "https://x/3"),
+            ("ares-windows-x64.zip", "https://x/4"),
+        });
+        Assert.Equal("ares-windows-x64.zip", ares!.Value.Name);
+    }
+
+    [Fact]
     public void PickWindowsAsset_SourceOnlyReleaseReturnsNull()
     {
         var picked = EmulatorUpdater.PickWindowsAsset(new List<(string?, string?)>

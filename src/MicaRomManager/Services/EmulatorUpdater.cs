@@ -259,9 +259,9 @@ public sealed class EmulatorUpdater
     /// <summary>明显不是 Windows 可执行包的关键字：符号表、源码、其它平台架构。</summary>
     private static readonly string[] NonWindowsAssetTokens =
     {
-        "symbols", "pdb", "debug", "source", "arm64", "armhf", "aarch64", "armv7",
+        "symbols", "pdb", "dbg", "debug", "source", "arm64", "armhf", "aarch64", "armv7",
         "macos", "mac-", "-mac", "osx", "darwin", "linux", "appimage", "flatpak", "ubuntu",
-        "android", "ios", "ipa", "switch", "vita", "wii", "3ds",
+        "android", "ios", "ipa", "switch", "vita", "wii", "3ds", "bsd",
     };
 
     /// <summary>
@@ -334,6 +334,10 @@ public sealed class EmulatorUpdater
         if (lower.EndsWith(".zip")) score += 3;
         else if (lower.EndsWith(".7z")) score += 2;
         if (lower.Contains("sse2")) score -= 2;
+        if (lower.Contains("avx2")) score -= 3;
+        if (lower.Contains("qtsdl")) score -= 1;
+        if (lower.Contains("mxe")) score += 2;
+        if (lower.Contains("msvc")) score -= 1;
         return score;
     }
 
