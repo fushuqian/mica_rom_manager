@@ -3,6 +3,7 @@
 ## 2026-10-31（WPF 深色 / 系统背景）
 
 - 只改 `SolidColorBrush.Color` 不够：`StaticResource` 在样式里可能已被冻结，深色调色板会出现“背景变了、文字还是深色”。要么全量换 `DynamicResource`，要么重建样式。本项目把 24 个 XAML 的画刷引用统一换成 DynamicResource。
+- 右上角按钮重影不是自绘按钮画了两遍，而是 `WindowStyle=SingleBorderWindow` 时 DWM 仍绘制一套系统 caption 按钮，和自绘标题栏叠加；要自绘标题栏就保持 `WindowStyle=None`。
 - WPF 做系统背景：`WindowStyle=SingleBorderWindow` + `WindowChrome GlassFrameThickness=-1` + `Background=Transparent` + `CompositionTarget.BackgroundColor=Transparent`，**不要**再 `DwmExtendFrameIntoClientArea`，否则容易变成不透明黑/灰；在 SourceInitialized 和 Loaded 都应用一次 DWM 属性。
 - Windows 11 的 Mica/Acrylic 采样桌面壁纸，不采样窗口后面的内容；壁纸比较素时看起来就像纯色。用 PrintWindow/截图判断“透明”不可靠，改壁纸也可能被 DWM 缓存。
 - 深色系统下，主按钮/徽标要单独用 `OnAccentTextBrush`，否则白字压在亮青色上对比度不够。

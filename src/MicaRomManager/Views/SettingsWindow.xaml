@@ -8,7 +8,7 @@
         Width="1020" Height="740"
         MinWidth="900" MinHeight="620"
         WindowStartupLocation="CenterOwner"
-        WindowStyle="SingleBorderWindow"
+        WindowStyle="None"
         ResizeMode="CanResize"
         Background="Transparent"
         FontFamily="{StaticResource AppFontFamily}"
