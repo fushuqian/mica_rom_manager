@@ -1,4 +1,4 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.IO;
 using System.Text.Json;
 using System.Windows;
@@ -241,7 +241,7 @@ public partial class MainWindow : Window
         {
             ApplyHiddenColumns(new ListViewState
             {
-                LayoutVersion = 5,
+                LayoutVersion = 6,
                 HiddenColumns = ListViewState.DefaultHiddenColumns.ToList(),
             });
             return;
@@ -259,14 +259,14 @@ public partial class MainWindow : Window
 
         if (state == null) return;
 
-        var legacyLayout = state.LayoutVersion < 5;
+        var legacyLayout = state.LayoutVersion < 6;
 
         // 换布局时直接套新默认列，避免旧布局的隐藏列（如类型/平台）残留下来
         if (legacyLayout)
         {
             state.HiddenColumns = ListViewState.DefaultHiddenColumns.ToList();
         }
-        state.LayoutVersion = 5;
+        state.LayoutVersion = 6;
 
         _viewModel.OnlyFavorites = state.OnlyFavorites;
         _viewModel.OnlyMissing = state.OnlyMissing;
@@ -386,7 +386,7 @@ public partial class MainWindow : Window
     {
         var state = new ListViewState
         {
-            LayoutVersion = 3,
+            LayoutVersion = 6,
             Search = _viewModel.SearchText,
             Platform = _viewModel.SelectedPlatform,
             Status = _viewModel.SelectedStatus,
@@ -396,13 +396,12 @@ public partial class MainWindow : Window
             Developer = _viewModel.SelectedDeveloper,
             OnlyFavorites = _viewModel.OnlyFavorites,
             OnlyMissing = _viewModel.OnlyMissing,
+            // 列宽自适应：只记住用户手动拖过的绝对宽度，Auto/星号列下次仍按内容自适应
             ColumnWidths = GameGrid.Columns
-                .Where(c => c.Header is string)
+                .Where(c => c.Header is string && c.Width.IsAbsolute)
                 .ToDictionary(
                     c => (string)c.Header,
-                    c => c.Visibility == Visibility.Visible
-                        ? c.ActualWidth
-                        : c.Width.IsAbsolute ? c.Width.Value : c.ActualWidth),
+                    c => c.Width.Value),
             HiddenColumns = GameGrid.Columns
                 .Where(c => c.Header is string && c.Visibility != Visibility.Visible)
                 .Select(c => (string)c.Header)

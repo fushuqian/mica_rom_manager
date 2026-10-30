@@ -330,33 +330,29 @@
                             </DataGrid.ContextMenu>
 
                             <DataGrid.Columns>
-                                <DataGridTextColumn Header="★" Binding="{Binding FavoriteDisplay}" Width="36"
-                                                    ElementStyle="{StaticResource DataGridTextStyle}" />
-                                <DataGridTemplateColumn Header="标题" Width="288">
+                                <DataGridTemplateColumn Header="收藏" Width="Auto" SortMemberPath="Favorite">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
-                                            <Grid>
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="Auto" />
-                                                    <ColumnDefinition Width="*" />
-                                                </Grid.ColumnDefinitions>
-                                                <Border Width="30" Height="30" CornerRadius="6" Margin="0,0,11,0"
-                                                        Background="#0D000000" ClipToBounds="True">
-                                                    <Image Source="{Binding CoverPath, Converter={StaticResource CoverThumbnailConverter}}"
-                                                           Stretch="UniformToFill" />
-                                                </Border>
-                                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                                    <TextBlock Text="{Binding Title}" FontSize="13" FontWeight="Medium"
-                                                               TextTrimming="CharacterEllipsis" />
-                                                    <TextBlock Text="{Binding Subtitle}" FontSize="11" Margin="0,2,0,0"
-                                                               Foreground="{DynamicResource TextSecondaryBrush}"
-                                                               TextTrimming="CharacterEllipsis" />
-                                                </StackPanel>
-                                            </Grid>
+                                            <TextBlock Text="{Binding FavoriteDisplay}" FontSize="13"
+                                                       FontFamily="Segoe UI Emoji, Segoe UI Symbol, Segoe MDL2 Assets"
+                                                       VerticalAlignment="Center" />
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
-                                <DataGridTemplateColumn Header="平台" Width="80" SortMemberPath="Platform">
+                                <DataGridTemplateColumn Header="标题" Width="*" MaxWidth="460">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Title}" FontSize="13" FontWeight="Medium"
+                                                           TextTrimming="CharacterEllipsis" />
+                                                <TextBlock Text="{Binding Subtitle}" FontSize="11" Margin="0,2,0,0"
+                                                           Foreground="{DynamicResource TextSecondaryBrush}"
+                                                           TextTrimming="CharacterEllipsis" />
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTemplateColumn Header="平台" Width="Auto" SortMemberPath="Platform">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <TextBlock Text="{Binding Platform}" VerticalAlignment="Center"
@@ -371,11 +367,11 @@
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellEditingTemplate>
                                 </DataGridTemplateColumn>
-                                <DataGridTextColumn Header="类型" Binding="{Binding Genre}" Width="100"
+                                <DataGridTextColumn Header="类型" Binding="{Binding Genre}" Width="Auto"
                                                     ElementStyle="{StaticResource DataGridTextStyle}" />
-                                <DataGridTextColumn Header="年份" Binding="{Binding ReleaseYear}" Width="76"
+                                <DataGridTextColumn Header="年份" Binding="{Binding ReleaseYear}" Width="Auto"
                                                     ElementStyle="{StaticResource DataGridTextStyle}" />
-                                <DataGridTemplateColumn x:Name="RatingColumn" Header="评分" Width="88" SortMemberPath="Rating">
+                                <DataGridTemplateColumn x:Name="RatingColumn" Header="评分" Width="Auto" SortMemberPath="Rating">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
@@ -398,7 +394,7 @@
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
-                                <DataGridTemplateColumn Header="区域" Width="66" SortMemberPath="Region">
+                                <DataGridTemplateColumn Header="区域" Width="Auto" SortMemberPath="Region">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <TextBlock Text="{Binding Region}" VerticalAlignment="Center"
@@ -413,7 +409,7 @@
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellEditingTemplate>
                                 </DataGridTemplateColumn>
-                                <DataGridTemplateColumn Header="语言" Width="68" SortMemberPath="Language">
+                                <DataGridTemplateColumn Header="语言" Width="Auto" SortMemberPath="Language">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <TextBlock Text="{Binding Language}" VerticalAlignment="Center"
@@ -428,16 +424,20 @@
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellEditingTemplate>
                                 </DataGridTemplateColumn>
-                                <DataGridTextColumn Header="特注" Binding="{Binding SpecialNote}" Width="92"
+                                <DataGridTextColumn Header="特注" Binding="{Binding SpecialNote}" Width="Auto"
                                                     ElementStyle="{StaticResource DataGridTextStyle}" />
-                                <DataGridTextColumn Header="光碟数" Binding="{Binding DiscCountText}" Width="60" SortMemberPath="DiscCount"
+                                <DataGridTextColumn Header="光碟数" Binding="{Binding DiscCountText}" Width="Auto" SortMemberPath="DiscCount"
                                                     ElementStyle="{StaticResource DataGridTextStyle}" />
-                                <DataGridTextColumn Header="格式" Binding="{Binding Format}" Width="60" SortMemberPath="Format"
+                                <DataGridTextColumn Header="格式" Binding="{Binding Format}" Width="Auto" SortMemberPath="Format"
                                                     ElementStyle="{StaticResource DataGridTextStyle}" />
-                                <DataGridTemplateColumn Header="状态" Width="72" SortMemberPath="Status">
+                                <DataGridTemplateColumn Header="状态" Width="Auto" SortMemberPath="Status">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
-                                            <TextBlock Text="{Binding Status}" VerticalAlignment="Center" />
+                                            <StackPanel VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Status}" />
+                                                <TextBlock Text="{Binding LastPlayedDisplay}" FontSize="11" Margin="0,2,0,0"
+                                                           Foreground="{DynamicResource TextSecondaryBrush}" />
+                                            </StackPanel>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                     <DataGridTemplateColumn.CellEditingTemplate>
@@ -448,17 +448,15 @@
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellEditingTemplate>
                                 </DataGridTemplateColumn>
-                                <DataGridTextColumn Header="次数" Binding="{Binding PlayCount}" Width="56"
+                                <DataGridTextColumn Header="次数" Binding="{Binding PlayCount}" Width="Auto"
                                                     ElementStyle="{StaticResource DataGridTextStyle}" />
-                                <DataGridTextColumn Header="时长" Binding="{Binding PlaySecondsDisplay}" Width="72" SortMemberPath="PlaySeconds"
+                                <DataGridTextColumn Header="时长" Binding="{Binding PlaySecondsDisplay}" Width="Auto" SortMemberPath="PlaySeconds"
                                                     ElementStyle="{StaticResource DataGridTextStyle}" />
-                                <DataGridTextColumn Header="最近游玩" Binding="{Binding LastPlayedDisplay}" Width="132" SortMemberPath="LastPlayedAt"
+                                <DataGridTextColumn Header="大小" Binding="{Binding FileSizeDisplay}" Width="Auto" SortMemberPath="FileSize"
                                                     ElementStyle="{StaticResource DataGridTextStyle}" />
-                                <DataGridTextColumn Header="大小" Binding="{Binding FileSizeDisplay}" Width="92" SortMemberPath="FileSize"
+                                <DataGridTextColumn Header="标签" Binding="{Binding Tags}" Width="Auto"
                                                     ElementStyle="{StaticResource DataGridTextStyle}" />
-                                <DataGridTextColumn Header="标签" Binding="{Binding Tags}" Width="120"
-                                                    ElementStyle="{StaticResource DataGridTextStyle}" />
-                                <DataGridTextColumn Header="指纹" Binding="{Binding RomHash}" Width="340"
+                                <DataGridTextColumn Header="指纹" Binding="{Binding RomHash}" Width="Auto"
                                                     SortMemberPath="RomHash"
                                                     ElementStyle="{StaticResource DataGridTextStyle}">
                                     <DataGridTextColumn.CellStyle>

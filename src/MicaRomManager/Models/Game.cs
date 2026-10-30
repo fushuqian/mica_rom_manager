@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace MicaRomManager.Models;
@@ -22,15 +22,16 @@ public partial class Game : ObservableObject
     [NotifyPropertyChangedFor(nameof(Subtitle))]
     private string platform = "";
     [ObservableProperty] private string genre = "";
-    [ObservableProperty] private string region = "";
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(Subtitle))]
+    private string region = "";
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(Subtitle))]
     private string language = "";
-    /// <summary>列表副行：平台 · 语言（语言为空时只显示平台）。</summary>
+    /// <summary>列表副行：平台 · 区域 · 语言（空值自动跳过）。</summary>
     public string Subtitle =>
-        string.IsNullOrWhiteSpace(Platform)
-            ? (Language ?? "")
-            : (string.IsNullOrWhiteSpace(Language) ? Platform : $"{Platform} · {Language}");
+        string.Join(" · ", new[] { Platform, Region, Language }
+            .Where(part => !string.IsNullOrWhiteSpace(part)));
     /// <summary>特别标注，整理文件名时放在语言后面，如「汉化版」。</summary>
     [ObservableProperty] private string specialNote = "";
     /// <summary>ROM 内容指纹（SHA256；大文件为 fast: 采样指纹）。</summary>
@@ -65,7 +66,7 @@ public partial class Game : ObservableObject
 
     public bool IsMissing => !string.IsNullOrWhiteSpace(RomPath) && !File.Exists(RomPath);
 
-    public string FavoriteDisplay => Favorite ? "★" : "";
+    public string FavoriteDisplay => Favorite ? "⭐" : "";
 
     /// <summary>五颗星文本，未评分为全空心。</summary>
     public string RatingStars => new string('★', Math.Clamp(Rating, 0, 5))
