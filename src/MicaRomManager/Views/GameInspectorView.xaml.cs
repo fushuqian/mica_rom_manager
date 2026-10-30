@@ -18,6 +18,7 @@ public partial class GameInspectorView : UserControl
     private bool _dirty;
     private bool _overwrite;
     private int _rating;
+    private readonly List<(string Field, string Before, string After)> _lastDiff = new();
 
     public GameInspectorView()
     {
@@ -54,6 +55,7 @@ public partial class GameInspectorView : UserControl
 
         SetDirty(false);
         ScrapeStatus.Text = "";
+        ClearScrapeDiff();
         if (edit) BeginEdit();
         else EndEdit();
     }
@@ -384,38 +386,99 @@ public partial class GameInspectorView : UserControl
 
     private int ApplyScrape(ScrapeResult result)
     {
+        _lastDiff.Clear();
         var filled = 0;
-        filled += SetText(EditTitle, result.Title);
-        filled += SetText(EditGenre, result.Genre);
-        filled += SetText(EditRegion, result.Region);
-        filled += SetText(EditLanguage, result.Language);
-        filled += SetText(EditPublisher, result.Publisher);
-        filled += SetText(EditDeveloper, result.Developer);
-        filled += SetText(EditNotes, result.Summary);
+        filled += SetText("标题", EditTitle, result.Title);
+        filled += SetText("类型", EditGenre, result.Genre);
+        filled += SetText("区域", EditRegion, result.Region);
+        filled += SetText("语言", EditLanguage, result.Language);
+        filled += SetText("发行商", EditPublisher, result.Publisher);
+        filled += SetText("开发商", EditDeveloper, result.Developer);
+        filled += SetText("备注", EditNotes, result.Summary);
         if (result.ReleaseYear is { } year && (_overwrite || string.IsNullOrWhiteSpace(EditYear.Text)))
         {
+            var before = EditYear.Text;
             EditYear.Text = year.ToString();
-            filled++;
+            if (!string.Equals(before.Trim(), EditYear.Text, StringComparison.Ordinal))
+            {
+                _lastDiff.Add(("年份", before, EditYear.Text));
+                filled++;
+            }
         }
 
+        RenderScrapeDiff();
         return filled;
     }
 
-    private int SetText(TextBox box, string value)
+    private void ClearScrapeDiff()
+    {
+        _lastDiff.Clear();
+        ScrapeDiffList.Children.Clear();
+        ScrapeDiffPanel.Visibility = Visibility.Collapsed;
+    }
+
+    private void RenderScrapeDiff()
+    {
+        ScrapeDiffList.Children.Clear();
+        if (_lastDiff.Count == 0)
+        {
+            ScrapeDiffPanel.Visibility = Visibility.Collapsed;
+            return;
+        }
+
+        foreach (var (field, before, after) in _lastDiff)
+        {
+            var row = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 2, 0, 0) };
+            row.Children.Add(new TextBlock
+            {
+                Text = field, Width = 48, FontSize = 11,
+                Foreground = (Brush)FindResource("TextSecondaryBrush"),
+            });
+            row.Children.Add(new TextBlock
+            {
+                Text = string.IsNullOrWhiteSpace(before) ? "—" : before,
+                FontSize = 11.5, TextDecorations = TextDecorations.Strikethrough,
+                Foreground = (Brush)FindResource("TextSecondaryBrush"),
+                MaxWidth = 90, TextTrimming = TextTrimming.CharacterEllipsis,
+            });
+            row.Children.Add(new TextBlock
+            {
+                Text = " → ", FontSize = 11,
+                Foreground = (Brush)FindResource("TextSecondaryBrush"),
+            });
+            row.Children.Add(new TextBlock
+            {
+                Text = after, FontSize = 11.5, FontWeight = FontWeights.SemiBold,
+                Foreground = (Brush)FindResource("AccentBrush"),
+                MaxWidth = 130, TextTrimming = TextTrimming.CharacterEllipsis,
+            });
+            ScrapeDiffList.Children.Add(row);
+        }
+
+        ScrapeDiffPanel.Visibility = Visibility.Visible;
+    }
+
+    private int SetText(string field, TextBox box, string value)
     {
         if (string.IsNullOrWhiteSpace(value)) return 0;
         if (!_overwrite && !string.IsNullOrWhiteSpace(box.Text)) return 0;
         if (string.Equals(box.Text.Trim(), value.Trim(), StringComparison.Ordinal)) return 0;
+
+        var before = box.Text.Trim();
         box.Text = value.Trim();
+        _lastDiff.Add((field, before, box.Text));
         return 1;
     }
 
-    private int SetText(ComboBox box, string value)
+    private int SetText(string field, ComboBox box, string value)
     {
         if (string.IsNullOrWhiteSpace(value)) return 0;
         if (!_overwrite && !string.IsNullOrWhiteSpace(box.Text)) return 0;
         if (string.Equals(box.Text.Trim(), value.Trim(), StringComparison.Ordinal)) return 0;
+
+        var before = box.Text.Trim();
         box.Text = value.Trim();
+        _lastDiff.Add((field, before, box.Text));
         return 1;
     }
 }

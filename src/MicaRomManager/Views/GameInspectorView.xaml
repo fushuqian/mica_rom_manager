@@ -115,6 +115,15 @@
             <ScrollViewer x:Name="EditPanel" Grid.Row="1" VerticalScrollBarVisibility="Auto"
                           Padding="16,12,14,8" Visibility="Collapsed">
                 <StackPanel>
+                    <Border x:Name="ScrapeDiffPanel" Visibility="Collapsed" Margin="0,0,0,10"
+                            Background="{DynamicResource AccentSubtleBrush}" CornerRadius="8" Padding="10,8">
+                        <StackPanel>
+                            <TextBlock Text="本次刮削" FontSize="11" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource AccentBrush}" Margin="0,0,0,6" />
+                            <StackPanel x:Name="ScrapeDiffList" />
+                        </StackPanel>
+                    </Border>
+
                     <StackPanel Orientation="Horizontal">
                         <StackPanel Width="150" Margin="0,0,8,0">
                             <TextBlock Text="标题" Style="{StaticResource InspLabel}" />
