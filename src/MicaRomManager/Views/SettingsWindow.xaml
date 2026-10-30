@@ -235,7 +235,7 @@
                         <ListBox.ItemTemplate>
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal" Margin="12,0,0,0">
-                                    <TextBlock Text="{Binding Name}" />
+                                    <TextBlock Text="{Binding Display}" />
                                     <TextBlock Text="（自定义）" Margin="4,0,0,0"
                                                Foreground="{DynamicResource TextSecondaryBrush}"
                                                Visibility="{Binding IsCustom, Converter={StaticResource BoolToVis}}" />

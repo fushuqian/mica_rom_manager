@@ -266,7 +266,11 @@ public partial class SettingsWindow : Window
 
         var presets = PlatformPresetStore.Load(AppServices.Paths);
         var platforms = AppServices.Platforms.ListAll();
-        foreach (var platform in platforms) platform.Vendor = PlatformPresetStore.VendorOf(presets, platform.Name);
+        foreach (var platform in platforms)
+        {
+            platform.Vendor = PlatformPresetStore.VendorOf(presets, platform.Name);
+            platform.Display = PlatformDisplayNames.Of(platform.Name);
+        }
 
         var view = new ListCollectionView(platforms);
         view.GroupDescriptions.Add(new PropertyGroupDescription(nameof(PlatformSetting.Vendor)));
@@ -296,7 +300,10 @@ public partial class SettingsWindow : Window
             return;
         }
 
-        PlatformNameText.Text = setting.Name;
+        var displayName = PlatformDisplayNames.Of(setting.Name);
+        PlatformNameText.Text = string.Equals(displayName, setting.Name, StringComparison.Ordinal)
+            ? setting.Name
+            : $"{displayName}（{setting.Name}）";
         PlatformFolderBox.Text = setting.Folder;
         PlatformFormatsBox.Text = setting.Formats;
         PlatformArgsBox.Text = setting.ArgsTemplate;

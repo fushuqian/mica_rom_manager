@@ -16,4 +16,7 @@ public sealed class PlatformSetting
 
     /// <summary>界面分组用：来自 PlatformPresets.json 的厂商名，写库时忽略。</summary>
     public string Vendor { get; set; } = "";
+
+    /// <summary>界面展示名（PS1 → PlayStation），不写库。</summary>
+    public string Display { get; set; } = "";
 }
