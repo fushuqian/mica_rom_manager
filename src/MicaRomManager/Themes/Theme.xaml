@@ -17,7 +17,7 @@
     <!-- 颜色 / 半透明表面（Mica 背景会透出来） -->
     <SolidColorBrush x:Key="WindowBackgroundBrush" Color="#F4F6F9" />
     <SolidColorBrush x:Key="SurfaceBrush" Color="#DEFFFFFF" />
-    <SolidColorBrush x:Key="CardBrush" Color="#C7FFFFFF" />
+    <SolidColorBrush x:Key="CardBrush" Color="#BFFFFFFF" />
     <SolidColorBrush x:Key="PanelBrush" Color="#FFFFFFFF" />
     <SolidColorBrush x:Key="FlyoutBrush" Color="#F5FFFFFF" />
     <SolidColorBrush x:Key="InputBrush" Color="#A6FFFFFF" />
@@ -42,19 +42,10 @@
     <SolidColorBrush x:Key="GridLineBrush" Color="#14000000" />
     <SolidColorBrush x:Key="ScrollThumbBrush" Color="#59000000" />
     <SolidColorBrush x:Key="ScrollThumbHoverBrush" Color="#8C000000" />
-    <SolidColorBrush x:Key="CardShadowBrush" Color="#1A000000" />
 
-    <!-- 卡片悬浮阴影：单独的空白 Border 承载 Effect，避免把子元素文字一起栅格化 -->
-    <Style x:Key="CardShadowStyle" TargetType="Border">
-        <Setter Property="Background" Value="{DynamicResource CardShadowBrush}" />
-        <Setter Property="CornerRadius" Value="12" />
-        <Setter Property="Effect">
-            <Setter.Value>
-                <DropShadowEffect Color="#000000" BlurRadius="22" ShadowDepth="4"
-                                  Direction="270" Opacity="0.18" />
-            </Setter.Value>
-        </Setter>
-    </Style>
+    <!-- 只让卡片的背景层投射阴影，文字放在上层的透明 Border 里，避免整棵子树被栅格化 -->
+    <DropShadowEffect x:Key="CardShadowEffect" Color="#000000" BlurRadius="28"
+                      ShadowDepth="8" Direction="270" Opacity="0.40" />
 
     <!-- 标题栏按钮 -->
     <Style x:Key="CaptionButtonStyle" TargetType="Button">

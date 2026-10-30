@@ -38,7 +38,6 @@ public static class ThemePalette
         ["GridLineBrush"] = Color.FromArgb(0x1F, 0xFF, 0xFF, 0xFF),
         ["ScrollThumbBrush"] = Color.FromArgb(0x66, 0xFF, 0xFF, 0xFF),
         ["ScrollThumbHoverBrush"] = Color.FromArgb(0x99, 0xFF, 0xFF, 0xFF),
-        ["CardShadowBrush"] = Color.FromArgb(0x40, 0x00, 0x00, 0x00),
     };
 
     public static void Apply()

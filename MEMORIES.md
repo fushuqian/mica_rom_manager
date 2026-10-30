@@ -3,6 +3,8 @@
 ## 2026-10-31（WPF 深色 / 系统背景）
 
 - 只改 `SolidColorBrush.Color` 不够：`StaticResource` 在样式里可能已被冻结，深色调色板会出现“背景变了、文字还是深色”。要么全量换 `DynamicResource`，要么重建样式。本项目把 24 个 XAML 的画刷引用统一换成 DynamicResource。
+- WPF 给卡片加 `DropShadowEffect` 如果直接加在承载内容的 Border 上，会把整棵子树栅格化、文字发虚；正确做法是：**背景层 Border 单独承载 Effect，内容层透明 Border 叠在上面**。阴影层必须是可见的背景（75% 白），只给 10% 透明黑再乘 Effect Opacity 会几乎看不见。
+- WPF `Border.CornerRadius` 不会裁剪子元素；AI 助手的头部/底部如果铺了不透明背景，会把圆角盖成直角。让这些行透明、只留外层的圆角背景即可。
 - 右上角按钮重影不是自绘按钮画了两遍，而是 `WindowStyle=SingleBorderWindow` 时 DWM 仍绘制一套系统 caption 按钮，和自绘标题栏叠加；要自绘标题栏就保持 `WindowStyle=None`。
 - WPF 给卡片加 `DropShadowEffect` 如果直接加在承载内容的 Border 上，会把整棵子树栅格化、文字发虚；要在后面放一个**空白同尺寸 Border** 承载阴影，内容卡片覆盖在上面。
 - WPF 动效控制在 120–220ms：窗口淡入、表格切换淡入、抽屉滑入、按钮 1.02 微缩放即可；不要给 DataGrid 每行加 Effect，性能会崩。

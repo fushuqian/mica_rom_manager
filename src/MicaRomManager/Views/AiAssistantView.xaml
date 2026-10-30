@@ -5,9 +5,10 @@
              FontSize="13"
              Background="Transparent">
     <Grid>
-        <Border Style="{StaticResource CardShadowStyle}" Margin="0,4,0,0" />
-        <Border Background="{DynamicResource PanelBrush}" BorderBrush="{DynamicResource BorderBrush}"
-                BorderThickness="1" CornerRadius="12" ClipToBounds="True">
+        <Border Background="{DynamicResource PanelBrush}" CornerRadius="12"
+                Margin="0,4,0,0" Effect="{StaticResource CardShadowEffect}" />
+        <Border Background="Transparent" BorderThickness="0"
+                CornerRadius="12" ClipToBounds="True">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -15,7 +16,7 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <Border Grid.Row="0" Background="{DynamicResource SurfaceBrush}"
+        <Border Grid.Row="0" Background="Transparent"
                 BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1" Padding="10,8">
             <DockPanel>
                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
@@ -164,7 +165,7 @@
             </StackPanel>
         </Grid>
 
-        <Border Grid.Row="2" Background="{DynamicResource SurfaceBrush}"
+        <Border Grid.Row="2" Background="Transparent"
                 BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0" Padding="8">
             <Grid>
                 <Grid.RowDefinitions>

@@ -150,9 +150,8 @@
             </Grid.ColumnDefinitions>
 
             <Grid Grid.Column="0">
-                <Border Style="{StaticResource CardShadowStyle}" Margin="0,3,0,0" />
-                <Border Background="{DynamicResource CardBrush}"
-                        BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="10">
+                <Border Background="{DynamicResource CardBrush}" CornerRadius="10" Margin="0,4,0,0" Effect="{StaticResource CardShadowEffect}" />
+                <Border Background="Transparent" BorderThickness="0" CornerRadius="10">
                     <DockPanel Margin="10">
                         <StackPanel DockPanel.Dock="Top" Margin="4,2,4,8">
                             <TextBlock Text="平台" FontSize="15" FontWeight="SemiBold" />
@@ -187,9 +186,8 @@
 
                 <!-- 搜索 + 筛选 -->
                 <Grid Grid.Row="0" Margin="0,0,0,10">
-                <Border Style="{StaticResource CardShadowStyle}" Margin="0,3,0,0" />
-                <Border Background="{DynamicResource CardBrush}"
-                        BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                <Border Background="{DynamicResource CardBrush}" CornerRadius="10" Margin="0,4,0,0" Effect="{StaticResource CardShadowEffect}" />
+                <Border Background="Transparent" BorderThickness="0"
                         CornerRadius="10" Padding="10,8">
                     <StackPanel Orientation="Horizontal">
                         <Grid Width="380" HorizontalAlignment="Left">
@@ -263,9 +261,8 @@
 
                 <!-- 游戏列表卡片 -->
                 <Grid Grid.Row="2">
-                <Border Style="{StaticResource CardShadowStyle}" Margin="0,3,0,0" />
-                <Border Background="{DynamicResource CardBrush}"
-                        BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                <Border Background="{DynamicResource CardBrush}" CornerRadius="10" Margin="0,4,0,0" Effect="{StaticResource CardShadowEffect}" />
+                <Border Background="Transparent" BorderThickness="0"
                         CornerRadius="10" ClipToBounds="True">
                     <DataGrid x:Name="GameGrid" Style="{StaticResource AppDataGridStyle}" RowHeight="34"
                               IsReadOnly="True" Margin="2"
