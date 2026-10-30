@@ -135,13 +135,40 @@ public partial class MainViewModel : ObservableObject, IAiAppHost
     public void LoadGames()
     {
         Games.Clear();
-        foreach (var game in AppServices.GameRepo.ListAll()) Games.Add(game);
+        var list = AppServices.GameRepo.ListAll();
+        ApplyEmulatorDisplay(list);
+        foreach (var game in list) Games.Add(game);
 
         RefreshLookups();
         TotalCount = Games.Count;
         LastRefreshText = $"上次刷新：{DateTime.Now:HH:mm:ss}";
         ApplyFilter();
         RefreshLibraryWarning();
+    }
+
+    /// <summary>把「选用模拟器」换算成名称：优先游戏自带 id，否则回落到该平台的默认模拟器。</summary>
+    private void ApplyEmulatorDisplay(IEnumerable<Game> games)
+    {
+        var byId = Emulators.Where(e => e.Id > 0).ToDictionary(e => e.Id, e => e.Name);
+        var byPlatform = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var emulator in Emulators)
+        {
+            foreach (var platform in emulator.Platforms)
+            {
+                if (string.IsNullOrWhiteSpace(platform)) continue;
+                if (!byPlatform.ContainsKey(platform)) byPlatform[platform] = emulator.Name;
+            }
+        }
+
+        foreach (var game in games)
+        {
+            if (game.EmulatorId is > 0 && byId.TryGetValue(game.EmulatorId.Value, out var name))
+                game.EmulatorDisplay = name;
+            else if (!string.IsNullOrWhiteSpace(game.Platform) && byPlatform.TryGetValue(game.Platform, out var fallback))
+                game.EmulatorDisplay = fallback;
+            else
+                game.EmulatorDisplay = "";
+        }
     }
 
     /// <summary>

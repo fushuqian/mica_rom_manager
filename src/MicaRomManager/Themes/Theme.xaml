@@ -20,6 +20,7 @@
     <SolidColorBrush x:Key="CardBrush" Color="#BFFFFFFF" />
     <SolidColorBrush x:Key="PanelBrush" Color="#FFFFFFFF" />
     <SolidColorBrush x:Key="FlyoutBrush" Color="#F7FFFFFF" />
+    <SolidColorBrush x:Key="TrayBrush" Color="#FDF9FAFC" />
     <SolidColorBrush x:Key="InputBrush" Color="#66FFFFFF" />
     <SolidColorBrush x:Key="NavBrush" Color="#80FFFFFF" />
     <SolidColorBrush x:Key="BorderBrush" Color="#14000000" />
@@ -851,6 +852,38 @@
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter TargetName="Bd" Property="Background" Value="{DynamicResource HoverBrush}" />
                             <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- 可切换的胶囊按钮（筛选条「编辑」） -->
+    <Style x:Key="ChipToggleButtonStyle" TargetType="ToggleButton">
+        <Setter Property="Height" Value="30" />
+        <Setter Property="Padding" Value="11,0" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToggleButton">
+                    <Border x:Name="Bd" Background="{TemplateBinding Background}" CornerRadius="7"
+                            Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
+                                          TextElement.Foreground="{TemplateBinding Foreground}" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource HoverBrush}" />
+                            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+                        </Trigger>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentBrush}" />
+                            <Setter Property="Foreground" Value="{DynamicResource OnAccentTextBrush}" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>

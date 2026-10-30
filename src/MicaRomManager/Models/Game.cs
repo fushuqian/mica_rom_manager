@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace MicaRomManager.Models;
@@ -63,6 +63,9 @@ public partial class Game : ObservableObject
 
     public DateTime CreatedAt { get; set; } = DateTime.Now;
     public DateTime UpdatedAt { get; set; } = DateTime.Now;
+
+    /// <summary>「选用模拟器」列的展示值；由列表加载时回填，不参与持久化。</summary>
+    public string EmulatorDisplay { get; set; } = "";
 
     public bool IsMissing => !string.IsNullOrWhiteSpace(RomPath) && !File.Exists(RomPath);
 

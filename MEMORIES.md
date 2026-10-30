@@ -172,3 +172,11 @@
 - WPF 项目里 `ImplicitUsings` 对 XAML 临时工程（`*_wpftmp.csproj`）不生效，`Path`/`File`/`Directory`/`HttpClient` 会报找不到类型；缺的 `using System.IO;`、`using System.Net.Http;` 要显式补。
 - `JsonElement` 是结构体，`FirstOrDefault` 返回 `ValueKind=Undefined` 而非 null，不能用 `??`；用 `ValueKind == JsonValueKind.Undefined` 判断。
 - 截图验证窗口时直接用屏幕拷贝会截到其它窗口；用 `PrintWindow(hWnd, hdc, 2)` 更稳。本机 200% 缩放，窗口逻辑尺寸 1280x780 对应物理 2560x1560，截图尺寸会只有一半，注意别误判控件被裁。
+
+## 2026-10-31 v0.30.0 托盘与浮层踩坑
+
+- **单文件发布不认 DLL**：publish 默认单文件，把 in 里的 MicaRomManager.dll 拷进去不生效；改代码后要么重新 dotnet publish，要么直接跑 in\\Release\\net9.0-windows\\MicaRomManager.exe 验证。
+- **PowerShell 改源码文本会坏中文**：Get-Content | Set-Content 在非 UTF-8 控制台下会把个别汉字替换成 ?，写坏 XAML。改源码统一用 edit 工具或 Python 显式 encoding='utf-8', newline=''。
+- **托盘叠在助手上必须是不透明底**：助手面板 ShellPanelBrush 只有 40% 白，托盘若用同系透明笔刷会透出对话文字；新增 TrayBrush（#FDF9FAFC / 深色 #FA18181D）。
+- **点空白关闭不要用遮罩 Border**：遮罩会盖住筛选条上的「编辑」开关，导致点不动；改为窗口级 PreviewMouseDown，命中托盘与开关时放行。
+- **这台机器 2K@200% 缩放**，窗口 1280 DIP 在 3840×2160 上仍能放下；截图必须先把 PowerShell 进程设为 Per-Monitor DPI 感知，否则 GetWindowRect 返回被虚拟化的坐标，只能拍到窗口左上角。

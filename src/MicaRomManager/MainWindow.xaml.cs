@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using System.IO;
 using System.Text.Json;
 using System.Windows;
@@ -33,10 +33,16 @@ public partial class MainWindow : Window
         RootGrid.Opacity = 0;
         _viewModel = new MainViewModel();
         DataContext = _viewModel;
-        FilterPopup.DataContext = _viewModel;
         _assistantViewModel = new AiAssistantViewModel(_viewModel);
         AssistantPanel.DataContext = _assistantViewModel;
         AssistantPanel.CloseRequested += (_, _) => SetAssistantOpen(false);
+        Inspector.DataContext = _viewModel;
+        Inspector.EditCanceled += (_, _) => EditModeToggle.IsChecked = false;
+        Inspector.Saved += (_, _) =>
+        {
+            EditModeToggle.IsChecked = false;
+            _viewModel.RefreshFilterAfterEdit();
+        };
         Loaded += OnLoaded;
         Closing += (_, _) => SaveViewState();
     }
@@ -91,29 +97,26 @@ public partial class MainWindow : Window
             },
         });
 
-    /// <summary>工具栏「AI 工具」：把低频的 AI 动作收进菜单。</summary>
-    private void AiTools_Click(object sender, RoutedEventArgs e)
+    /// <summary>筛选浮层开合（窗口内锚定，不用 Popup）。</summary>
+    private void FilterButton_Click(object sender, RoutedEventArgs e)
     {
-        var menu = new ContextMenu
-        {
-            PlacementTarget = AiToolsButton,
-            Placement = PlacementMode.Bottom,
-        };
-
-        AddMenuCommand(menu, "AI 刮削信息", _viewModel.ScrapeCommand);
-        AddMenuCommand(menu, "AI 生成标签", _viewModel.AiTagsCommand);
-        AddMenuCommand(menu, "AI 翻译", _viewModel.AiTranslateCommand);
-        AddMenuCommand(menu, "推荐游戏", _viewModel.RecommendCommand);
-        menu.IsOpen = true;
+        var open = FilterFlyout.Visibility != Visibility.Visible;
+        CloseOverlays();
+        if (!open) return;
+        FilterFlyout.Visibility = Visibility.Visible;
+        OverlayScrim.Visibility = Visibility.Visible;
     }
 
-    private static void AddMenuCommand(ContextMenu menu, string header, ICommand command) =>
-        menu.Items.Add(new MenuItem { Header = header, Command = command });
+    private void OverlayScrim_MouseDown(object sender, MouseButtonEventArgs e) => CloseOverlays();
 
-    private void FilterButton_Click(object sender, RoutedEventArgs e) =>
-        FilterPopup.IsOpen = !FilterPopup.IsOpen;
+    private void CloseOverlays_Click(object sender, RoutedEventArgs e) => CloseOverlays();
 
-    private void CloseFilter_Click(object sender, RoutedEventArgs e) => FilterPopup.IsOpen = false;
+    private void CloseOverlays()
+    {
+        FilterFlyout.Visibility = Visibility.Collapsed;
+        ColumnFlyout.Visibility = Visibility.Collapsed;
+        OverlayScrim.Visibility = Visibility.Collapsed;
+    }
 
     /// <summary>右键「AI 问问」：把选中游戏推进助手并直接咨询。</summary>
     private void AiAsk_Click(object sender, RoutedEventArgs e)
@@ -241,7 +244,7 @@ public partial class MainWindow : Window
         {
             ApplyHiddenColumns(new ListViewState
             {
-                LayoutVersion = 6,
+                LayoutVersion = 7,
                 HiddenColumns = ListViewState.DefaultHiddenColumns.ToList(),
             });
             return;
@@ -259,14 +262,14 @@ public partial class MainWindow : Window
 
         if (state == null) return;
 
-        var legacyLayout = state.LayoutVersion < 6;
+        var legacyLayout = state.LayoutVersion < 7;
 
         // 换布局时直接套新默认列，避免旧布局的隐藏列（如类型/平台）残留下来
         if (legacyLayout)
         {
             state.HiddenColumns = ListViewState.DefaultHiddenColumns.ToList();
         }
-        state.LayoutVersion = 6;
+        state.LayoutVersion = 7;
 
         _viewModel.OnlyFavorites = state.OnlyFavorites;
         _viewModel.OnlyMissing = state.OnlyMissing;
@@ -320,39 +323,43 @@ public partial class MainWindow : Window
         }
     }
 
-    /// <summary>工具栏「列设置」：列出所有列，勾选切换显隐。</summary>
+    /// <summary>筛选条「列」：展开窗口内浮层的勾选清单。</summary>
     private void ColumnMenu_Click(object sender, RoutedEventArgs e)
     {
-        var menu = new ContextMenu
-        {
-            PlacementTarget = ColumnMenuButton,
-            Placement = PlacementMode.Bottom,
-        };
+        var open = ColumnFlyout.Visibility != Visibility.Visible;
+        CloseOverlays();
+        if (!open) return;
 
-        foreach (var column in GameGrid.Columns.Where(column => column.Header is string))
-        {
-            var item = new MenuItem
-            {
-                Header = column.Header,
-                IsCheckable = true,
-                IsChecked = column.Visibility == Visibility.Visible,
-                StaysOpenOnClick = true,
-            };
-            item.Click += (_, _) => ToggleColumn(column, item);
-            menu.Items.Add(item);
-        }
-
-        menu.IsOpen = true;
+        BuildColumnChecks();
+        ColumnFlyout.Visibility = Visibility.Visible;
+        OverlayScrim.Visibility = Visibility.Visible;
     }
 
-    private void ToggleColumn(DataGridColumn column, MenuItem item)
+    private void BuildColumnChecks()
+    {
+        ColumnCheckHost.Children.Clear();
+        foreach (var column in GameGrid.Columns.Where(entry => entry.Header is string))
+        {
+            var box = new CheckBox
+            {
+                Content = column.Header,
+                IsChecked = column.Visibility == Visibility.Visible,
+                Margin = new Thickness(0, 0, 0, 8),
+            };
+            var target = column;
+            box.Click += (_, _) => ToggleColumn(target, box);
+            ColumnCheckHost.Children.Add(box);
+        }
+    }
+
+    private void ToggleColumn(DataGridColumn column, CheckBox box)
     {
         if (column.Visibility == Visibility.Visible)
         {
             var visibleCount = GameGrid.Columns.Count(entry => entry.Visibility == Visibility.Visible);
             if (visibleCount <= 1)
             {
-                item.IsChecked = true;
+                box.IsChecked = true;
                 _viewModel.StatusMessage = "至少要保留一列。";
                 return;
             }
@@ -364,7 +371,28 @@ public partial class MainWindow : Window
             column.Visibility = Visibility.Visible;
         }
 
-        item.IsChecked = column.Visibility == Visibility.Visible;
+        box.IsChecked = column.Visibility == Visibility.Visible;
+        SaveViewState();
+    }
+
+    private void ColumnsShowAll_Click(object sender, RoutedEventArgs e)
+    {
+        foreach (var column in GameGrid.Columns) column.Visibility = Visibility.Visible;
+        BuildColumnChecks();
+        SaveViewState();
+    }
+
+    private void ColumnsReset_Click(object sender, RoutedEventArgs e)
+    {
+        foreach (var column in GameGrid.Columns)
+        {
+            if (column.Header is not string header) continue;
+            column.Visibility = ListViewState.DefaultHiddenColumns.Contains(header, StringComparer.Ordinal)
+                ? Visibility.Collapsed
+                : Visibility.Visible;
+        }
+
+        BuildColumnChecks();
         SaveViewState();
     }
 
@@ -386,7 +414,7 @@ public partial class MainWindow : Window
     {
         var state = new ListViewState
         {
-            LayoutVersion = 6,
+            LayoutVersion = 7,
             Search = _viewModel.SearchText,
             Platform = _viewModel.SelectedPlatform,
             Status = _viewModel.SelectedStatus,
@@ -421,21 +449,73 @@ public partial class MainWindow : Window
     private void OnSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         _viewModel.SetSelectedGames(GameGrid.SelectedItems.Cast<Game>());
+        if (InspectorTray.Visibility != Visibility.Visible) return;
+        if (EditModeToggle.IsChecked == true) return;
+        Inspector.Load(_viewModel.SelectedGame, edit: false);
     }
 
     /// <summary>供设置窗口在扫描补录后刷新列表。</summary>
     public void RefreshGames() => _viewModel.LoadGames();
 
+    /// <summary>双击：打开详情托盘（只读）。启动改用回车 / 工具栏「启动」/ 托盘按钮。</summary>
     private void OnRowDoubleClick(object sender, MouseButtonEventArgs e)
     {
         if (e.ChangedButton != MouseButton.Left) return;
-        if (EditModeToggle.IsChecked == true) return;
         var cell = FindAncestor<DataGridCell>(e.OriginalSource as DependencyObject);
         if (cell?.Column == RatingColumn) return;
         if (FindAncestor<DataGridRow>(e.OriginalSource as DependencyObject) == null) return;
         if (_viewModel.SelectedGame == null) return;
 
-        _viewModel.LaunchSelectedCommand.Execute(null);
+        OpenTray(edit: false);
+    }
+
+    /// <summary>打开详情/编辑托盘：占用米卡助手那一格并盖在其上。</summary>
+    private void OpenTray(bool edit)
+    {
+        CloseOverlays();
+        if (_viewModel.SelectedGame == null) return;
+
+        InspectorTray.Visibility = Visibility.Visible;
+        Inspector.Load(_viewModel.SelectedGame, edit);
+        InspectorTray.BeginAnimation(OpacityProperty,
+            new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(160))
+            {
+                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut },
+            });
+    }
+
+    private void CloseTray()
+    {
+        if (InspectorTray.Visibility != Visibility.Visible) return;
+        if (Inspector.HasUnsavedChanges)
+        {
+            var choice = MessageBox.Show("有未保存的修改，先保存吗？", "编辑元数据",
+                MessageBoxButton.YesNoCancel, MessageBoxImage.Question);
+            if (choice == MessageBoxResult.Cancel) return;
+            if (choice == MessageBoxResult.Yes)
+            {
+                Inspector.SaveCurrent();
+                if (Inspector.HasUnsavedChanges) return;
+            }
+        }
+
+        InspectorTray.Visibility = Visibility.Collapsed;
+        EditModeToggle.IsChecked = false;
+    }
+
+    /// <summary>点托盘以外的地方关闭；点在「编辑」开关与托盘内部时不拦截。</summary>
+    private void OnWindowPreviewMouseDown(object sender, MouseButtonEventArgs e)
+    {
+        if (InspectorTray.Visibility != Visibility.Visible) return;
+        if (InspectorTray.IsMouseOver) return;
+        if (EditModeToggle.IsMouseOver) return;
+        CloseTray();
+    }
+
+    private void EditMode_Changed(object sender, RoutedEventArgs e)
+    {
+        if (EditModeToggle.IsChecked == true) OpenTray(edit: true);
+        else if (InspectorTray.Visibility == Visibility.Visible && Inspector.IsEditing) CloseTray();
     }
 
     /// <summary>点击星标直接评分；再次点击同一颗星清空评分。</summary>
@@ -447,11 +527,6 @@ public partial class MainWindow : Window
         game.Rating = game.Rating == star ? 0 : star;
         e.Handled = true;
         _viewModel.SaveInline(game);
-    }
-
-    private void OnEditModeChanged(object sender, RoutedEventArgs e)
-    {
-        GameGrid.IsReadOnly = EditModeToggle.IsChecked != true;
     }
 
     private void OnCellEditEnding(object sender, DataGridCellEditEndingEventArgs e)
@@ -474,6 +549,24 @@ public partial class MainWindow : Window
 
     private void OnPreviewKeyDown(object sender, KeyEventArgs e)
     {
+        if (e.Key == Key.Escape)
+        {
+            if (FilterFlyout.Visibility == Visibility.Visible || ColumnFlyout.Visibility == Visibility.Visible)
+            {
+                CloseOverlays();
+                e.Handled = true;
+                return;
+            }
+
+            if (InspectorTray.Visibility == Visibility.Visible)
+            {
+                CloseTray();
+                e.Handled = true;
+            }
+
+            return;
+        }
+
         if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.F)
         {
             SearchBox.Focus();
@@ -483,7 +576,6 @@ public partial class MainWindow : Window
         }
 
         if (e.OriginalSource is TextBox || e.OriginalSource is ComboBox) return;
-        if (EditModeToggle.IsChecked == true) return;
 
         switch (e.Key)
         {
@@ -492,7 +584,7 @@ public partial class MainWindow : Window
                 e.Handled = true;
                 break;
             case Key.F2 when _viewModel.SelectedGame != null:
-                _viewModel.EditSelectedCommand.Execute(null);
+                EditModeToggle.IsChecked = true;
                 e.Handled = true;
                 break;
             case Key.Delete when _viewModel.SelectedGame != null:
