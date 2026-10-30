@@ -318,6 +318,24 @@ public class AiAssistantTests
             && (message.Content ?? "").Contains("磁盘只读"));
     }
 
+    [Fact]
+    public async Task AssistantService_UsesInjectedPolicy()
+    {
+        // 策略可注入：把「反问」标记清空后，同样的话就不该再触发补提示
+        var host = new FakeHost(new[] { new Game { Id = 1, Title = "银河战士", Platform = "SNES" } });
+        var client = new FakeChatClient();
+        client.Results.Enqueue(new AiToolChatResult(true, "年份 2009，要我改正吗？", "",
+            new List<AiToolCall>(), 200, TimeSpan.Zero));
+
+        var policy = new AiReplyPolicy { PermissionMarkers = Array.Empty<string>() };
+        var service = new AiAssistantService(client, new AiToolExecutor(), policy);
+
+        var result = await service.SendAsync("这游戏哪年出的", host, CancellationToken.None);
+
+        Assert.Single(client.Requests);
+        Assert.Contains("要我改正吗", result.Text);
+    }
+
     private static void AssertHistoryIsValid(IReadOnlyList<AiWireMessage> messages)
     {
         foreach (var message in messages)

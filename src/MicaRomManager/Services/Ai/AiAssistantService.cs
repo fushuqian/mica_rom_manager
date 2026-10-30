@@ -13,13 +13,18 @@ public sealed class AiAssistantService
 
     private readonly IAiChatClient _client;
     private readonly IAiToolExecutor _executor;
+    private readonly AiReplyPolicy _policy;
     private readonly List<AiChatMessage> _history = new();
     private string? _pendingToolCallId;
 
-    public AiAssistantService(IAiChatClient? client = null, IAiToolExecutor? executor = null)
+    public AiAssistantService(
+        IAiChatClient? client = null,
+        IAiToolExecutor? executor = null,
+        AiReplyPolicy? policy = null)
     {
         _client = client ?? AppServices.Ai;
         _executor = executor ?? new AiToolExecutor();
+        _policy = policy ?? new AiReplyPolicy();
     }
 
     public bool HasPending => _pendingToolCallId != null;
@@ -124,19 +129,16 @@ public sealed class AiAssistantService
             if (calls.Count == 0)
             {
                 // 模型又在文字里反问「要我改吗？」：补一轮提示，逼它直接出卡片，避免用户打字回答两遍。
-                if (!nudged && IsPermissionAsk(content))
+                if (!nudged && _policy.IsPermissionAsk(content))
                 {
                     nudged = true;
                     preface = content;
-                    AddHistory(new AiChatMessage
-                    {
-                        Role = "user",
-                        Content = "【系统提示】不要向我反问或征求同意。如果上面的回答涉及修改游戏、设置或发送，请立即调用对应工具生成确认卡片；否则直接给出结论，不要再问。",
-                    });
+                    AiLog.Write("policy nudge=permission");
+                    AddHistory(new AiChatMessage { Role = "user", Content = AiReplyPolicy.PermissionNudge });
                     continue;
                 }
 
-                return new AiTurnResult(MergePreface(preface, content), null, "");
+                return new AiTurnResult(_policy.MergePreface(preface, content), null, "");
             }
 
             var restart = false;
@@ -161,10 +163,10 @@ public sealed class AiAssistantService
                 if (execution.Pending != null)
                 {
                     // 用户要的是介绍，但模型只甩了张卡片：让它先补介绍正文，再重新出卡片。
-                    if (!introGuarded && preface.Length == 0 && content.Length < 30
-                        && IsIntroRequest(FindLastUserText()))
+                    if (_policy.ShouldRequestIntroFirst(introGuarded, preface, content, FindLastUserText()))
                     {
                         introGuarded = true;
+                        AiLog.Write($"policy nudge=intro tool={call.Name}");
                         for (var rest = index; rest < calls.Count; rest++)
                         {
                             AddHistory(new AiChatMessage
@@ -172,8 +174,8 @@ public sealed class AiAssistantService
                                 Role = "tool",
                                 ToolCallId = calls[rest].Id,
                                 Content = rest == index
-                                    ? "{\"ok\":false,\"message\":\"先不要出卡片：用户要的是游戏介绍。请先用正文写 3–5 句介绍（玩法、剧情、年份、平台），然后在同一轮重新调用 update_games 生成后续卡片；正文不能为空，也不要把介绍写进备注。\"}"
-                                    : "{\"ok\":false,\"message\":\"未执行：等待重新生成。\"}",
+                                    ? AiReplyPolicy.IntroNudge
+                                    : AiReplyPolicy.NotExecutedPlaceholder,
                             });
                         }
 
@@ -192,7 +194,7 @@ public sealed class AiAssistantService
                         });
                     }
 
-                    return new AiTurnResult(MergePreface(preface, content), execution.Pending, "");
+                    return new AiTurnResult(_policy.MergePreface(preface, content), execution.Pending, "");
                 }
 
                 AddHistory(new AiChatMessage
@@ -218,60 +220,6 @@ public sealed class AiAssistantService
         var firstUser = _history.FindIndex(cut, item => item.Role == "user");
         if (firstUser > 0) _history.RemoveRange(0, firstUser);
     }
-
-    private static readonly string[] PermissionMarkers =
-    {
-        "要我", "需要我", "要不要我", "需不需要我", "是否要我", "是否需要我", "需要帮你",
-    };
-
-    /// <summary>回答末尾是否在反问「要我…吗？」，这类反问会让用户不得不再打一次字。</summary>
-    private static bool IsPermissionAsk(string text)
-    {
-        var trimmed = text.TrimEnd();
-        if (trimmed.Length == 0) return false;
-        if (!trimmed.EndsWith('？') && !trimmed.EndsWith('?')) return false;
-
-        return PermissionMarkers.Any(marker => trimmed.Contains(marker, StringComparison.Ordinal));
-    }
-
-    /// <summary>把被拦下的反问句去掉，保留前面的分析内容，再与下一轮回复合并。</summary>
-    private static string MergePreface(string preface, string content)
-    {
-        if (preface.Length == 0) return content;
-
-        var kept = StripTrailingPermissionAsk(preface);
-        if (kept.Length == 0) return content;
-        return content.Length == 0 ? kept : kept + "\n\n" + content;
-    }
-
-    private static string StripTrailingPermissionAsk(string text)
-    {
-        var trimmed = text.TrimEnd();
-        if (!IsPermissionAsk(trimmed)) return trimmed;
-
-        var cut = -1;
-        for (var index = trimmed.Length - 2; index >= 0; index--)
-        {
-            if ("。！？!?；;\n".IndexOf(trimmed[index]) >= 0)
-            {
-                cut = index;
-                break;
-            }
-        }
-
-        if (cut < 0) return "";
-        var tail = trimmed[(cut + 1)..].Trim();
-        return IsPermissionAsk(tail) ? trimmed[..cut].TrimEnd() : trimmed;
-    }
-
-    private static readonly string[] IntroMarkers =
-    {
-        "介绍", "说说", "讲讲", "聊聊", "科普", "好不好玩", "值得玩", "是什么游戏", "怎么样",
-    };
-
-    /// <summary>用户这一轮是不是在要游戏介绍（这种问题必须先有正文，不能只弹卡片）。</summary>
-    private static bool IsIntroRequest(string text) =>
-        text.Length > 0 && IntroMarkers.Any(marker => text.Contains(marker, StringComparison.Ordinal));
 
     private string FindLastUserText()
     {
