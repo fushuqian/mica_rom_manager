@@ -2,10 +2,10 @@
 
 ## 路径
 
-- 项目目录：`d:\Trae\MICA_ROM_MANAGER`
+- 项目目录：`D:\Dev\mica_rom_manager`（旧路径 `d:\Trae\MICA_ROM_MANAGER` 已废弃）
 - 解决方案：`MicaRomManager.sln`
 - 主程序：`src\MicaRomManager\MicaRomManager.csproj`（WPF，net9.0-windows）
-- 运行期数据（便携）：`<程序目录>\data\`，含 `mica.db`、`covers\`、`emulators\`、`exports\`、`logs\`
+- 运行期数据（便携）：`<程序目录>\data\`，含 `mica.db`、`covers\`、`emulators\`、`downloads\`（模拟器更新包临时目录）、`exports\`、`logs\`
 - 回退数据目录：`%LOCALAPPDATA%\MicaRomManager\`
 - 字体：`C:\Windows\Fonts\HarmonyOS_Sans_SC_Regular.ttf` / `_Bold.ttf`（系统已安装，直接引用）
 
