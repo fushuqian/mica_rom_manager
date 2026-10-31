@@ -204,3 +204,9 @@
 
 - **diff 要在写入时记录**：`SetText` 只有真正改动才返回 1，顺手把 (字段, 旧值, 新值) 记进 `_lastDiff`，比事后比对控件状态稳。
 - **别在生产库里跑真假削做验证**：会真扣 API 费用，UI 层用编译 + 既有表单同源保证，把「未实机验证」如实写进 CHANGELOG。
+
+## 2026-10-31 v0.30.8 失焦变灰
+
+- **失焦变灰是 DWM 的降级**：Win11 对 `DWMWA_SYSTEMBACKDROP_TYPE` 的 Mica/Acrylic 有「非激活实色」状态，没有任何 API 能直接关掉；可行做法是在 `WM_ACTIVATE`/`WM_NCACTIVATE` 后重新 `DwmSetWindowAttribute` 下发一次，实测聚焦与失焦的取样像素完全一致。
+- **SWCA 亚克力在 Win11 上不吃 GradientColor 的 alpha**：0x99 和 0x40 两种透明度截出来一模一样（都偏白 242），还会盖掉原来的通透感；所以默认仍走 DWM，只把它留作开关。
+- **截图验证失焦**：用 `SetWindowPos(HWND_TOPMOST)` 固定窗口位置，再点桌面空白处（避开任务栏，任务栏点击会把窗口最小化导致截到别的窗口）。
