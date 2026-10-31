@@ -167,6 +167,7 @@
                     <DockPanel>
                         <DockPanel DockPanel.Dock="Top" Margin="20,16,14,6">
                             <ToggleButton DockPanel.Dock="Right" Content="分组" VerticalAlignment="Top"
+                                          Background="{DynamicResource InputBrush}"
                                           Style="{StaticResource ChipToggleButtonStyle}"
                                           IsChecked="{Binding GroupPlatforms, Mode=TwoWay}"
                                           ToolTip="按厂商分组显示；关闭后按你在「设置 → 平台」里拖出来的顺序平铺" />
