@@ -173,29 +173,8 @@
                                        TextTrimming="CharacterEllipsis" />
                         </StackPanel>
                         <ListBox x:Name="PlatformSidebar" Style="{StaticResource SideNavListStyle}"
-                                 ItemsSource="{Binding PlatformFiltersView}"
+                                 ItemsSource="{Binding PlatformFilters}"
                                  SelectedItem="{Binding SelectedPlatformFilter, Mode=TwoWay}">
-                            <ListBox.GroupStyle>
-                                <GroupStyle>
-                                    <GroupStyle.HeaderTemplate>
-                                        <DataTemplate>
-                                            <TextBlock Text="{Binding Name}" FontSize="10.5" FontWeight="SemiBold"
-                                                       Margin="20,12,20,4"
-                                                       Foreground="{DynamicResource TextSecondaryBrush}">
-                                                <TextBlock.Style>
-                                                    <Style TargetType="TextBlock">
-                                                        <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding Name}" Value="">
-                                                                <Setter Property="Visibility" Value="Collapsed" />
-                                                            </DataTrigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </TextBlock.Style>
-                                            </TextBlock>
-                                        </DataTemplate>
-                                    </GroupStyle.HeaderTemplate>
-                                </GroupStyle>
-                            </ListBox.GroupStyle>
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
                                     <DockPanel MinWidth="120">

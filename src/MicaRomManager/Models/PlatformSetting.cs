@@ -19,4 +19,7 @@ public sealed class PlatformSetting
 
     /// <summary>界面展示名（PS1 → PlayStation），不写库。</summary>
     public string Display { get; set; } = "";
+
+    /// <summary>列表右侧的浅色标记：自定义平台显示「自定义」，其余显示厂商。</summary>
+    public string SideLabel { get; set; } = "";
 }

@@ -1,5 +1,11 @@
 # 经验记录（MEMORIES）
 
+## 2026-10-31（平台拖放排序）
+
+- WPF 列表拖放排序的稳妥写法：`PreviewMouseLeftButtonDown` 只记起点和命中的项，`PreviewMouseMove` 里超过 `SystemParameters.Minimum*DragDistance` 才 `DoDragDrop`——直接在 MouseDown 里拖会把单击选中吞掉。
+- 「分组表头」和「用户自定义顺序」天然打架：分组会按分组键重排，用户的顺序就失效了。二选一时留手工顺序，厂商信息降级成行内浅色标记；真要分组就得接受组内排序。
+- 顺序这种「用户偏好」放 settings JSON 数组（`ui.platform_order`）比加数据库列省事：不用迁移、不用每次开窗口写库，新主机还能靠兜底排序落到合理位置。
+
 ## 2026-10-31（平台排序）
 
 - 机型顺序不能靠展示名：字典序会把 GameCube 塞进 Famicom 和 Super Famicom 之间。要单独一张「首发年份」表按年代排，同年再按展示名兜底，自建平台 `int.MaxValue` 排最后。

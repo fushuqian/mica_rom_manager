@@ -16,7 +16,7 @@ using Microsoft.Win32;
 
 namespace MicaRomManager.ViewModels;
 
-/// <summary>左侧平台列表项：Name 为筛选值，Display 为显示文本，Vendor 用来分组。</summary>
+/// <summary>左侧平台列表项：Name 为筛选值，Display 为显示文本。</summary>
 public partial class PlatformFilterItem : ObservableObject
 {
     public PlatformFilterItem(string name) => Name = name;
@@ -26,11 +26,6 @@ public partial class PlatformFilterItem : ObservableObject
     public string Display => string.Equals(Name, MainViewModel.AllPlatforms, StringComparison.Ordinal)
         ? "所有游戏"
         : PlatformDisplayNames.Of(Name);
-
-    /// <summary>厂商分组名；「所有游戏」不参与分组（空串 → 表头折叠）。</summary>
-    public string Vendor => string.Equals(Name, MainViewModel.AllPlatforms, StringComparison.Ordinal)
-        ? ""
-        : PlatformDisplayNames.VendorOf(Name);
 
     [ObservableProperty] private int count;
 
@@ -54,9 +49,6 @@ public partial class MainViewModel : ObservableObject, IAiAppHost
     public ObservableCollection<string> Regions { get; } = new();
     public ObservableCollection<string> Languages { get; } = new();
     public ObservableCollection<PlatformFilterItem> PlatformFilters { get; } = new();
-
-    /// <summary>左侧平台栏的分组视图（按厂商）。</summary>
-    public ICollectionView PlatformFiltersView { get; }
     public ObservableCollection<string> RegionFilters { get; } = new();
     public ObservableCollection<string> LanguageFilters { get; } = new();
     public ObservableCollection<string> DeveloperFilters { get; } = new();
@@ -136,10 +128,6 @@ public partial class MainViewModel : ObservableObject, IAiAppHost
     {
         GamesView = CollectionViewSource.GetDefaultView(Games);
         GamesView.Filter = FilterGame;
-
-        // 左侧平台栏按厂商分组：分组名来自 PlatformFilterItem.Vendor
-        PlatformFiltersView = new ListCollectionView(PlatformFilters);
-        PlatformFiltersView.GroupDescriptions.Add(new PropertyGroupDescription(nameof(PlatformFilterItem.Vendor)));
 
         AppServices.Launcher.SessionEnded += OnSessionEnded;
         AppServices.SendQueue.AllCompleted += OnSendQueueCompleted;
@@ -315,7 +303,7 @@ public partial class MainViewModel : ObservableObject, IAiAppHost
     private void RefreshLookups()
     {
         Rebuild(Platforms, AllPlatforms, Games.Select(g => g.Platform), SelectedPlatform,
-            value => SelectedPlatform = value, PlatformOrder.ByVendorThenEra);
+            value => SelectedPlatform = value, PlatformOrderStore.Comparer);
         Rebuild(Tags, AllTags, Games.SelectMany(g => SplitTags(g.Tags)), SelectedTag, value => SelectedTag = value);
         if (!Statuses.Contains(SelectedStatus)) SelectedStatus = AllStatuses;
 
@@ -357,11 +345,8 @@ public partial class MainViewModel : ObservableObject, IAiAppHost
         foreach (var name in gamePlatforms)
             if (!ordered.Contains(name, StringComparer.OrdinalIgnoreCase)) ordered.Add(name);
 
-        // 先按厂商（预置清单顺序，自定义最后）再按机型年代排，分组表头与组内顺序都按这个来
-        ordered = ordered
-            .OrderBy(PlatformDisplayNames.VendorRank)
-            .ThenBy(name => name, PlatformOrder.ByEra)
-            .ToList();
+        // 顺序由用户在「设置 → 平台」里拖出来；没排过就按厂商 → 年代兜底
+        ordered = ordered.OrderBy(name => name, PlatformOrderStore.Comparer).ToList();
 
         // 增量同步而不是 Clear，避免 ListBox 选中项被清空、左侧平台状态被重置。
         var desired = new List<string> { AllPlatforms };

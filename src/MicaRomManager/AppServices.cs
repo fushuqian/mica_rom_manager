@@ -49,6 +49,9 @@ public static class AppServices
         Models.PlatformDisplayNames.SetNaming(
             Models.PlatformDisplayNames.ParseNaming(Settings.Get(Models.PlatformDisplayNames.NamingKey)));
 
+        // 用户拖出来的主机顺序（平台页可拖拽），没存过就按厂商 → 年代
+        PlatformOrderStore.Initialize(Settings);
+
         Lookups = new LookupRepository(Db);
         Platforms = new PlatformRepository(Db);
         Network = new NetworkClientProvider(Settings);

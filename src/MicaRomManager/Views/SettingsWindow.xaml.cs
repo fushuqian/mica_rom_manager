@@ -1,9 +1,12 @@
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Reflection;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
+using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Media.Animation;
 using MicaRomManager.Data;
 using MicaRomManager.Models;
@@ -18,6 +21,11 @@ public partial class SettingsWindow : Window
     private List<Emulator> _emulators = new();
     private CancellationTokenSource? _scanCts;
     private CancellationTokenSource? _hashCts;
+
+    /// <summary>平台页左栏的可见顺序，拖放就改这个集合并落库。</summary>
+    private readonly ObservableCollection<PlatformSetting> _platformItems = new();
+    private Point _platformDragStart;
+    private PlatformSetting? _platformDragItem;
 
     public SettingsWindow()
     {
@@ -286,20 +294,15 @@ public partial class SettingsWindow : Window
         {
             platform.Vendor = PlatformDisplayNames.VendorOf(platform.Name);
             platform.Display = PlatformDisplayNames.Of(platform.Name);
+            platform.SideLabel = platform.IsCustom ? "自定义" : platform.Vendor;
         }
 
-        // 厂商按预置清单顺序，同厂商内按机型年代（Famicom → Game Boy → Super Famicom…），
-        // 分组顺序 = 首次出现顺序，所以先排序再交给分组视图
-        platforms.Sort((left, right) =>
-        {
-            var byVendor = PlatformDisplayNames.VendorRank(left.Name)
-                .CompareTo(PlatformDisplayNames.VendorRank(right.Name));
-            return byVendor != 0 ? byVendor : PlatformOrder.CompareByEra(left.Name, right.Name);
-        });
+        // 顺序由用户在这个列表里拖出来；没排过的按「厂商 → 年代」兜底，自建平台排最后
+        platforms.Sort((left, right) => PlatformOrderStore.Compare(left.Name, right.Name));
 
-        var view = new ListCollectionView(platforms);
-        view.GroupDescriptions.Add(new PropertyGroupDescription(nameof(PlatformSetting.Vendor)));
-        PlatformList.ItemsSource = view;
+        _platformItems.Clear();
+        foreach (var platform in platforms) _platformItems.Add(platform);
+        PlatformList.ItemsSource = _platformItems;
 
         PlatformEmulatorCombo.Items.Clear();
         PlatformEmulatorCombo.Items.Add(new ComboBoxItem { Content = "（不指定）", Tag = null });
@@ -312,6 +315,63 @@ public partial class SettingsWindow : Window
             var match = platforms.FirstOrDefault(p => string.Equals(p.Name, selected, StringComparison.OrdinalIgnoreCase));
             if (match != null) PlatformList.SelectedItem = match;
         }
+
+        // 打开页面时默认落在第一台主机上，右侧不会是一片空表单
+        if (PlatformList.SelectedItem == null && _platformItems.Count > 0)
+            PlatformList.SelectedItem = _platformItems[0];
+    }
+
+    // ---------- 平台列表拖放排序 ----------
+
+    private void PlatformList_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        _platformDragStart = e.GetPosition(PlatformList);
+        _platformDragItem = PlatformUnder(e.GetPosition(PlatformList));
+    }
+
+    private void PlatformList_PreviewMouseMove(object sender, MouseEventArgs e)
+    {
+        if (_platformDragItem == null || e.LeftButton != MouseButtonState.Pressed) return;
+
+        var position = e.GetPosition(PlatformList);
+        if (Math.Abs(position.X - _platformDragStart.X) < SystemParameters.MinimumHorizontalDragDistance &&
+            Math.Abs(position.Y - _platformDragStart.Y) < SystemParameters.MinimumVerticalDragDistance)
+            return;
+
+        var dragged = _platformDragItem;
+        _platformDragItem = null;
+        DragDrop.DoDragDrop(PlatformList, dragged, DragDropEffects.Move);
+    }
+
+    private void PlatformList_Drop(object sender, DragEventArgs e)
+    {
+        if (e.Data.GetData(typeof(PlatformSetting)) is not PlatformSetting dragged) return;
+
+        var from = _platformItems.IndexOf(dragged);
+        if (from < 0) return;
+
+        var target = PlatformUnder(e.GetPosition(PlatformList));
+        var to = target == null ? _platformItems.Count - 1 : _platformItems.IndexOf(target);
+        if (to < 0 || to == from) return;
+
+        _platformItems.Move(from, to);
+        PlatformList.SelectedItem = dragged;
+        PlatformOrderStore.Save(AppServices.Settings, _platformItems.Select(item => item.Name));
+    }
+
+    private PlatformSetting? PlatformUnder(Point point)
+    {
+        var hit = PlatformList.InputHitTest(point) as DependencyObject;
+        while (hit != null && hit is not ListBoxItem)
+            hit = VisualTreeHelper.GetParent(hit);
+
+        return (hit as ListBoxItem)?.DataContext as PlatformSetting;
+    }
+
+    private void ResetPlatformOrder_Click(object sender, RoutedEventArgs e)
+    {
+        PlatformOrderStore.Reset(AppServices.Settings);
+        LoadPlatforms();
     }
 
     private void PlatformList_SelectionChanged(object sender, SelectionChangedEventArgs e)

@@ -325,7 +325,7 @@
                     <StackPanel Margin="28,20,28,0">
                         <TextBlock Text="平台" Style="{StaticResource SettingsPageTitleStyle}" />
                         <TextBlock Style="{StaticResource SettingsPageDescStyle}"
-                                   Text="每个平台的默认模拟器、库内子目录、ROM 格式、RetroArch 核心与启动参数。平台名请到「字典库 → 平台」维护。" />
+                                   Text="每个平台的默认模拟器、库内子目录、ROM 格式、RetroArch 核心与启动参数。左侧主机可以直接拖动排序（主界面左侧栏跟随），平台名请到「字典库 → 平台」维护。" />
                     </StackPanel>
 
                     <Border Grid.Row="1" Style="{StaticResource SettingsCardStyle}" Padding="0"
@@ -337,29 +337,28 @@
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
 
-                            <DockPanel Grid.Column="0" Margin="10,14,10,14">
-                                <TextBlock DockPanel.Dock="Top" Text="主机" Margin="10,0,0,10"
+                            <DockPanel Grid.Column="0" Margin="10,14,10,12">
+                                <TextBlock DockPanel.Dock="Top" Text="主机" Margin="10,0,0,8"
                                            Style="{StaticResource SettingsRowLabelStyle}" />
-                                <ListBox x:Name="PlatformList" SelectionChanged="PlatformList_SelectionChanged">
-                                    <ListBox.GroupStyle>
-                                        <GroupStyle>
-                                            <GroupStyle.HeaderTemplate>
-                                                <DataTemplate>
-                                                    <TextBlock Text="{Binding Name}" FontSize="11" FontWeight="SemiBold"
-                                                               Margin="4,10,0,4"
-                                                               Foreground="{DynamicResource TextSecondaryBrush}" />
-                                                </DataTemplate>
-                                            </GroupStyle.HeaderTemplate>
-                                        </GroupStyle>
-                                    </ListBox.GroupStyle>
+                                <Button DockPanel.Dock="Bottom" Content="恢复默认顺序" Margin="0,8,0,0"
+                                        Style="{StaticResource SecondaryButtonStyle}"
+                                        Click="ResetPlatformOrder_Click"
+                                        ToolTip="按「厂商 → 首发年代」重排；平时可以直接拖动上面的主机自己排" />
+                                <ListBox x:Name="PlatformList" SelectionChanged="PlatformList_SelectionChanged"
+                                         AllowDrop="True"
+                                         PreviewMouseLeftButtonDown="PlatformList_PreviewMouseLeftButtonDown"
+                                         PreviewMouseMove="PlatformList_PreviewMouseMove"
+                                         Drop="PlatformList_Drop">
                                     <ListBox.ItemTemplate>
                                         <DataTemplate>
-                                            <StackPanel Orientation="Horizontal" Margin="12,0,0,0">
-                                                <TextBlock Text="{Binding Display}" />
-                                                <TextBlock Text="（自定义）" Margin="4,0,0,0"
-                                                           Foreground="{DynamicResource TextSecondaryBrush}"
-                                                           Visibility="{Binding IsCustom, Converter={StaticResource BoolToVis}}" />
-                                            </StackPanel>
+                                            <DockPanel MinWidth="120">
+                                                <TextBlock DockPanel.Dock="Right" Text="{Binding SideLabel}"
+                                                           Margin="8,0,0,0" FontSize="10.5"
+                                                           VerticalAlignment="Center"
+                                                           Foreground="{DynamicResource TextSecondaryBrush}" />
+                                                <TextBlock Text="{Binding Display}"
+                                                           TextTrimming="CharacterEllipsis" />
+                                            </DockPanel>
                                         </DataTemplate>
                                     </ListBox.ItemTemplate>
                                 </ListBox>
