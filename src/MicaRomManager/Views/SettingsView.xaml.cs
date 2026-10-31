@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Reflection;
 using System.Text;
@@ -500,6 +500,54 @@ public partial class SettingsView : UserControl
     {
         PlatformOrderStore.Reset(AppServices.Settings);
         LoadPlatforms();
+    }
+
+    private void RenamePlatform_Click(object sender, RoutedEventArgs e)
+    {
+        if (PlatformList.SelectedItem is not PlatformSetting setting) return;
+
+        var dialog = new TextPromptWindow(
+            "重命名主机",
+            $"库里存的是主机短名（如 PS1、NES）。改名后游戏记录、模拟器绑定与排序会一起改。当前：{setting.Name}",
+            setting.Name)
+        {
+            Owner = Window.GetWindow(this),
+        };
+
+        if (dialog.ShowDialog() != true || dialog.Value.Length == 0) return;
+        if (string.Equals(dialog.Value, setting.Name, StringComparison.Ordinal)) return;
+
+        var result = AppServices.Lookups.Rename(LookupRepository.Platform, setting.Name, dialog.Value);
+        if (!result.Success)
+        {
+            MessageBox.Show(result.Message, "重命名主机", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        PlatformOrderStore.Rename(AppServices.Settings, setting.Name, dialog.Value);
+        LoadPlatforms(dialog.Value);
+        PlatformScanHint.Text = result.Message;
+    }
+
+    private void DeletePlatform_Click(object sender, RoutedEventArgs e)
+    {
+        if (PlatformList.SelectedItem is not PlatformSetting setting) return;
+
+        var confirm = MessageBox.Show(
+            $"删除主机「{setting.Display}」？\n\n只删除这个平台的配置（默认模拟器、子目录、格式、启动参数），不动 ROM 文件。\n如果库里还有该平台的游戏，会拒绝删除。",
+            "删除主机", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+        if (confirm != MessageBoxResult.Yes) return;
+
+        var result = AppServices.Lookups.Delete(LookupRepository.Platform, setting.Name);
+        if (!result.Success)
+        {
+            MessageBox.Show(result.Message, "删除主机", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        PlatformOrderStore.Remove(AppServices.Settings, setting.Name);
+        LoadPlatforms();
+        PlatformScanHint.Text = result.Message;
     }
 
     private void PlatformList_SelectionChanged(object sender, SelectionChangedEventArgs e)

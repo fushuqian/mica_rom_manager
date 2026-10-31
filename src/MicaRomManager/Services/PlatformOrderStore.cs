@@ -39,6 +39,23 @@ public static class PlatformOrderStore
         settings.Set(SettingKey, "");
     }
 
+    /// <summary>主机改名后同步自定义顺序，别让它掉到末位。</summary>
+    public static void Rename(SettingsRepository settings, string oldName, string newName)
+    {
+        var index = _order.FindIndex(item => string.Equals(item, oldName, StringComparison.OrdinalIgnoreCase));
+        if (index < 0) return;
+
+        _order[index] = newName.Trim();
+        settings.Set(SettingKey, JsonSerializer.Serialize(_order));
+    }
+
+    /// <summary>主机被删除后把它从顺序里摘掉。</summary>
+    public static void Remove(SettingsRepository settings, string name)
+    {
+        if (_order.RemoveAll(item => string.Equals(item, name, StringComparison.OrdinalIgnoreCase)) == 0) return;
+        settings.Set(SettingKey, JsonSerializer.Serialize(_order));
+    }
+
     public static bool HasCustomOrder => _order.Count > 0;
 
     /// <summary>用户顺序里的位置；不在里面的排到最后。</summary>

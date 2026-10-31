@@ -1,5 +1,12 @@
 # 经验记录（MEMORIES）
 
+## 2026-11-01（行分隔线 / 平台重命名）
+
+- 扁平表单加行分隔线最省事的做法：往行 Grid 里塞一个 `Rectangle VerticalAlignment="Bottom" Margin="0,0,0,7"`（样式 `SettingsRowLineStyle`，`Grid.ColumnSpan=2`），rides 在控件下方 `Margin` 留出的空隙里，不用重排布局。
+- 平台改名要一次改四处：`lookup_items`、`platforms`、`emulator_platforms`、`games.platform`；`LookupRepository.Rename(Platform, …)` 已经全包了，而且重名会直接报错，UI 只要再同步 `ui.platform_order`。
+- 删除按钮必须先 `CountUsage` 拦「还有游戏在用」，否则会留下引用不到平台的孤儿记录。
+- `docs/release` 流程：`tools\release.ps1 -Version x.y.z -SkipPublish` 会从 CHANGELOG 里按 `^## .*vX.Y.Z$` 抓 release notes，所以**版本标题必须严格是「## 日期 v1.2.3」**，否则脚本报 CHANGELOG has no section。
+
 ## 2026-11-01（可存储路径）
 
 - 库里凡是存路径的字段（`install_dir` / `exe` / `core` / `config` / 库目录）都是「可存储形式」：带 `%DATA%` 前缀，便携模式还是相对路径。**判断存在性、打开、删除、打包前一定要先展开**（`PortablePath.Expand` + `GetFullPath`），直接 `Directory.Exists(存储值)` 必然判缺失。

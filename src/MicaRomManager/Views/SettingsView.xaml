@@ -58,6 +58,15 @@
             <Setter Property="ItemContainerStyle" Value="{StaticResource SettingsMenuItemStyle}" />
             <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
         </Style>
+
+        <!-- 行与行之间的极淡分隔线：压在行的底部空隙里 -->
+        <Style x:Key="SettingsRowLineStyle" TargetType="Rectangle">
+            <Setter Property="Height" Value="1" />
+            <Setter Property="VerticalAlignment" Value="Bottom" />
+            <Setter Property="Grid.ColumnSpan" Value="2" />
+            <Setter Property="Margin" Value="0,0,0,7" />
+            <Setter Property="Fill" Value="{DynamicResource HairlineBrush}" />
+        </Style>
     </UserControl.Resources>
 
     <Grid x:Name="RootGrid">
@@ -167,6 +176,7 @@
                                     <ComboBoxItem Content="复制到库目录后入库" />
                                     <ComboBoxItem Content="移动到库目录后入库" />
                                 </ComboBox>
+                                <Rectangle Grid.Row="0" Style="{StaticResource SettingsRowLineStyle}" />
 
                                 <TextBlock Grid.Row="1" Text="库目录" Style="{StaticResource SettingsRowLabelStyle}" />
                                 <Grid Grid.Row="1" Grid.Column="1" Margin="0,0,0,14">
@@ -179,6 +189,8 @@
                                             Style="{StaticResource SecondaryButtonStyle}"
                                             Click="BrowseLibraryRoot_Click" />
                                 </Grid>
+
+                                <Rectangle Grid.Row="1" Style="{StaticResource SettingsRowLineStyle}" />
 
                                 <TextBlock Grid.Row="2" Text="选项" Style="{StaticResource SettingsRowLabelStyle}" />
                                 <StackPanel Grid.Row="2" Grid.Column="1">
@@ -273,6 +285,7 @@
                                     <ComboBoxItem Content="跟随系统代理" />
                                     <ComboBoxItem Content="手动代理" />
                                 </ComboBox>
+                                <Rectangle Grid.Row="0" Style="{StaticResource SettingsRowLineStyle}" />
 
                                 <TextBlock Grid.Row="1" Text="代理地址" Style="{StaticResource SettingsRowLabelStyle}" />
                                 <StackPanel Grid.Row="1" Grid.Column="1">
@@ -514,8 +527,25 @@
                             <ScrollViewer Grid.Column="4" VerticalScrollBarVisibility="Auto"
                                           HorizontalScrollBarVisibility="Disabled">
                                 <StackPanel Margin="20,14,20,18" MaxWidth="600" HorizontalAlignment="Left">
-                                    <TextBlock x:Name="PlatformNameText" Style="{StaticResource SettingsGroupTitleStyle}"
-                                               FontSize="16" Text="（未选择平台）" />
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock x:Name="PlatformNameText" VerticalAlignment="Center"
+                                                   Style="{StaticResource SettingsGroupTitleStyle}"
+                                                   FontSize="16" Text="（未选择平台）" TextTrimming="CharacterEllipsis" />
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                            <Button Content="重命名…" Padding="10,4" FontSize="12"
+                                                    Style="{StaticResource SecondaryButtonStyle}"
+                                                    Click="RenamePlatform_Click"
+                                                    ToolTip="改主机短名，游戏记录与模拟器绑定会一起改" />
+                                            <Button Content="删除" Padding="10,4" FontSize="12" Margin="8,0,0,0"
+                                                    Style="{StaticResource SecondaryButtonStyle}"
+                                                    Click="DeletePlatform_Click"
+                                                    ToolTip="只删这个平台的配置；库里还有该平台的游戏时会拒绝" />
+                                        </StackPanel>
+                                    </Grid>
 
                                     <TextBlock Text="默认模拟器" Style="{StaticResource SettingsRowLabelStyle}" Margin="0,16,0,6" />
                                     <ComboBox x:Name="PlatformEmulatorCombo" Width="280" HorizontalAlignment="Left"
@@ -631,10 +661,12 @@
                                     <ComboBoxItem Content="Kimi" />
                                     <ComboBoxItem Content="OpenAI" />
                                 </ComboBox>
+                                <Rectangle Grid.Row="0" Style="{StaticResource SettingsRowLineStyle}" />
 
                                 <TextBlock Grid.Row="1" Text="BaseUrl" Style="{StaticResource SettingsRowLabelStyle}" />
                                 <TextBox x:Name="AiBaseUrlBox" Grid.Row="1" Grid.Column="1" Margin="0,0,0,16"
                                          ToolTip="OpenAI 兼容端点，例如 https://api.deepseek.com/v1" />
+                                <Rectangle Grid.Row="1" Style="{StaticResource SettingsRowLineStyle}" />
 
                                 <TextBlock Grid.Row="2" Text="API Key" Style="{StaticResource SettingsRowLabelStyle}" />
                                 <Grid Grid.Row="2" Grid.Column="1" Margin="0,0,0,16">
@@ -651,10 +683,12 @@
                                               VerticalAlignment="Center"
                                               Checked="AiShowKey_Changed" Unchecked="AiShowKey_Changed" />
                                 </Grid>
+                                <Rectangle Grid.Row="2" Style="{StaticResource SettingsRowLineStyle}" />
 
                                 <TextBlock Grid.Row="3" Text="模型名" Style="{StaticResource SettingsRowLabelStyle}" />
                                 <TextBox x:Name="AiModelBox" Grid.Row="3" Grid.Column="1" Margin="0,0,0,16"
                                          ToolTip="例如 deepseek-chat、gpt-4o-mini" />
+                                <Rectangle Grid.Row="3" Style="{StaticResource SettingsRowLineStyle}" />
 
                                 <TextBlock Grid.Row="4" Text="超时" Style="{StaticResource SettingsRowLabelStyle}" />
                                 <StackPanel Grid.Row="4" Grid.Column="1" Orientation="Horizontal" Margin="0,0,0,16">
@@ -664,6 +698,7 @@
                                     <TextBlock Text="10–600" Margin="12,0,0,0" VerticalAlignment="Center"
                                                Style="{StaticResource SettingsHintStyle}" />
                                 </StackPanel>
+                                <Rectangle Grid.Row="4" Style="{StaticResource SettingsRowLineStyle}" />
 
                                 <TextBlock Grid.Row="5" Text="批量上限" Style="{StaticResource SettingsRowLabelStyle}" />
                                 <StackPanel Grid.Row="5" Grid.Column="1" Orientation="Horizontal">
@@ -725,6 +760,7 @@
                                 <CheckBox x:Name="AiSearchEnabledCheck" Grid.Row="0" Grid.Column="1" Margin="0,6,0,16"
                                           Content="允许 AI 联网搜索（刮削 / 助手）"
                                           ToolTip="使用 DeepSeek 官方 Search API，复用「连接」页的 API Key" />
+                                <Rectangle Grid.Row="0" Style="{StaticResource SettingsRowLineStyle}" />
 
                                 <TextBlock Grid.Row="1" Text="结果条数" Style="{StaticResource SettingsRowLabelStyle}" />
                                 <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal">
