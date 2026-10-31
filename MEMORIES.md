@@ -1,5 +1,12 @@
 # 经验记录（MEMORIES）
 
+## 2026-10-31（设置二级菜单 / 排序按钮）
+
+- WPF TreeView 做设置导航够用：`HierarchicalDataTemplate` + 自定义 `TreeViewItem` 模板（34 高、缩进 16、选中用 AccentSubtle）。图省事只设 `Background="Transparent"` 的 ToggleButton 会露出 Aero 的蓝色勾选块——折叠箭头必须自己写 `ToggleButton.Template`（只留 ContentPresenter）。
+- 页签只当内容宿主：把 `TabControl` 模板改成 `ContentPresenter ContentSource="SelectedContent"`，页签头就消失了，左侧换什么导航都行，9 页 XAML 一行不用改。
+- 列表拖动排序在 WPF 里不稳（Drop 目标判定、禁止符号），上移 / 下移按钮更省心：编辑模式 + 点到即存，比 DoDragDrop 可靠得多。
+- 字典库这种「字段清单」页要能减项：把 `Kinds` 里的项去掉即可，数据（`lookup_items`）不用删，导入时 `LookupSync` 仍会补平台。
+
 ## 2026-10-31（设置内嵌主窗口）
 
 - 模态窗口（`ShowDialog`）会把 owner 置为 disabled，Win11 对 disabled 窗口不再保持 Mica/Acrylic，于是主窗口看起来「褪成纯色」——靠重下发布景属性救不回来，改结构才根治。

@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Reflection;
 using System.Text;
@@ -28,8 +28,7 @@ public partial class SettingsView : UserControl
     private readonly Dictionary<string, List<PlatformSetting>> _platformsByVendor = new(StringComparer.OrdinalIgnoreCase);
     private string? _selectedVendor;
     private string? _selectedPlatformName;
-    private Point _platformDragStart;
-    private PlatformSetting? _platformDragItem;
+    private bool _orderEditing;
 
     /// <summary>点「返回」或按 Esc 时通知宿主把设置页收起来。</summary>
     public event EventHandler? CloseRequested;
@@ -42,7 +41,12 @@ public partial class SettingsView : UserControl
         InitializeComponent();
         PlatformList.ItemsSource = _vendorPlatforms;
         VendorList.ItemsSource = _vendorItems;
-        SettingsTabs.SelectionChanged += (_, _) => EnsureTabContent();
+        SettingsTabs.SelectionChanged += (_, _) =>
+        {
+            EnsureTabContent();
+            SelectNavForTab(SettingsTabs.SelectedIndex);
+        };
+        BuildNav();
         EnsureTabContent();
         LoadGeneral();
         LoadAiSettings();
@@ -54,6 +58,81 @@ public partial class SettingsView : UserControl
 
         var version = Assembly.GetExecutingAssembly().GetName().Version;
         VersionText.Text = $"版本 {version?.ToString(3) ?? "0.1.0"}";
+    }
+
+    // ---------- 二级导航 ----------
+
+    private readonly List<SettingsNavNode> _navNodes = new();
+
+    private void BuildNav()
+    {
+        _navNodes.Clear();
+        SettingsNavNode? group = null;
+
+        foreach (var tab in SettingsTabs.Items.OfType<TabItem>())
+        {
+            var title = tab.Header?.ToString() ?? "";
+            var index = SettingsTabs.Items.IndexOf(tab);
+            var groupName = tab.Tag as string;
+
+            if (string.IsNullOrEmpty(groupName))
+            {
+                group = null;
+                _navNodes.Add(new SettingsNavNode(title, index));
+                continue;
+            }
+
+            if (group == null || !string.Equals(group.Title, groupName, StringComparison.Ordinal))
+            {
+                group = new SettingsNavNode(groupName, -1);
+                _navNodes.Add(group);
+            }
+
+            group.Children.Add(new SettingsNavNode(title, index));
+        }
+
+        SettingsNav.ItemsSource = _navNodes;
+        SelectNavForTab(SettingsTabs.SelectedIndex);
+    }
+
+    private void SettingsNav_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+    {
+        if (e.NewValue is not SettingsNavNode node) return;
+
+        if (node.TabIndex >= 0)
+        {
+            if (SettingsTabs.SelectedIndex != node.TabIndex) SettingsTabs.SelectedIndex = node.TabIndex;
+            return;
+        }
+
+        // 点分组标题：展开并落到第一个子项，页面不会空着
+        if (node.Children.Count == 0) return;
+        SettingsTabs.SelectedIndex = node.Children[0].TabIndex;
+        SelectNavForTab(node.Children[0].TabIndex);
+    }
+
+    /// <summary>让左侧导航跟着当前页走（点页签或代码切页时同步）。</summary>
+    private void SelectNavForTab(int index)
+    {
+        var target = _navNodes
+            .SelectMany(node => node.Children.Count == 0 ? new[] { node } : node.Children.ToArray())
+            .FirstOrDefault(node => node.TabIndex == index);
+        if (target == null) return;
+
+        var parent = _navNodes.FirstOrDefault(node => node.Children.Contains(target));
+        var container = SettingsNav.ItemContainerGenerator.ContainerFromItem((object?)parent ?? target) as TreeViewItem;
+        if (container == null) return;
+
+        if (parent == null)
+        {
+            container.IsSelected = true;
+            return;
+        }
+
+        container.IsExpanded = true;
+        container.UpdateLayout();
+        if (container.ItemContainerGenerator.ContainerFromItem(target) is TreeViewItem child)
+            child.IsSelected = true;
     }
 
     private void Back_Click(object sender, RoutedEventArgs e) => CloseRequested?.Invoke(this, EventArgs.Empty);
@@ -367,43 +446,31 @@ public partial class SettingsView : UserControl
         PlatformList.SelectedItem = target;
     }
 
-    // ---------- 主机列表拖放排序（同厂商内） ----------
+    // ---------- 主机排序：编辑模式 + 上移 / 下移（比拖动稳） ----------
 
-    private void PlatformList_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    private void TogglePlatformOrderEdit_Click(object sender, RoutedEventArgs e)
     {
-        _platformDragStart = e.GetPosition(PlatformList);
-        _platformDragItem = PlatformUnder(e.GetPosition(PlatformList));
+        _orderEditing = !_orderEditing;
+        PlatformList.Tag = _orderEditing;
+        OrderEditButton.Content = _orderEditing ? "完成排序" : "编辑排序";
     }
 
-    private void PlatformList_PreviewMouseMove(object sender, MouseEventArgs e)
+    private void MovePlatformUp_Click(object sender, RoutedEventArgs e) => MovePlatform(sender, -1);
+
+    private void MovePlatformDown_Click(object sender, RoutedEventArgs e) => MovePlatform(sender, 1);
+
+    private void MovePlatform(object sender, int delta)
     {
-        if (_platformDragItem == null || e.LeftButton != MouseButtonState.Pressed) return;
+        if ((sender as FrameworkElement)?.Tag is not PlatformSetting item) return;
 
-        var position = e.GetPosition(PlatformList);
-        if (Math.Abs(position.X - _platformDragStart.X) < SystemParameters.MinimumHorizontalDragDistance &&
-            Math.Abs(position.Y - _platformDragStart.Y) < SystemParameters.MinimumVerticalDragDistance)
-            return;
-
-        var dragged = _platformDragItem;
-        _platformDragItem = null;
-        DragDrop.DoDragDrop(PlatformList, dragged, DragDropEffects.Move);
-    }
-
-    private void PlatformList_Drop(object sender, DragEventArgs e)
-    {
-        if (e.Data.GetData(typeof(PlatformSetting)) is not PlatformSetting dragged) return;
-
-        var from = _vendorPlatforms.IndexOf(dragged);
-        if (from < 0) return;
-
-        var target = PlatformUnder(e.GetPosition(PlatformList));
-        var to = target == null ? _vendorPlatforms.Count - 1 : _vendorPlatforms.IndexOf(target);
-        if (to < 0 || to == from) return;
+        var from = _vendorPlatforms.IndexOf(item);
+        var to = from + delta;
+        if (from < 0 || to < 0 || to >= _vendorPlatforms.Count) return;
 
         _vendorPlatforms.Move(from, to);
-        PlatformList.SelectedItem = dragged;
+        PlatformList.SelectedItem = item;
 
-        // 拖的是「这个厂商内」的顺序，写回分组后再整体保存，别的厂商不受影响
+        // 改的是「这个厂商内」的顺序，写回分组后再整体保存，别的厂商不受影响
         if (_selectedVendor != null && _platformsByVendor.ContainsKey(_selectedVendor))
             _platformsByVendor[_selectedVendor] = _vendorPlatforms.ToList();
         SavePlatformOrder();
@@ -419,15 +486,6 @@ public partial class SettingsView : UserControl
             .ToList();
 
         PlatformOrderStore.Save(AppServices.Settings, ordered);
-    }
-
-    private PlatformSetting? PlatformUnder(Point point)
-    {
-        var hit = PlatformList.InputHitTest(point) as DependencyObject;
-        while (hit != null && hit is not ListBoxItem)
-            hit = VisualTreeHelper.GetParent(hit);
-
-        return (hit as ListBoxItem)?.DataContext as PlatformSetting;
     }
 
     private void ResetPlatformOrder_Click(object sender, RoutedEventArgs e)
@@ -1267,6 +1325,24 @@ public sealed class LookupValueRow : System.ComponentModel.INotifyPropertyChange
     }
 
     public event System.ComponentModel.PropertyChangedEventHandler? PropertyChanged;
+}
+
+/// <summary>左侧二级导航节点：分组（TabIndex = -1）或具体页面。</summary>
+public sealed class SettingsNavNode
+{
+    public SettingsNavNode(string title, int tabIndex)
+    {
+        Title = title;
+        TabIndex = tabIndex;
+    }
+
+    public string Title { get; }
+    public int TabIndex { get; }
+
+    /// <summary>分组标题（不能单独成页）。</summary>
+    public bool IsGroup => TabIndex < 0;
+
+    public ObservableCollection<SettingsNavNode> Children { get; } = new();
 }
 
 /// <summary>平台页左栏的厂商条目。</summary>

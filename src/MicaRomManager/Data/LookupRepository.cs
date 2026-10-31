@@ -22,7 +22,6 @@ public sealed class LookupRepository
     {
         new LookupKind(Region, "区域"),
         new LookupKind(Language, "语言"),
-        new LookupKind(Platform, "平台"),
         new LookupKind(Genre, "类型"),
         new LookupKind(Publisher, "发行商"),
         new LookupKind(Developer, "开发商"),

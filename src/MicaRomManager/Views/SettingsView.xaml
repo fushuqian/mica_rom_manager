@@ -6,6 +6,81 @@
              FontSize="13"
              Foreground="{DynamicResource TextPrimaryBrush}">
 
+    <UserControl.Resources>
+        <!-- 只留内容区，页签头由左侧二级导航代替 -->
+        <Style x:Key="SettingsContentOnlyTabControlStyle" TargetType="TabControl">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TabControl">
+                        <ContentPresenter ContentSource="SelectedContent" />
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- 导航树：分组 34 高、子项缩进，选中用强调色 -->
+        <Style x:Key="SettingsNavItemStyle" TargetType="TreeViewItem">
+            <Setter Property="IsExpanded" Value="True" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+            <Setter Property="FontSize" Value="12.5" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TreeViewItem">
+                        <StackPanel>
+                            <Border x:Name="Bd" Height="34" Background="Transparent" CornerRadius="0">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <ToggleButton x:Name="Expander" Width="22" Focusable="False" Cursor="Hand"
+                                                  IsChecked="{Binding IsExpanded, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}">
+                                        <ToggleButton.Template>
+                                            <ControlTemplate TargetType="ToggleButton">
+                                                <Border Background="Transparent">
+                                                    <ContentPresenter HorizontalAlignment="Center"
+                                                                      VerticalAlignment="Center" />
+                                                </Border>
+                                            </ControlTemplate>
+                                        </ToggleButton.Template>
+                                        <TextBlock x:Name="Chevron" Text="&#xE76C;" FontSize="8"
+                                                   FontFamily="{StaticResource IconFontFamily}"
+                                                   VerticalAlignment="Center" HorizontalAlignment="Center"
+                                                   Foreground="{DynamicResource TextSecondaryBrush}" />
+                                    </ToggleButton>
+                                    <ContentPresenter Grid.Column="1" ContentSource="Header" VerticalAlignment="Center"
+                                                      Margin="0,0,14,0" />
+                                </Grid>
+                            </Border>
+                            <ItemsPresenter x:Name="ItemsHost" Margin="16,0,0,0" />
+                        </StackPanel>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="HasItems" Value="False">
+                                <Setter TargetName="Expander" Property="Visibility" Value="Collapsed" />
+                                <Setter Property="IsExpanded" Value="False" />
+                            </Trigger>
+                            <Trigger Property="IsExpanded" Value="True">
+                                <Setter TargetName="Chevron" Property="Text" Value="&#xE70D;" />
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource HoverBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentSubtleBrush}" />
+                                <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.5" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
     <Grid x:Name="RootGrid">
         <Grid.RowDefinitions>
             <RowDefinition Height="48" />
@@ -22,13 +97,47 @@
             </StackPanel>
         </Grid>
 
-        <TabControl x:Name="SettingsTabs" Grid.Row="1" Margin="0"
-                    Style="{StaticResource SettingsTabControlStyle}"
-                    ItemContainerStyle="{StaticResource SettingsTabItemStyle}"
-                    TabStripPlacement="Left">
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="196" />
+                <ColumnDefinition Width="1" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
 
-            <!-- 常规 -->
-            <TabItem Header="常规">
+            <!-- 二级导航：分组可展开，叶子节点直接选页 -->
+            <Border Grid.Column="0" Background="{DynamicResource ShellPanelBrush}">
+                <TreeView x:Name="SettingsNav" Background="Transparent" BorderThickness="0"
+                          Padding="0,10,0,0"
+                          ItemContainerStyle="{StaticResource SettingsNavItemStyle}"
+                          SelectedItemChanged="SettingsNav_SelectedItemChanged">
+                    <TreeView.ItemTemplate>
+                        <HierarchicalDataTemplate ItemsSource="{Binding Children}">
+                            <TextBlock Text="{Binding Title}">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsGroup}" Value="True">
+                                                <Setter Property="FontWeight" Value="SemiBold" />
+                                                <Setter Property="Foreground"
+                                                        Value="{DynamicResource TextSecondaryBrush}" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </HierarchicalDataTemplate>
+                    </TreeView.ItemTemplate>
+                </TreeView>
+            </Border>
+
+            <Border Grid.Column="1" Background="{DynamicResource HairlineBrush}" />
+
+            <TabControl x:Name="SettingsTabs" Grid.Column="2" Margin="0"
+                        Style="{StaticResource SettingsContentOnlyTabControlStyle}"
+                        ItemContainerStyle="{StaticResource SettingsTabItemStyle}">
+
+            <!-- 常规 · 库与导入 -->
+            <TabItem Header="库与导入" Tag="常规">
                 <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                     <StackPanel Margin="28,20,28,16">
                         <Grid>
@@ -37,70 +146,79 @@
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
                             <StackPanel>
-                                <TextBlock Text="常规" Style="{StaticResource SettingsPageTitleStyle}" />
+                                <TextBlock Text="库与导入" Style="{StaticResource SettingsPageTitleStyle}" />
                                 <TextBlock Style="{StaticResource SettingsPageDescStyle}"
-                                           Text="导入方式、库位置、主机命名习惯与网络代理。" />
+                                           Text="决定导入时文件是链接、复制还是移动，以及库目录放在哪里。" />
                             </StackPanel>
                             <Button Grid.Column="1" Content="保存常规设置" Width="130" VerticalAlignment="Top"
                                     Style="{StaticResource PrimaryButtonStyle}" Click="SaveGeneral_Click" />
                         </Grid>
 
                         <Border Style="{StaticResource SettingsCardStyle}">
-                            <StackPanel>
-                                <TextBlock Text="库与导入" Style="{StaticResource SettingsGroupTitleStyle}" />
-                                <TextBlock Style="{StaticResource SettingsGroupDescStyle}"
-                                           Text="决定导入时文件是链接、复制还是移动，以及库目录放在哪里。" />
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="92" />
+                                    <ColumnDefinition Width="*" MaxWidth="620" />
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
 
-                                <Grid Margin="0,14,0,0">
+                                <TextBlock Grid.Row="0" Text="导入策略" Style="{StaticResource SettingsRowLabelStyle}" />
+                                <ComboBox x:Name="ImportModeCombo" Grid.Row="0" Grid.Column="1"
+                                          Width="340" HorizontalAlignment="Left" MinHeight="32" Margin="0,0,0,14">
+                                    <ComboBoxItem Content="仅链接（只记录路径，不移动、不复制）" />
+                                    <ComboBoxItem Content="复制到库目录后入库" />
+                                    <ComboBoxItem Content="移动到库目录后入库" />
+                                </ComboBox>
+
+                                <TextBlock Grid.Row="1" Text="库目录" Style="{StaticResource SettingsRowLabelStyle}" />
+                                <Grid Grid.Row="1" Grid.Column="1" Margin="0,0,0,14">
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="92" />
-                                        <ColumnDefinition Width="*" MaxWidth="620" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="Auto" />
-                                    </Grid.RowDefinitions>
-
-                                    <TextBlock Grid.Row="0" Text="导入策略" Style="{StaticResource SettingsRowLabelStyle}" />
-                                    <ComboBox x:Name="ImportModeCombo" Grid.Row="0" Grid.Column="1"
-                                              Width="340" HorizontalAlignment="Left" MinHeight="32" Margin="0,0,0,14">
-                                        <ComboBoxItem Content="仅链接（只记录路径，不移动、不复制）" />
-                                        <ComboBoxItem Content="复制到库目录后入库" />
-                                        <ComboBoxItem Content="移动到库目录后入库" />
-                                    </ComboBox>
-
-                                    <TextBlock Grid.Row="1" Text="库目录" Style="{StaticResource SettingsRowLabelStyle}" />
-                                    <Grid Grid.Row="1" Grid.Column="1" Margin="0,0,0,14">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="Auto" />
-                                        </Grid.ColumnDefinitions>
-                                        <TextBox x:Name="LibraryRootBox" />
-                                        <Button Grid.Column="1" Content="浏览…" Margin="12,0,0,0"
-                                                Style="{StaticResource SecondaryButtonStyle}"
-                                                Click="BrowseLibraryRoot_Click" />
-                                    </Grid>
-
-                                    <TextBlock Grid.Row="2" Text="选项" Style="{StaticResource SettingsRowLabelStyle}" />
-                                    <StackPanel Grid.Row="2" Grid.Column="1">
-                                        <CheckBox x:Name="PortableModeCheck"
-                                                  Content="便携模式（库目录为程序目录下的相对路径）" />
-                                        <CheckBox x:Name="AssistantDefaultCheck" Margin="0,10,0,0"
-                                                  Content="启动时展开米卡助手" />
-                                        <TextBlock Style="{StaticResource SettingsHintStyle}"
-                                                   Text="便携模式要求 exe 与库文件夹在同一盘；开启后库目录、ROM / 碟片 / 封面与模拟器路径都存相对路径，换机器换盘符仍可用。" />
-                                    </StackPanel>
+                                    <TextBox x:Name="LibraryRootBox" />
+                                    <Button Grid.Column="1" Content="浏览…" Margin="12,0,0,0"
+                                            Style="{StaticResource SecondaryButtonStyle}"
+                                            Click="BrowseLibraryRoot_Click" />
                                 </Grid>
-                            </StackPanel>
+
+                                <TextBlock Grid.Row="2" Text="选项" Style="{StaticResource SettingsRowLabelStyle}" />
+                                <StackPanel Grid.Row="2" Grid.Column="1">
+                                    <CheckBox x:Name="PortableModeCheck"
+                                              Content="便携模式（库目录为程序目录下的相对路径）" />
+                                    <CheckBox x:Name="AssistantDefaultCheck" Margin="0,10,0,0"
+                                              Content="启动时展开米卡助手" />
+                                    <TextBlock Style="{StaticResource SettingsHintStyle}"
+                                               Text="便携模式要求 exe 与库文件夹在同一盘；开启后库目录、ROM / 碟片 / 封面与模拟器路径都存相对路径，换机器换盘符仍可用。" />
+                                </StackPanel>
+                            </Grid>
                         </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- 常规 · 显示 -->
+            <TabItem Header="显示" Tag="常规">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <StackPanel Margin="28,20,28,16">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="显示" Style="{StaticResource SettingsPageTitleStyle}" />
+                            <Button Grid.Column="1" Content="保存常规设置" Width="130" VerticalAlignment="Top"
+                                    Style="{StaticResource PrimaryButtonStyle}" Click="SaveGeneral_Click" />
+                        </Grid>
 
                         <Border Style="{StaticResource SettingsCardStyle}">
                             <StackPanel>
-                                <TextBlock Text="显示" Style="{StaticResource SettingsGroupTitleStyle}" />
                                 <TextBlock Style="{StaticResource SettingsGroupDescStyle}"
                                            Text="只影响界面显示；库里始终存平台短名，换习惯不改数据。" />
-
                                 <Grid Margin="0,14,0,0">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="92" />
@@ -120,52 +238,66 @@
                                 </Grid>
                             </StackPanel>
                         </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- 常规 · 网络 -->
+            <TabItem Header="网络" Tag="常规">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <StackPanel Margin="28,20,28,16">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock Text="网络" Style="{StaticResource SettingsPageTitleStyle}" />
+                                <TextBlock Style="{StaticResource SettingsPageDescStyle}"
+                                           Text="代理同时作用于检查更新、模拟器下载与 AI 请求。" />
+                            </StackPanel>
+                            <Button Grid.Column="1" Content="保存常规设置" Width="130" VerticalAlignment="Top"
+                                    Style="{StaticResource PrimaryButtonStyle}" Click="SaveGeneral_Click" />
+                        </Grid>
 
                         <Border Style="{StaticResource SettingsCardStyle}">
-                            <StackPanel>
-                                <TextBlock Text="网络" Style="{StaticResource SettingsGroupTitleStyle}" />
-                                <TextBlock Style="{StaticResource SettingsGroupDescStyle}"
-                                           Text="代理同时作用于检查更新、模拟器下载与 AI 请求。" />
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="92" />
+                                    <ColumnDefinition Width="*" MaxWidth="620" />
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
 
-                                <Grid Margin="0,14,0,0">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="92" />
-                                        <ColumnDefinition Width="*" MaxWidth="620" />
-                                    </Grid.ColumnDefinitions>
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="Auto" />
-                                    </Grid.RowDefinitions>
+                                <TextBlock Grid.Row="0" Text="代理模式" Style="{StaticResource SettingsRowLabelStyle}" />
+                                <ComboBox x:Name="ProxyModeCombo" Grid.Row="0" Grid.Column="1"
+                                          Width="220" HorizontalAlignment="Left" MinHeight="32" Margin="0,0,0,14"
+                                          SelectionChanged="ProxyMode_Changed">
+                                    <ComboBoxItem Content="不使用代理" />
+                                    <ComboBoxItem Content="跟随系统代理" />
+                                    <ComboBoxItem Content="手动代理" />
+                                </ComboBox>
 
-                                    <TextBlock Grid.Row="0" Text="代理模式" Style="{StaticResource SettingsRowLabelStyle}" />
-                                    <ComboBox x:Name="ProxyModeCombo" Grid.Row="0" Grid.Column="1"
-                                              Width="220" HorizontalAlignment="Left" MinHeight="32" Margin="0,0,0,14"
-                                              SelectionChanged="ProxyMode_Changed">
-                                        <ComboBoxItem Content="不使用代理" />
-                                        <ComboBoxItem Content="跟随系统代理" />
-                                        <ComboBoxItem Content="手动代理" />
-                                    </ComboBox>
-
-                                    <TextBlock Grid.Row="1" Text="代理地址" Style="{StaticResource SettingsRowLabelStyle}" />
-                                    <StackPanel Grid.Row="1" Grid.Column="1">
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="220" />
-                                                <ColumnDefinition Width="Auto" />
-                                            </Grid.ColumnDefinitions>
-                                            <TextBox x:Name="ProxyAddressBox"
-                                                     ToolTip="格式：host:port，例如 127.0.0.1:7890（仅手动代理时生效）" />
-                                            <Button Grid.Column="1" Content="测试 GitHub 连接" Margin="12,0,0,0"
-                                                    Style="{StaticResource SecondaryButtonStyle}"
-                                                    Click="TestNetwork_Click" />
-                                        </Grid>
-                                        <TextBlock x:Name="NetworkTestText" Style="{StaticResource SettingsHintStyle}"
-                                                   TextTrimming="CharacterEllipsis" />
-                                    </StackPanel>
-                                </Grid>
-                            </StackPanel>
+                                <TextBlock Grid.Row="1" Text="代理地址" Style="{StaticResource SettingsRowLabelStyle}" />
+                                <StackPanel Grid.Row="1" Grid.Column="1">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="220" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBox x:Name="ProxyAddressBox"
+                                                 ToolTip="格式：host:port，例如 127.0.0.1:7890（仅手动代理时生效）" />
+                                        <Button Grid.Column="1" Content="测试 GitHub 连接" Margin="12,0,0,0"
+                                                Style="{StaticResource SecondaryButtonStyle}"
+                                                Click="TestNetwork_Click" />
+                                    </Grid>
+                                    <TextBlock x:Name="NetworkTestText" Style="{StaticResource SettingsHintStyle}"
+                                               TextTrimming="CharacterEllipsis" />
+                                </StackPanel>
+                            </Grid>
                         </Border>
-
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>
@@ -296,17 +428,17 @@
                 </Grid>
             </TabItem>
 
-            <!-- 平台 -->
-            <TabItem Header="平台">
+            <!-- 平台设置 -->
+            <TabItem Header="平台设置">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
                     <StackPanel Margin="28,20,28,0">
-                        <TextBlock Text="平台" Style="{StaticResource SettingsPageTitleStyle}" />
+                        <TextBlock Text="平台设置" Style="{StaticResource SettingsPageTitleStyle}" />
                         <TextBlock Style="{StaticResource SettingsPageDescStyle}"
-                                   Text="每个平台的默认模拟器、库内子目录、ROM 格式、RetroArch 核心与启动参数；先选厂商再选主机，主机可在厂商内拖动排序。" />
+                                   Text="每个平台的默认模拟器、库内子目录、ROM 格式、RetroArch 核心与启动参数；先选厂商再选主机，点「编辑排序」用 ↑ ↓ 调整顺序。" />
                     </StackPanel>
 
                     <Border Grid.Row="1" Style="{StaticResource SettingsCardStyle}" Padding="0"
@@ -344,19 +476,37 @@
                             <DockPanel Grid.Column="2" Margin="10,14,10,12">
                                 <TextBlock DockPanel.Dock="Top" Text="主机" Margin="10,0,0,8"
                                            Style="{StaticResource SettingsRowLabelStyle}" />
-                                <Button DockPanel.Dock="Bottom" Content="恢复默认顺序" Margin="0,8,0,0"
-                                        Style="{StaticResource SecondaryButtonStyle}"
-                                        Click="ResetPlatformOrder_Click"
-                                        ToolTip="按「厂商 → 首发年代」重排；平时可以直接拖动上面的主机，只在该厂商内生效" />
-                                <ListBox x:Name="PlatformList" SelectionChanged="PlatformList_SelectionChanged"
-                                         AllowDrop="True"
-                                         PreviewMouseLeftButtonDown="PlatformList_PreviewMouseLeftButtonDown"
-                                         PreviewMouseMove="PlatformList_PreviewMouseMove"
-                                         Drop="PlatformList_Drop">
+                                <Grid DockPanel.Dock="Bottom" Margin="0,8,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <Button x:Name="OrderEditButton" Content="编辑排序" HorizontalAlignment="Left"
+                                            Padding="12,5" Style="{StaticResource SecondaryButtonStyle}"
+                                            Click="TogglePlatformOrderEdit_Click"
+                                            ToolTip="进入编辑模式后用 ↑ ↓ 调整顺序，只在当前厂商内生效" />
+                                    <Button Grid.Column="1" Content="恢复默认" Padding="10,5"
+                                            Style="{StaticResource SecondaryButtonStyle}"
+                                            Click="ResetPlatformOrder_Click"
+                                            ToolTip="按「厂商 → 首发年代」重排" />
+                                </Grid>
+                                <ListBox x:Name="PlatformList" SelectionChanged="PlatformList_SelectionChanged">
                                     <ListBox.ItemTemplate>
                                         <DataTemplate>
                                             <DockPanel MinWidth="120">
-                                                <TextBlock Text="{Binding Display}"
+                                                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal"
+                                                            VerticalAlignment="Center"
+                                                            Visibility="{Binding Tag, RelativeSource={RelativeSource AncestorType=ListBox}, Converter={StaticResource BoolToVis}}">
+                                                    <Button Content="↑" Tag="{Binding}" Click="MovePlatformUp_Click"
+                                                            Width="22" Height="22" Padding="0" FontSize="11"
+                                                            Background="Transparent" BorderThickness="0" Cursor="Hand"
+                                                            ToolTip="上移" />
+                                                    <Button Content="↓" Tag="{Binding}" Click="MovePlatformDown_Click"
+                                                            Width="22" Height="22" Padding="0" FontSize="11"
+                                                            Background="Transparent" BorderThickness="0" Cursor="Hand"
+                                                            ToolTip="下移" />
+                                                </StackPanel>
+                                                <TextBlock Text="{Binding Display}" VerticalAlignment="Center"
                                                            TextTrimming="CharacterEllipsis" />
                                             </DockPanel>
                                         </DataTemplate>
@@ -445,8 +595,8 @@
                 </Grid>
             </TabItem>
 
-            <!-- AI -->
-            <TabItem Header="AI">
+            <!-- AI · 连接 -->
+            <TabItem Header="连接" Tag="AI">
                 <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                     <StackPanel Margin="28,20,28,16">
                         <Grid>
@@ -455,118 +605,81 @@
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
                             <StackPanel>
-                                <TextBlock Text="AI" Style="{StaticResource SettingsPageTitleStyle}" />
+                                <TextBlock Text="连接" Style="{StaticResource SettingsPageTitleStyle}" />
                                 <TextBlock Style="{StaticResource SettingsPageDescStyle}"
-                                           Text="OpenAI 兼容接口，刮削、推荐与米卡助手都用这一份配置。" />
+                                           Text="OpenAI 兼容接口；API Key 只存本机数据库，落盘前用 Windows DPAPI 按当前用户加密。" />
                             </StackPanel>
                             <Button Grid.Column="1" Content="保存 AI 设置" Width="130" VerticalAlignment="Top"
                                     Style="{StaticResource PrimaryButtonStyle}" Click="SaveAi_Click" />
                         </Grid>
 
                         <Border Style="{StaticResource SettingsCardStyle}">
-                            <StackPanel>
-                                <TextBlock Text="连接" Style="{StaticResource SettingsGroupTitleStyle}" />
-                                <TextBlock Style="{StaticResource SettingsGroupDescStyle}"
-                                           Text="API Key 只存本机数据库，落盘前用 Windows DPAPI 按当前用户加密。" />
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="92" />
+                                    <ColumnDefinition Width="*" MaxWidth="620" />
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
 
-                                <Grid Margin="0,14,0,0">
+                                <TextBlock Grid.Row="0" Text="预设" Style="{StaticResource SettingsRowLabelStyle}" />
+                                <ComboBox x:Name="AiPresetCombo" Grid.Row="0" Grid.Column="1" Width="260"
+                                          HorizontalAlignment="Left" MinHeight="32" Margin="0,0,0,16"
+                                          SelectionChanged="AiPreset_Changed">
+                                    <ComboBoxItem Content="自定义" />
+                                    <ComboBoxItem Content="DeepSeek" />
+                                    <ComboBoxItem Content="Kimi" />
+                                    <ComboBoxItem Content="OpenAI" />
+                                </ComboBox>
+
+                                <TextBlock Grid.Row="1" Text="BaseUrl" Style="{StaticResource SettingsRowLabelStyle}" />
+                                <TextBox x:Name="AiBaseUrlBox" Grid.Row="1" Grid.Column="1" Margin="0,0,0,16"
+                                         ToolTip="OpenAI 兼容端点，例如 https://api.deepseek.com/v1" />
+
+                                <TextBlock Grid.Row="2" Text="API Key" Style="{StaticResource SettingsRowLabelStyle}" />
+                                <Grid Grid.Row="2" Grid.Column="1" Margin="0,0,0,16">
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="92" />
-                                        <ColumnDefinition Width="*" MaxWidth="620" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="Auto" />
-                                    </Grid.RowDefinitions>
-
-                                    <TextBlock Grid.Row="0" Text="预设" Style="{StaticResource SettingsRowLabelStyle}" />
-                                    <ComboBox x:Name="AiPresetCombo" Grid.Row="0" Grid.Column="1" Width="260"
-                                              HorizontalAlignment="Left" MinHeight="32" Margin="0,0,0,16"
-                                              SelectionChanged="AiPreset_Changed">
-                                        <ComboBoxItem Content="自定义" />
-                                        <ComboBoxItem Content="DeepSeek" />
-                                        <ComboBoxItem Content="Kimi" />
-                                        <ComboBoxItem Content="OpenAI" />
-                                    </ComboBox>
-
-                                    <TextBlock Grid.Row="1" Text="BaseUrl" Style="{StaticResource SettingsRowLabelStyle}" />
-                                    <TextBox x:Name="AiBaseUrlBox" Grid.Row="1" Grid.Column="1" Margin="0,0,0,16"
-                                             ToolTip="OpenAI 兼容端点，例如 https://api.deepseek.com/v1" />
-
-                                    <TextBlock Grid.Row="2" Text="API Key" Style="{StaticResource SettingsRowLabelStyle}" />
-                                    <Grid Grid.Row="2" Grid.Column="1" Margin="0,0,0,16">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="Auto" />
-                                        </Grid.ColumnDefinitions>
-                                        <Grid>
-                                            <PasswordBox x:Name="AiApiKeyBox" MinHeight="32" VerticalContentAlignment="Center"
-                                                         Padding="6,4" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" />
-                                            <TextBox x:Name="AiApiKeyPlainBox" Visibility="Collapsed" />
-                                        </Grid>
-                                        <CheckBox x:Name="AiShowKeyCheck" Grid.Column="1" Content="显示" Margin="14,0,0,0"
-                                                  VerticalAlignment="Center"
-                                                  Checked="AiShowKey_Changed" Unchecked="AiShowKey_Changed" />
+                                    <Grid>
+                                        <PasswordBox x:Name="AiApiKeyBox" MinHeight="32" VerticalContentAlignment="Center"
+                                                     Padding="6,4" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" />
+                                        <TextBox x:Name="AiApiKeyPlainBox" Visibility="Collapsed" />
                                     </Grid>
-
-                                    <TextBlock Grid.Row="3" Text="模型名" Style="{StaticResource SettingsRowLabelStyle}" />
-                                    <TextBox x:Name="AiModelBox" Grid.Row="3" Grid.Column="1" Margin="0,0,0,16"
-                                             ToolTip="例如 deepseek-chat、gpt-4o-mini" />
-
-                                    <TextBlock Grid.Row="4" Text="超时" Style="{StaticResource SettingsRowLabelStyle}" />
-                                    <StackPanel Grid.Row="4" Grid.Column="1" Orientation="Horizontal" Margin="0,0,0,16">
-                                        <TextBox x:Name="AiTimeoutBox" Width="90" ToolTip="10–600 秒" />
-                                        <TextBlock Text="秒" Margin="8,0,0,0" VerticalAlignment="Center"
-                                                   Foreground="{DynamicResource TextSecondaryBrush}" />
-                                        <TextBlock Text="10–600" Margin="12,0,0,0" VerticalAlignment="Center"
-                                                   Style="{StaticResource SettingsHintStyle}" />
-                                    </StackPanel>
-
-                                    <TextBlock Grid.Row="5" Text="批量上限" Style="{StaticResource SettingsRowLabelStyle}" />
-                                    <StackPanel Grid.Row="5" Grid.Column="1" Orientation="Horizontal">
-                                        <TextBox x:Name="AiBatchLimitBox" Width="90" ToolTip="1–200 条；超过时请分批处理" />
-                                        <TextBlock Text="条" Margin="8,0,0,0" VerticalAlignment="Center"
-                                                   Foreground="{DynamicResource TextSecondaryBrush}" />
-                                        <TextBlock Text="单次刮削 / 修改的最大条数，1–200" Margin="12,0,0,0"
-                                                   VerticalAlignment="Center" Style="{StaticResource SettingsHintStyle}" />
-                                    </StackPanel>
+                                    <CheckBox x:Name="AiShowKeyCheck" Grid.Column="1" Content="显示" Margin="14,0,0,0"
+                                              VerticalAlignment="Center"
+                                              Checked="AiShowKey_Changed" Unchecked="AiShowKey_Changed" />
                                 </Grid>
-                            </StackPanel>
-                        </Border>
 
-                        <Border Style="{StaticResource SettingsCardStyle}">
-                            <StackPanel>
-                                <TextBlock Text="联网搜索" Style="{StaticResource SettingsGroupTitleStyle}" />
-                                <TextBlock Style="{StaticResource SettingsGroupDescStyle}"
-                                           Text="使用 DeepSeek 官方 Search API，复用同一个 API Key 与 https://api.deepseek.com/v1 端点；其他 BaseUrl 暂不支持，按成功请求计费。" />
+                                <TextBlock Grid.Row="3" Text="模型名" Style="{StaticResource SettingsRowLabelStyle}" />
+                                <TextBox x:Name="AiModelBox" Grid.Row="3" Grid.Column="1" Margin="0,0,0,16"
+                                         ToolTip="例如 deepseek-chat、gpt-4o-mini" />
 
-                                <Grid Margin="0,14,0,0">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="92" />
-                                        <ColumnDefinition Width="*" MaxWidth="620" />
-                                    </Grid.ColumnDefinitions>
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="Auto" />
-                                    </Grid.RowDefinitions>
+                                <TextBlock Grid.Row="4" Text="超时" Style="{StaticResource SettingsRowLabelStyle}" />
+                                <StackPanel Grid.Row="4" Grid.Column="1" Orientation="Horizontal" Margin="0,0,0,16">
+                                    <TextBox x:Name="AiTimeoutBox" Width="90" ToolTip="10–600 秒" />
+                                    <TextBlock Text="秒" Margin="8,0,0,0" VerticalAlignment="Center"
+                                               Foreground="{DynamicResource TextSecondaryBrush}" />
+                                    <TextBlock Text="10–600" Margin="12,0,0,0" VerticalAlignment="Center"
+                                               Style="{StaticResource SettingsHintStyle}" />
+                                </StackPanel>
 
-                                    <TextBlock Grid.Row="0" Text="开关" Style="{StaticResource SettingsRowLabelStyle}" />
-                                    <CheckBox x:Name="AiSearchEnabledCheck" Grid.Row="0" Grid.Column="1" Margin="0,6,0,16"
-                                              Content="允许 AI 联网搜索（刮削 / 助手）"
-                                              ToolTip="使用 DeepSeek 官方 Search API，复用上面的 API Key" />
-
-                                    <TextBlock Grid.Row="1" Text="结果条数" Style="{StaticResource SettingsRowLabelStyle}" />
-                                    <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal">
-                                        <TextBox x:Name="AiSearchMaxBox" Width="90" ToolTip="1–10 条；条数不影响单次计费" />
-                                        <TextBlock Text="1–10 条；条数不影响单次计费" Margin="12,0,0,0"
-                                                   VerticalAlignment="Center" Style="{StaticResource SettingsHintStyle}" />
-                                    </StackPanel>
-                                </Grid>
-                            </StackPanel>
+                                <TextBlock Grid.Row="5" Text="批量上限" Style="{StaticResource SettingsRowLabelStyle}" />
+                                <StackPanel Grid.Row="5" Grid.Column="1" Orientation="Horizontal">
+                                    <TextBox x:Name="AiBatchLimitBox" Width="90" ToolTip="1–200 条；超过时请分批处理" />
+                                    <TextBlock Text="条" Margin="8,0,0,0" VerticalAlignment="Center"
+                                               Foreground="{DynamicResource TextSecondaryBrush}" />
+                                    <TextBlock Text="单次刮削 / 修改的最大条数，1–200" Margin="12,0,0,0"
+                                               VerticalAlignment="Center" Style="{StaticResource SettingsHintStyle}" />
+                                </StackPanel>
+                            </Grid>
                         </Border>
 
                         <StackPanel Orientation="Horizontal" Margin="0,16,0,0" VerticalAlignment="Center">
@@ -581,6 +694,55 @@
 
                         <TextBlock Style="{StaticResource SettingsHintStyle}" Margin="0,14,0,0"
                                    Text="AI 只接收游戏标题、文件名、平台等文本信息，不上传 ROM、封面或存档。" />
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- AI · 联网搜索 -->
+            <TabItem Header="联网搜索" Tag="AI">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <StackPanel Margin="28,20,28,16">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock Text="联网搜索" Style="{StaticResource SettingsPageTitleStyle}" />
+                                <TextBlock Style="{StaticResource SettingsPageDescStyle}"
+                                           Text="使用 DeepSeek 官方 Search API，复用「连接」页的 API Key 与 https://api.deepseek.com/v1 端点；其他 BaseUrl 暂不支持，按成功请求计费。" />
+                            </StackPanel>
+                            <Button Grid.Column="1" Content="保存 AI 设置" Width="130" VerticalAlignment="Top"
+                                    Style="{StaticResource PrimaryButtonStyle}" Click="SaveAi_Click" />
+                        </Grid>
+
+                        <Border Style="{StaticResource SettingsCardStyle}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="92" />
+                                    <ColumnDefinition Width="*" MaxWidth="620" />
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+
+                                <TextBlock Grid.Row="0" Text="开关" Style="{StaticResource SettingsRowLabelStyle}" />
+                                <CheckBox x:Name="AiSearchEnabledCheck" Grid.Row="0" Grid.Column="1" Margin="0,6,0,16"
+                                          Content="允许 AI 联网搜索（刮削 / 助手）"
+                                          ToolTip="使用 DeepSeek 官方 Search API，复用「连接」页的 API Key" />
+
+                                <TextBlock Grid.Row="1" Text="结果条数" Style="{StaticResource SettingsRowLabelStyle}" />
+                                <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal">
+                                    <TextBox x:Name="AiSearchMaxBox" Width="90" ToolTip="1–10 条；条数不影响单次计费" />
+                                    <TextBlock Text="1–10 条；条数不影响单次计费" Margin="12,0,0,0"
+                                               VerticalAlignment="Center" Style="{StaticResource SettingsHintStyle}" />
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <TextBlock Style="{StaticResource SettingsHintStyle}" Margin="0,14,0,0"
+                                   Text="「测试搜索」在「连接」页，和「测试连接」放在一起。" />
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>
@@ -672,34 +834,37 @@
                 </Grid>
             </TabItem>
 
-            <!-- 数据维护 -->
-            <TabItem Header="数据维护">
+            <!-- 数据维护 · 备份与导出 -->
+            <TabItem Header="备份与导出" Tag="数据维护">
                 <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-                    <StackPanel Margin="28,22,28,26">
-                        <TextBlock Text="数据维护" Style="{StaticResource SettingsPageTitleStyle}" />
+                    <StackPanel Margin="28,20,28,16">
+                        <TextBlock Text="备份与导出" Style="{StaticResource SettingsPageTitleStyle}" />
                         <TextBlock Style="{StaticResource SettingsPageDescStyle}"
-                                   Text="备份 / 恢复数据库、导出清单，以及修复失效路径与缺失指纹。" />
+                                   Text="备份是复制当前 mica.db；恢复会用备份覆盖当前库，重启后生效（恢复前自动再备份一次）。" />
 
                         <Border Style="{StaticResource SettingsCardStyle}">
-                            <StackPanel MaxWidth="760" HorizontalAlignment="Left">
-                                <TextBlock Text="备份与导出" Style="{StaticResource SettingsGroupTitleStyle}" />
-                                <TextBlock Style="{StaticResource SettingsGroupDescStyle}"
-                                           Text="备份是复制当前 mica.db；恢复会用备份覆盖当前库，重启后生效（恢复前自动再备份一次）。" />
-                                <WrapPanel Margin="0,14,0,0">
-                                    <Button Content="打开数据目录" Margin="0,0,8,0" Style="{StaticResource SecondaryButtonStyle}" Click="OpenDataDir_Click" />
-                                    <Button Content="备份数据库…" Margin="0,0,8,0" Style="{StaticResource SecondaryButtonStyle}" Click="Backup_Click" />
-                                    <Button Content="从备份恢复…" Margin="0,0,8,0" Style="{StaticResource SecondaryButtonStyle}" Click="Restore_Click" />
-                                    <Button Content="导出 CSV…" Margin="0,0,8,0" Style="{StaticResource SecondaryButtonStyle}" Click="ExportCsv_Click" />
-                                </WrapPanel>
-                            </StackPanel>
+                            <WrapPanel>
+                                <Button Content="打开数据目录" Margin="0,0,8,0" Style="{StaticResource SecondaryButtonStyle}" Click="OpenDataDir_Click" />
+                                <Button Content="备份数据库…" Margin="0,0,8,0" Style="{StaticResource SecondaryButtonStyle}" Click="Backup_Click" />
+                                <Button Content="从备份恢复…" Margin="0,0,8,0" Style="{StaticResource SecondaryButtonStyle}" Click="Restore_Click" />
+                                <Button Content="导出 CSV…" Margin="0,0,8,0" Style="{StaticResource SecondaryButtonStyle}" Click="ExportCsv_Click" />
+                            </WrapPanel>
                         </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- 数据维护 · 修复与清理 -->
+            <TabItem Header="修复与清理" Tag="数据维护">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <StackPanel Margin="28,20,28,16">
+                        <TextBlock Text="修复与清理" Style="{StaticResource SettingsPageTitleStyle}" />
+                        <TextBlock Style="{StaticResource SettingsPageDescStyle}"
+                                   Text="清理只删数据库记录、不动文件；所在盘未连接时会中止，避免误删进度与元数据。" />
 
                         <Border Style="{StaticResource SettingsCardStyle}">
-                            <StackPanel MaxWidth="760" HorizontalAlignment="Left">
-                                <TextBlock Text="修复与清理" Style="{StaticResource SettingsGroupTitleStyle}" />
-                                <TextBlock Style="{StaticResource SettingsGroupDescStyle}"
-                                           Text="清理只删数据库记录、不动文件；所在盘未连接时会中止，避免误删进度与元数据。" />
-                                <WrapPanel Margin="0,14,0,0">
+                            <StackPanel>
+                                <WrapPanel>
                                     <Button Content="清理失效路径记录" Margin="0,0,8,0" Style="{StaticResource SecondaryButtonStyle}" Click="CleanMissing_Click" />
                                     <Button Content="补算缺失指纹" Margin="0,0,8,0" Style="{StaticResource SecondaryButtonStyle}" Click="HashMissing_Click" />
                                     <Button x:Name="CancelHashButton" Content="取消补算" IsEnabled="False" Margin="0,0,8,0"
@@ -746,6 +911,7 @@
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>
-        </TabControl>
+            </TabControl>
+        </Grid>
     </Grid>
 </UserControl>
