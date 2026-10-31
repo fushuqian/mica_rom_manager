@@ -47,6 +47,9 @@ public partial class MainWindow : Window
         Closing += (_, _) => SaveViewState();
     }
 
+    /// <summary>设置里改了主机命名习惯后，让左侧平台栏重新取显示名。</summary>
+    public void RefreshPlatformNames() => _viewModel.RefreshPlatformDisplay();
+
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
         RestoreViewState();
@@ -57,8 +60,7 @@ public partial class MainWindow : Window
         Dispatcher.BeginInvoke(CheckPortableLibrary, DispatcherPriority.ApplicationIdle);
     }
 
-    private void AnimateIn()
-    {
+    private void AnimateIn()    {
         RootGrid.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(220))
         {
             EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut },

@@ -1,6 +1,7 @@
 using System.IO;
 using MicaRomManager.Data;
 using MicaRomManager.Models;
+using MicaRomManager.Services;
 using Xunit;
 
 namespace MicaRomManager.Tests;
@@ -126,6 +127,24 @@ public class LookupRepositoryTests : IDisposable
         var names = _platforms.ListAll().Select(p => p.Name).ToList();
 
         Assert.Contains("测试平台", names);
+    }
+
+    [Fact]
+    public void PlatformList_SeedsMissingRowsOnceWithDefaults()
+    {
+        _lookups.Add(LookupRepository.Platform, "Z 平台");
+        _lookups.Add(LookupRepository.Platform, "A 平台");
+
+        var first = _platforms.ListAll();
+        var seeded = first.Where(p => p.Name is "A 平台" or "Z 平台").Select(p => p.Name).ToList();
+
+        // 顺序沿用字典的 ORDER BY value；补种一次后再读不重复插入
+        Assert.Equal(new[] { "A 平台", "Z 平台" }, seeded);
+        Assert.Equal(first.Count, _platforms.ListAll().Count);
+
+        var row = _platforms.Get("A 平台")!;
+        Assert.Equal("A 平台", row.Folder);
+        Assert.Equal(PlatformFormats.GetDefault("A 平台"), row.Formats);
     }
 
     [Fact]

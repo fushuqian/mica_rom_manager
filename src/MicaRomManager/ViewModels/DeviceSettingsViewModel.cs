@@ -33,16 +33,64 @@ public partial class DeviceSettingsViewModel : ObservableObject
 
     public DeviceSettingsViewModel()
     {
-        LoadDrives();
         Reload(null);
+        _ = LoadDrivesAsync();
     }
 
-    private void LoadDrives()
+    /// <summary>
+    /// 盘符探测（IsReady / 卷标）遇到掉线的网络盘、没插卡的读卡器、空光驱时，
+    /// 系统调用会阻塞到超时；放到后台线程，别让打开设置卡在 UI 线程上。
+    /// </summary>
+    private async Task LoadDrivesAsync()
     {
+        var drives = await Task.Run(ProbeDrives);
+
+        var previousRoot = SelectedDrive?.Root;
         Drives.Clear();
-        foreach (var drive in DriveInfo.GetDrives())
+        foreach (var drive in drives) Drives.Add(drive);
+
+        SelectedDrive = drives.FirstOrDefault(drive =>
+                             string.Equals(drive.Root, previousRoot, StringComparison.OrdinalIgnoreCase))
+                         ?? drives.FirstOrDefault();
+    }
+
+    private static List<DriveChoice> ProbeDrives()
+    {
+        var result = new List<DriveChoice>();
+
+        DriveInfo[] all;
+        try
         {
-            if (!drive.IsReady) continue;
+            all = DriveInfo.GetDrives();
+        }
+        catch
+        {
+            return result;
+        }
+
+        foreach (var drive in all)
+        {
+            bool ready;
+            try
+            {
+                ready = drive.IsReady;
+            }
+            catch
+            {
+                continue;
+            }
+
+            if (!ready) continue;
+
+            string root;
+            try
+            {
+                root = drive.RootDirectory.FullName;
+            }
+            catch
+            {
+                root = drive.Name;
+            }
 
             string label;
             try
@@ -54,11 +102,11 @@ public partial class DeviceSettingsViewModel : ObservableObject
                 label = "";
             }
 
-            var display = $"{drive.Name}{(string.IsNullOrWhiteSpace(label) ? "" : " " + label)}";
-            Drives.Add(new DriveChoice(drive.RootDirectory.FullName, display));
+            var display = $"{root}{(string.IsNullOrWhiteSpace(label) ? "" : " " + label)}";
+            result.Add(new DriveChoice(root, display));
         }
 
-        SelectedDrive = Drives.FirstOrDefault();
+        return result;
     }
 
     private void Reload(string? selectId)

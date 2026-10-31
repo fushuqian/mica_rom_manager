@@ -44,6 +44,11 @@ public static class AppServices
         GameRepo = new GameRepository(Db);
         EmulatorRepo = new EmulatorRepository(Db);
         Settings = new SettingsRepository(Db);
+
+        // 主机命名习惯（日式 Famicom / 欧美 NES），只影响界面显示
+        Models.PlatformDisplayNames.SetNaming(
+            Models.PlatformDisplayNames.ParseNaming(Settings.Get(Models.PlatformDisplayNames.NamingKey)));
+
         Lookups = new LookupRepository(Db);
         Platforms = new PlatformRepository(Db);
         Network = new NetworkClientProvider(Settings);

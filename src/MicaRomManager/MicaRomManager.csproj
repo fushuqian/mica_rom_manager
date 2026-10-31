@@ -6,7 +6,7 @@
     <UseWPF>true</UseWPF>
     <RootNamespace>MicaRomManager</RootNamespace>
     <AssemblyName>MicaRomManager</AssemblyName>
-    <Version>0.30.8</Version>
+    <Version>0.31.1</Version>
     <ApplicationIcon>app.ico</ApplicationIcon>
     <Platforms>AnyCPU</Platforms>
     <PublishSingleFile>true</PublishSingleFile>
@@ -26,7 +26,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- 测试需要直接验证采样哈希、资产选择、版本比较等内部实现 -->
+    <!-- 娴嬭瘯闇€瑕佺洿鎺ラ獙璇侀噰鏍峰搱甯屻€佽祫浜ч€夋嫨銆佺増鏈瘮杈冪瓑鍐呴儴瀹炵幇 -->
     <InternalsVisibleTo Include="MicaRomManager.Tests" />
   </ItemGroup>
 

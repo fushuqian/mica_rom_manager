@@ -1,5 +1,28 @@
 # 经验记录（MEMORIES）
 
+## 2026-10-31（平台名与分组）
+
+- 日欧美叫法不同的主机用一张表按习惯切换，**不要把全称塞进预置清单**：`PlatformPresets.json` 在 `data\` 有一份用户副本，改随程序发布的 JSON 到不了老用户，写在代码里才稳。库里始终存短名（NES/SNES/PCE/MD），展示层再翻。
+- 展示名这类全局静态映射改完必须主动刷界面：`Display` 是只读计算属性，集合项复用时不会触发 `PropertyChanged`。给列表项加 `RefreshDisplay()`，保存后遍历调一遍。
+- WPF 列表分组用 `ListCollectionView` + `PropertyGroupDescription`，**分组顺序等于源集合里首次出现的顺序**，所以要先按「厂商权重 → 名字」排好源集合再交给视图；「所有游戏」这种不参与分组的项给空分组名，表头用 DataTrigger 折叠掉。
+- 测试里别把厂商名当平台名传给 `VendorRank`：入参是平台，厂商不在表里会被算成「自定义」。
+- 数据目录这类「程序自己的路径」不要摆在设置里给用户看：便携模式下存的是相对路径，显示绝对路径既没意义又容易误导。
+
+## 2026-10-31（设置页视觉层次）
+
+- 「没有层次感」的典型症状是：所有信息一个字号、一个颜色、一个间距直排。修法不是加线加框，而是建立**三级字号（20 页标题 / 13.5 分组标题 / 12.5 字段与正文 / 11.5 提示）+ 分组卡片 + 统一间距节奏**；卡片靠「比底色亮一档 + 1px 发丝线」分层，别用 DropShadowEffect（会把子树栅格化）。
+- WPF 里想「控件最宽 560、左对齐、窗口拉宽也不跟着变长」，别给外层 StackPanel 设 `MaxWidth + HorizontalAlignment="Left"` —— StackPanel 会按内容的 DesiredWidth 收缩，结果同一页里有的输入框 440、有的 760。正解是给**列定义**设 `MaxWidth`：`<ColumnDefinition Width="*" MaxWidth="620"/>`。
+- 页头右侧放主按钮（保存）比放页底更稳：内容再长也不会被挤到滚动区外，还顺手把「主操作」这件事说清楚了。
+- 设置页出图用 `RenderTargetBitmap` 最省事：进程声明 `PerMonitorV2`（app.manifest）→ `VisualTreeHelper.GetDpi(root).PixelsPerDip` 是 2 → 位图尺寸 = DIP × dip、位图 DPI 声明 `96 × dip`，再叠一层模拟桌面渐变，就能拿到 2× 的稳定渲染图；直接 `BitBlt` 屏幕会受 DPI 虚拟化和遮挡影响。
+- 高 DPI 下 `CopyFromScreen`/`BitBlt` 拿到的是物理像素，而未声明 DPI 感知的进程取 `GetWindowRect` 得到的是被缩放的逻辑坐标，两者不一致就会截到桌面而不是窗口。
+
+## 2026-10-31（打开设置卡顿定位）
+
+- 「窗口打开慢」先量再改：写个 `[STAThread]` 控制台程序引用主工程，`new App().InitializeComponent()` → `AppServices.Initialize()` → `new MainWindow().Show()` → 再 `new SettingsWindow()`，用 Stopwatch 打点，能直接把「构造 / 首帧 / 各页首次切换」拆开。本项目实测构造 154ms、首帧 241ms，**大头是 XAML 解析，不是查库**（平台补种 29 行只要 13ms）。
+- `SettingsWindow` 里内联的子页面（`<views:EmulatorManagerView />`）在 XAML 解析时就会**立刻构造**，即使那个页签没被选中；它们的 ViewModel 构造、查库、读 JSON 全都算在「打开设置」头上。要按需加载就换成 `<ContentControl>` + 选中页签时再 `new`。
+- `DriveInfo.IsReady` / `VolumeLabel` / `RootDirectory` 不是内存操作，会去问设备：映射的网络盘掉线、读卡器没插卡、光驱空仓时要等到系统超时（秒级到十几秒）。**绝不能在 UI 线程同步跑**，尤其不要在窗口构造里跑。
+- `PlatformRepository.ListAll()` 原来对每个平台调一次 `EnsureExists`（各自开连接 + 各自写事务）；`Database.Open()` 每次都会带 `busy_timeout=3000`，库被同步盘/杀毒/别的进程占用时这些写会逐个排队。补行改成「一个连接 + 一个事务批量 INSERT OR IGNORE」，无缺项时零写。
+
 ## 2026-10-31（v0.29.0 三栏外壳）
 
 - 悬停投影的阴影层**必须自带底色**：`Background="Transparent"` 的空 Border 加 `DropShadowEffect` 投不出阴影（没有任何 alpha 可投影）。做法是给阴影层一个低 alpha 的抬升色（`ShellPanelLiftBrush` / `MainPanelLiftBrush`），和面板同色相，既出阴影又只把面板抬一档。

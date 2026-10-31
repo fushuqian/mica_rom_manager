@@ -54,14 +54,15 @@
             </StackPanel>
         </Grid>
 
-        <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto">
+        <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled">
             <StackPanel>
                 <TextBlock Style="{StaticResource SectionTitleStyle}"
                            Text="{Binding SelectedProfile.Name, FallbackValue=（未选择设备）, TargetNullValue=（未选择设备）}" />
 
                 <Grid Margin="0,8,0,0">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="82" />
+                        <ColumnDefinition Width="92" />
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
                     <Grid.RowDefinitions>
@@ -73,11 +74,11 @@
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
-                    <TextBlock Grid.Row="0" Grid.Column="0" Text="名称" Style="{StaticResource FieldLabelStyle}" />
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="名称" Style="{StaticResource SettingsRowLabelStyle}" />
                     <TextBox Grid.Row="0" Grid.Column="1" Margin="0,0,0,8"
                              Text="{Binding SelectedProfile.Name, UpdateSourceTrigger=PropertyChanged}" />
 
-                    <TextBlock Grid.Row="1" Grid.Column="0" Text="品牌 / 型号" Style="{StaticResource FieldLabelStyle}" />
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="品牌 / 型号" Style="{StaticResource SettingsRowLabelStyle}" />
                     <Grid Grid.Row="1" Grid.Column="1" Margin="0,0,0,8">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
@@ -88,7 +89,7 @@
                         <TextBox Grid.Column="2" Text="{Binding SelectedProfile.Model, UpdateSourceTrigger=PropertyChanged}" />
                     </Grid>
 
-                    <TextBlock Grid.Row="2" Grid.Column="0" Text="传输方式" Style="{StaticResource FieldLabelStyle}" />
+                    <TextBlock Grid.Row="2" Grid.Column="0" Text="传输方式" Style="{StaticResource SettingsRowLabelStyle}" />
                     <ComboBox Grid.Row="2" Grid.Column="1" Width="240" HorizontalAlignment="Left" MinHeight="28"
                               Margin="0,0,0,8" SelectedValuePath="Tag"
                               SelectedValue="{Binding SelectedProfile.Transport, Mode=TwoWay}">
@@ -96,20 +97,20 @@
                         <ComboBoxItem Content="Android MTP（暂未支持）" Tag="mtp" />
                     </ComboBox>
 
-                    <TextBlock Grid.Row="3" Grid.Column="0" Text="盘内根目录" Style="{StaticResource FieldLabelStyle}" />
+                    <TextBlock Grid.Row="3" Grid.Column="0" Text="盘内根目录" Style="{StaticResource SettingsRowLabelStyle}" />
                     <TextBox Grid.Row="3" Grid.Column="1" Width="240" HorizontalAlignment="Left" Margin="0,0,0,8"
                              Text="{Binding SelectedProfile.RootFolder, UpdateSourceTrigger=PropertyChanged}" />
 
-                    <TextBlock Grid.Row="4" Grid.Column="0" Text="目录模板" Style="{StaticResource FieldLabelStyle}" />
+                    <TextBlock Grid.Row="4" Grid.Column="0" Text="目录模板" Style="{StaticResource SettingsRowLabelStyle}" />
                     <StackPanel Grid.Row="4" Grid.Column="1" Margin="0,0,0,8">
                         <TextBox x:Name="FolderTemplateBox"
                                  Text="{Binding SelectedProfile.FolderTemplate, UpdateSourceTrigger=PropertyChanged}" />
-                        <TextBlock Margin="0,4,0,0" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"
+                        <TextBlock Style="{StaticResource SettingsHintStyle}"
                                    Text="可用占位符：{root} 盘根+根目录，{platform} 平台映射目录，{title} 游戏标题，{year} 年份。例如 {root}/{platform} 或 {root}/{platform}/{title}。" />
                     </StackPanel>
 
-                    <TextBlock Grid.Row="5" Grid.Column="0" Text="平台映射" Style="{StaticResource FieldLabelStyle}"
-                               VerticalAlignment="Top" Margin="0,4,0,0" />
+                    <TextBlock Grid.Row="5" Grid.Column="0" Text="平台映射" Style="{StaticResource SettingsRowLabelStyle}"
+                               VerticalAlignment="Top" Margin="0,8,12,0" />
                     <StackPanel Grid.Row="5" Grid.Column="1">
                         <DataGrid ItemsSource="{Binding PlatformFolders}"
                                   SelectedItem="{Binding SelectedFolderRow, Mode=TwoWay}"

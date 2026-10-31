@@ -16,7 +16,7 @@ using Microsoft.Win32;
 
 namespace MicaRomManager.ViewModels;
 
-/// <summary>左侧平台列表项：Name 为筛选值，Display 为显示文本。</summary>
+/// <summary>左侧平台列表项：Name 为筛选值，Display 为显示文本，Vendor 用来分组。</summary>
 public partial class PlatformFilterItem : ObservableObject
 {
     public PlatformFilterItem(string name) => Name = name;
@@ -27,7 +27,15 @@ public partial class PlatformFilterItem : ObservableObject
         ? "所有游戏"
         : PlatformDisplayNames.Of(Name);
 
+    /// <summary>厂商分组名；「所有游戏」不参与分组（空串 → 表头折叠）。</summary>
+    public string Vendor => string.Equals(Name, MainViewModel.AllPlatforms, StringComparison.Ordinal)
+        ? ""
+        : PlatformDisplayNames.VendorOf(Name);
+
     [ObservableProperty] private int count;
+
+    /// <summary>命名习惯改了以后让绑定重新取值（Display 是只读计算属性）。</summary>
+    public void RefreshDisplay() => OnPropertyChanged(nameof(Display));
 }
 
 public partial class MainViewModel : ObservableObject, IAiAppHost
@@ -46,6 +54,9 @@ public partial class MainViewModel : ObservableObject, IAiAppHost
     public ObservableCollection<string> Regions { get; } = new();
     public ObservableCollection<string> Languages { get; } = new();
     public ObservableCollection<PlatformFilterItem> PlatformFilters { get; } = new();
+
+    /// <summary>左侧平台栏的分组视图（按厂商）。</summary>
+    public ICollectionView PlatformFiltersView { get; }
     public ObservableCollection<string> RegionFilters { get; } = new();
     public ObservableCollection<string> LanguageFilters { get; } = new();
     public ObservableCollection<string> DeveloperFilters { get; } = new();
@@ -126,10 +137,20 @@ public partial class MainViewModel : ObservableObject, IAiAppHost
         GamesView = CollectionViewSource.GetDefaultView(Games);
         GamesView.Filter = FilterGame;
 
+        // 左侧平台栏按厂商分组：分组名来自 PlatformFilterItem.Vendor
+        PlatformFiltersView = new ListCollectionView(PlatformFilters);
+        PlatformFiltersView.GroupDescriptions.Add(new PropertyGroupDescription(nameof(PlatformFilterItem.Vendor)));
+
         AppServices.Launcher.SessionEnded += OnSessionEnded;
         AppServices.SendQueue.AllCompleted += OnSendQueueCompleted;
         LoadEmulators();
         LoadGames();
+    }
+
+    /// <summary>命名习惯改了以后，让侧栏里的平台显示名重新取一次。</summary>
+    public void RefreshPlatformDisplay()
+    {
+        foreach (var item in PlatformFilters) item.RefreshDisplay();
     }
 
     public void LoadGames()
@@ -332,8 +353,14 @@ public partial class MainViewModel : ObservableObject, IAiAppHost
             .Where(name => gamePlatforms.Contains(name, StringComparer.OrdinalIgnoreCase))
             .ToList();
 
-        foreach (var name in gamePlatforms.OrderBy(name => name, StringComparer.CurrentCultureIgnoreCase))
+        foreach (var name in gamePlatforms)
             if (!ordered.Contains(name, StringComparer.OrdinalIgnoreCase)) ordered.Add(name);
+
+        // 先按厂商（预置清单顺序，自定义最后）再按展示名排，分组表头才会按这个顺序出现
+        ordered = ordered
+            .OrderBy(PlatformDisplayNames.VendorRank)
+            .ThenBy(PlatformDisplayNames.Of, StringComparer.CurrentCultureIgnoreCase)
+            .ToList();
 
         // 增量同步而不是 Clear，避免 ListBox 选中项被清空、左侧平台状态被重置。
         var desired = new List<string> { AllPlatforms };
@@ -356,6 +383,7 @@ public partial class MainViewModel : ObservableObject, IAiAppHost
                 string.Equals(PlatformFilters[index].Name, name, StringComparison.OrdinalIgnoreCase))
             {
                 PlatformFilters[index].Count = count;
+                PlatformFilters[index].RefreshDisplay();
                 continue;
             }
 
@@ -365,6 +393,7 @@ public partial class MainViewModel : ObservableObject, IAiAppHost
             {
                 PlatformFilters.Move(PlatformFilters.IndexOf(existing), index);
                 existing.Count = count;
+                existing.RefreshDisplay();
             }
             else
             {
@@ -520,7 +549,8 @@ public partial class MainViewModel : ObservableObject, IAiAppHost
         var raw = AppServices.Settings.Get("library.import_mode");
         if (Enum.TryParse<ImportMode>(raw, true, out var mode)) return mode;
 
-        return AppServices.Settings.GetBool("library.copy_on_import") ? ImportMode.Copy : ImportMode.Link;
+        // 没设置过就按「移动到库目录」走；早期版本用 copy_on_import 布尔，留着兼容
+        return AppServices.Settings.GetBool("library.copy_on_import") ? ImportMode.Copy : ImportMode.Move;
     }
 
     private async Task ApplyImportAsync(ImportWizardResult result, string libraryRoot)

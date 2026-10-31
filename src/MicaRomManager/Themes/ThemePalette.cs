@@ -27,6 +27,8 @@ public static class ThemePalette
         ["ShellScrimBrush"] = Color.FromArgb(0x33, 0x0A, 0x0A, 0x0C),
         ["ShellPanelLiftBrush"] = Color.FromArgb(0x3D, 0x20, 0x20, 0x26),
         ["MainPanelLiftBrush"] = Color.FromArgb(0x4D, 0x2A, 0x2A, 0x31),
+        ["SettingsCardBrush"] = Color.FromArgb(0xF0, 0x20, 0x20, 0x27),
+        ["SettingsCardBorderBrush"] = Color.FromArgb(0x1A, 0xFF, 0xFF, 0xFF),
         ["TextPrimaryBrush"] = Color.FromRgb(0xF2, 0xF2, 0xF4),
         ["TextSecondaryBrush"] = Color.FromRgb(0x8A, 0x8A, 0x90),
         ["AccentBrush"] = Color.FromRgb(0x0A, 0x84, 0xFF),

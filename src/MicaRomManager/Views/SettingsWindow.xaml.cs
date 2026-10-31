@@ -22,6 +22,8 @@ public partial class SettingsWindow : Window
     public SettingsWindow()
     {
         InitializeComponent();
+        SettingsTabs.SelectionChanged += (_, _) => EnsureTabContent();
+        EnsureTabContent();
         WindowBackdrop.Apply(this, WindowBackdrop.BackdropKind.Acrylic);
         RootGrid.Opacity = 0;
         Loaded += (_, _) => RootGrid.BeginAnimation(OpacityProperty,
@@ -36,10 +38,22 @@ public partial class SettingsWindow : Window
 
         AssistantDefaultCheck.IsChecked = AppServices.Settings.GetBool("ui.assistant_open_v2", true);
         LoadPrompts();
-        DataDirText.Text = AppServices.Paths.DataDir;
 
         var version = Assembly.GetExecutingAssembly().GetName().Version;
         VersionText.Text = $"版本 {version?.ToString(3) ?? "0.1.0"}";
+    }
+
+    /// <summary>
+    /// 「模拟器管理」「设备」两页首次切过去时才构造：它们的界面树、查库和盘符探测
+    /// 都不该压打开设置这条路径上。
+    /// </summary>
+    private void EnsureTabContent()
+    {
+        if (ReferenceEquals(SettingsTabs.SelectedItem, EmulatorTab) && EmulatorTabHost.Content == null)
+            EmulatorTabHost.Content = new EmulatorManagerView();
+
+        if (ReferenceEquals(SettingsTabs.SelectedItem, DeviceTab) && DeviceTabHost.Content == null)
+            DeviceTabHost.Content = new DeviceSettingsView();
     }
 
     private AiPromptDefinition? _currentPrompt;
@@ -112,16 +126,19 @@ public partial class SettingsWindow : Window
 
     private void LoadGeneral()
     {
+        // 默认「移动到库目录」；老配置里只有 copy_on_import 布尔值，照旧兼容
         var importMode = AppServices.Settings.Get("library.import_mode");
         ImportModeCombo.SelectedIndex = importMode switch
         {
             "copy" => 1,
             "move" => 2,
             "link" => 0,
-            _ => AppServices.Settings.GetBool("library.copy_on_import") ? 1 : 0,
+            _ => AppServices.Settings.GetBool("library.copy_on_import") ? 1 : 2,
         };
         LibraryRootBox.Text = PortablePath.Expand(AppServices.Settings.Get("library.root") ?? "");
         PortableModeCheck.IsChecked = AppServices.Settings.GetBool(PortablePath.SettingKey);
+
+        PlatformNamingCombo.SelectedIndex = PlatformDisplayNames.Naming == PlatformNaming.Western ? 1 : 0;
 
         var mode = AppServices.Settings.Get(NetworkClientProvider.ModeKey);
         ProxyModeCombo.SelectedIndex = mode switch { "none" => 0, "manual" => 2, _ => 1 };
@@ -735,11 +752,21 @@ public partial class SettingsWindow : Window
         });
         AppServices.Settings.Set("library.copy_on_import", (ImportModeCombo.SelectedIndex == 1).ToString());
         AppServices.Settings.Set("library.root", portable ? PortablePath.ToStored(libraryRoot, true) : libraryRoot);
+
+        var naming = PlatformNamingCombo.SelectedIndex == 1 ? PlatformNaming.Western : PlatformNaming.Japanese;
+        AppServices.Settings.Set(PlatformDisplayNames.NamingKey, PlatformDisplayNames.StoreNaming(naming));
+        PlatformDisplayNames.SetNaming(naming);
+
         AppServices.Settings.Set(NetworkClientProvider.ModeKey, mode);
         AppServices.Settings.Set(NetworkClientProvider.AddressKey, ProxyAddressBox.Text.Trim());
         AppServices.RebuildNetwork();
         AppServices.EmulatorRepo.NormalizePaths();
+
+        // 命名习惯可能与打开设置时不同，平台页的展示名要重算一次
+        LoadPlatforms();
+        (Owner as MainWindow)?.RefreshPlatformNames();
         (Owner as MainWindow)?.RefreshGames();
+
         MessageBox.Show($"常规设置已保存。\n已重定位 {relocated} 条记录，已转换 {converted} 条游戏路径。",
             "设置", MessageBoxButton.OK, MessageBoxImage.Information);
     }
