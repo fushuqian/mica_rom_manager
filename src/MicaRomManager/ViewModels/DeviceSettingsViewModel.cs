@@ -263,8 +263,7 @@ public partial class DeviceSettingsViewModel : ObservableObject
 
             var window = new AiDeviceProfileWindow(summary, result)
             {
-                Owner = Application.Current?.Windows.OfType<SettingsWindow>().FirstOrDefault()
-                        ?? Application.Current?.MainWindow,
+                Owner = Application.Current?.MainWindow,
             };
             if (window.ShowDialog() != true || window.Profile == null)
             {

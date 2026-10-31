@@ -27,6 +27,11 @@ public partial class PlatformFilterItem : ObservableObject
         ? "所有游戏"
         : PlatformDisplayNames.Of(Name);
 
+    /// <summary>厂商分组名；「所有游戏」不参与分组（空串 → 表头折叠）。</summary>
+    public string Vendor => string.Equals(Name, MainViewModel.AllPlatforms, StringComparison.Ordinal)
+        ? ""
+        : PlatformDisplayNames.VendorOf(Name);
+
     [ObservableProperty] private int count;
 
     /// <summary>命名习惯改了以后让绑定重新取值（Display 是只读计算属性）。</summary>
@@ -49,6 +54,12 @@ public partial class MainViewModel : ObservableObject, IAiAppHost
     public ObservableCollection<string> Regions { get; } = new();
     public ObservableCollection<string> Languages { get; } = new();
     public ObservableCollection<PlatformFilterItem> PlatformFilters { get; } = new();
+
+    /// <summary>左侧平台栏视图：按厂商分组或平铺，取决于「分组」开关。</summary>
+    public ICollectionView PlatformFiltersView { get; }
+
+    /// <summary>左侧平台栏是否按厂商分组（平铺时按用户拖出来的顺序）。</summary>
+    [ObservableProperty] private bool groupPlatforms;
     public ObservableCollection<string> RegionFilters { get; } = new();
     public ObservableCollection<string> LanguageFilters { get; } = new();
     public ObservableCollection<string> DeveloperFilters { get; } = new();
@@ -83,6 +94,9 @@ public partial class MainViewModel : ObservableObject, IAiAppHost
 
     private bool _syncingPlatformFilter;
     private SendTaskWindow? _taskWindow;
+
+    /// <summary>请求在主窗口里打开设置页（由 MainWindow 订阅）。</summary>
+    public event EventHandler? SettingsRequested;
 
     // AI 查询产生的临时条件（仅本次会话有效，清除筛选时一并重置）
     private string _aiGenre = "";
@@ -129,10 +143,29 @@ public partial class MainViewModel : ObservableObject, IAiAppHost
         GamesView = CollectionViewSource.GetDefaultView(Games);
         GamesView.Filter = FilterGame;
 
+        PlatformFiltersView = new ListCollectionView(PlatformFilters);
+        GroupPlatforms = AppServices.Settings.GetBool(GroupingKey);
+        ApplyPlatformGrouping();
+
         AppServices.Launcher.SessionEnded += OnSessionEnded;
         AppServices.SendQueue.AllCompleted += OnSendQueueCompleted;
         LoadEmulators();
         LoadGames();
+    }
+
+    public const string GroupingKey = "ui.platform_grouping";
+
+    partial void OnGroupPlatformsChanged(bool value)
+    {
+        ApplyPlatformGrouping();
+        AppServices.Settings.Set(GroupingKey, value.ToString());
+    }
+
+    private void ApplyPlatformGrouping()
+    {
+        PlatformFiltersView.GroupDescriptions.Clear();
+        if (GroupPlatforms)
+            PlatformFiltersView.GroupDescriptions.Add(new PropertyGroupDescription(nameof(PlatformFilterItem.Vendor)));
     }
 
     /// <summary>命名习惯改了以后，让侧栏里的平台显示名重新取一次。</summary>
@@ -1422,11 +1455,8 @@ public partial class MainViewModel : ObservableObject, IAiAppHost
     [RelayCommand]
     private void OpenSettings()
     {
-        var window = new SettingsWindow { Owner = Application.Current?.MainWindow };
-        window.ShowDialog();
-
-        LoadEmulators();
-        LoadGames();
+        // 设置现在是主窗口里的一页，由 MainWindow 负责切换；这里只发个请求
+        SettingsRequested?.Invoke(this, EventArgs.Empty);
     }
 
     public void FocusSearchRequested() { }

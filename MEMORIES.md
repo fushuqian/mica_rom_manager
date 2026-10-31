@@ -1,5 +1,12 @@
 # 经验记录（MEMORIES）
 
+## 2026-10-31（设置内嵌主窗口）
+
+- 模态窗口（`ShowDialog`）会把 owner 置为 disabled，Win11 对 disabled 窗口不再保持 Mica/Acrylic，于是主窗口看起来「褪成纯色」——靠重下发布景属性救不回来，改结构才根治。
+- Window 改 UserControl 的改动面比想象小：换根元素、删掉 WindowChrome/标题栏/关闭条、`Owner as MainWindow` 改成 `Window.GetWindow(this) as MainWindow`（UserControl 也能拿宿主窗口）。剩下的 9 页 XAML 一行没动。
+- 嵌进主窗口的页面要**懒构造**（`ContentControl` 第一次切过去再 `new`），否则设置页的查库/模板加载会回到启动路径上。
+- 同一份列表既要「自定义顺序」又要「按厂商分组」时，分组用 `ListCollectionView.GroupDescriptions` 开关即可，别维护两份集合；分组只在打开开关时生效，平铺时顺序完全跟用户。
+
 ## 2026-10-31（平台拖放排序）
 
 - WPF 列表拖放排序的稳妥写法：`PreviewMouseLeftButtonDown` 只记起点和命中的项，`PreviewMouseMove` 里超过 `SystemParameters.Minimum*DragDistance` 才 `DoDragDrop`——直接在 MouseDown 里拖会把单击选中吞掉。

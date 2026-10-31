@@ -49,7 +49,7 @@
         <controls:FluentTitleBar Grid.Row="0" Title="Mica ROM Manager" />
 
         <!-- 命令栏：库操作靠左；米卡助手 / 设备 / 设置靠右，发丝线分组 -->
-        <Grid Grid.Row="1" Margin="12,0">
+        <Grid x:Name="CommandBar" Grid.Row="1" Margin="12,0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
@@ -148,7 +148,7 @@
         </Grid>
 
         <!-- 三栏平面：侧栏 / 列表 / 助手，发丝线分区，悬停浮起 -->
-        <Grid Grid.Row="2">
+        <Grid x:Name="LibraryContent" Grid.Row="2">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="208" />
                 <ColumnDefinition Width="1" />
@@ -165,16 +165,43 @@
                         Effect="{StaticResource PanelShadowEffect}" IsHitTestVisible="False" />
                 <Border Background="{DynamicResource ShellPanelBrush}">
                     <DockPanel>
-                        <StackPanel DockPanel.Dock="Top" Margin="20,16,20,6">
-                            <TextBlock Text="平台" FontSize="10.5" FontWeight="SemiBold"
-                                       Foreground="{DynamicResource TextSecondaryBrush}" />
-                            <TextBlock Text="{Binding CountText}" FontSize="11" Margin="0,4,0,0"
-                                       Foreground="{DynamicResource TextSecondaryBrush}"
-                                       TextTrimming="CharacterEllipsis" />
-                        </StackPanel>
+                        <DockPanel DockPanel.Dock="Top" Margin="20,16,14,6">
+                            <ToggleButton DockPanel.Dock="Right" Content="分组" VerticalAlignment="Top"
+                                          Style="{StaticResource ChipToggleButtonStyle}"
+                                          IsChecked="{Binding GroupPlatforms, Mode=TwoWay}"
+                                          ToolTip="按厂商分组显示；关闭后按你在「设置 → 平台」里拖出来的顺序平铺" />
+                            <StackPanel>
+                                <TextBlock Text="平台" FontSize="10.5" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextSecondaryBrush}" />
+                                <TextBlock Text="{Binding CountText}" FontSize="11" Margin="0,4,0,0"
+                                           Foreground="{DynamicResource TextSecondaryBrush}"
+                                           TextTrimming="CharacterEllipsis" />
+                            </StackPanel>
+                        </DockPanel>
                         <ListBox x:Name="PlatformSidebar" Style="{StaticResource SideNavListStyle}"
-                                 ItemsSource="{Binding PlatformFilters}"
+                                 ItemsSource="{Binding PlatformFiltersView}"
                                  SelectedItem="{Binding SelectedPlatformFilter, Mode=TwoWay}">
+                            <ListBox.GroupStyle>
+                                <GroupStyle>
+                                    <GroupStyle.HeaderTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding Name}" FontSize="10.5" FontWeight="SemiBold"
+                                                       Margin="20,12,20,4"
+                                                       Foreground="{DynamicResource TextSecondaryBrush}">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Name}" Value="">
+                                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </DataTemplate>
+                                    </GroupStyle.HeaderTemplate>
+                                </GroupStyle>
+                            </ListBox.GroupStyle>
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
                                     <DockPanel MinWidth="120">
@@ -630,7 +657,7 @@
 
 
         <!-- 状态栏 -->
-        <Grid Grid.Row="3" Margin="20,0" ToolTip="{Binding DataPathText}">
+        <Grid x:Name="StatusBar" Grid.Row="3" Margin="20,0" ToolTip="{Binding DataPathText}">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
@@ -649,5 +676,9 @@
             <TextBlock Grid.Column="4" Text="{Binding LastRefreshText}" FontSize="11"
                        Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center" />
         </Grid>
+
+        <!-- 设置：整页替换中间区域，不再另开窗口（避免模态把主窗口压成实色）。
+             内容首次打开时才构造，别把查库压到启动路径上。 -->
+        <ContentControl x:Name="SettingsHost" Grid.Row="1" Grid.RowSpan="3" Visibility="Collapsed" />
     </Grid>
 </Window>

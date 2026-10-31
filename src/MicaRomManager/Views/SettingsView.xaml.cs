@@ -1,4 +1,4 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.IO;
 using System.Reflection;
 using System.Text;
@@ -16,29 +16,34 @@ using Microsoft.Win32;
 
 namespace MicaRomManager.Views;
 
-public partial class SettingsWindow : Window
+public partial class SettingsView : UserControl
 {
     private List<Emulator> _emulators = new();
     private CancellationTokenSource? _scanCts;
     private CancellationTokenSource? _hashCts;
 
-    /// <summary>平台页左栏的可见顺序，拖放就改这个集合并落库。</summary>
-    private readonly ObservableCollection<PlatformSetting> _platformItems = new();
+    /// <summary>平台页：厂商 → 主机 两级。厂商下的主机会保留用户拖出来的顺序。</summary>
+    private readonly ObservableCollection<PlatformVendorItem> _vendorItems = new();
+    private readonly ObservableCollection<PlatformSetting> _vendorPlatforms = new();
+    private readonly Dictionary<string, List<PlatformSetting>> _platformsByVendor = new(StringComparer.OrdinalIgnoreCase);
+    private string? _selectedVendor;
+    private string? _selectedPlatformName;
     private Point _platformDragStart;
     private PlatformSetting? _platformDragItem;
 
-    public SettingsWindow()
+    /// <summary>点「返回」或按 Esc 时通知宿主把设置页收起来。</summary>
+    public event EventHandler? CloseRequested;
+
+    /// <summary>设置页现在是主窗口里的一页，宿主窗口就是它所在的 MainWindow。</summary>
+    private MainWindow? Host => Window.GetWindow(this) as MainWindow;
+
+    public SettingsView()
     {
         InitializeComponent();
+        PlatformList.ItemsSource = _vendorPlatforms;
+        VendorList.ItemsSource = _vendorItems;
         SettingsTabs.SelectionChanged += (_, _) => EnsureTabContent();
         EnsureTabContent();
-        WindowBackdrop.Apply(this, WindowBackdrop.BackdropKind.Acrylic);
-        RootGrid.Opacity = 0;
-        Loaded += (_, _) => RootGrid.BeginAnimation(OpacityProperty,
-            new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(200))
-            {
-                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut },
-            });
         LoadGeneral();
         LoadAiSettings();
         LoadLookupKinds();
@@ -50,6 +55,8 @@ public partial class SettingsWindow : Window
         var version = Assembly.GetExecutingAssembly().GetName().Version;
         VersionText.Text = $"版本 {version?.ToString(3) ?? "0.1.0"}";
     }
+
+    private void Back_Click(object sender, RoutedEventArgs e) => CloseRequested?.Invoke(this, EventArgs.Empty);
 
     /// <summary>
     /// 「模拟器管理」「设备」两页首次切过去时才构造：它们的界面树、查库和盘符探测
@@ -283,9 +290,11 @@ public partial class SettingsWindow : Window
 
     private void LoadPlatforms(string? selectName = null)
     {
-        var selected = selectName ?? (PlatformList.SelectedItem as PlatformSetting)?.Name;
+        var selected = selectName
+                       ?? (PlatformList.SelectedItem as PlatformSetting)?.Name
+                       ?? _selectedPlatformName;
 
-        // 先把预置清单里缺的主机补进平台表，再按「厂商 → 主机」分组显示
+        // 先把预置清单里缺的主机补进平台表，再按「厂商 → 主机」两级显示
         var seeded = PlatformPresetStore.SeedMissing(AppServices.Platforms, AppServices.Paths);
         if (seeded > 0) PlatformScanHint.Text = $"已按预置清单补充 {seeded} 个主机条目。";
 
@@ -297,12 +306,17 @@ public partial class SettingsWindow : Window
             platform.SideLabel = platform.IsCustom ? "自定义" : platform.Vendor;
         }
 
-        // 顺序由用户在这个列表里拖出来；没排过的按「厂商 → 年代」兜底，自建平台排最后
+        // 厂商内按用户拖出来的顺序；没排过的按「厂商 → 年代」兜底
         platforms.Sort((left, right) => PlatformOrderStore.Compare(left.Name, right.Name));
 
-        _platformItems.Clear();
-        foreach (var platform in platforms) _platformItems.Add(platform);
-        PlatformList.ItemsSource = _platformItems;
+        _platformsByVendor.Clear();
+        _vendorItems.Clear();
+        foreach (var vendorGroup in platforms.GroupBy(platform => platform.Vendor))
+        {
+            var items = vendorGroup.ToList();
+            _platformsByVendor[vendorGroup.Key] = items;
+            _vendorItems.Add(new PlatformVendorItem(vendorGroup.Key, items.Count));
+        }
 
         PlatformEmulatorCombo.Items.Clear();
         PlatformEmulatorCombo.Items.Add(new ComboBoxItem { Content = "（不指定）", Tag = null });
@@ -310,18 +324,50 @@ public partial class SettingsWindow : Window
         foreach (var emulator in _emulators)
             PlatformEmulatorCombo.Items.Add(new ComboBoxItem { Content = emulator.Name, Tag = emulator.Id });
 
-        if (!string.IsNullOrEmpty(selected))
+        _selectedPlatformName = selected;
+        var vendor = _vendorItems.FirstOrDefault(item =>
+                         string.Equals(item.Name, _selectedVendor, StringComparison.OrdinalIgnoreCase))
+                     ?? _vendorItems.FirstOrDefault();
+
+        if (vendor == null)
         {
-            var match = platforms.FirstOrDefault(p => string.Equals(p.Name, selected, StringComparison.OrdinalIgnoreCase));
-            if (match != null) PlatformList.SelectedItem = match;
+            _vendorPlatforms.Clear();
+            PlatformNameText.Text = "（未选择平台）";
+            return;
         }
 
-        // 打开页面时默认落在第一台主机上，右侧不会是一片空表单
-        if (PlatformList.SelectedItem == null && _platformItems.Count > 0)
-            PlatformList.SelectedItem = _platformItems[0];
+        if (ReferenceEquals(VendorList.SelectedItem, vendor))
+        {
+            // 选中的厂商没变，ListBox 不会再触发一次 SelectionChanged，这里手动刷一遍
+            FillVendorPlatforms(vendor);
+        }
+        else
+        {
+            VendorList.SelectedItem = vendor; // 触发 VendorList_SelectionChanged
+        }
     }
 
-    // ---------- 平台列表拖放排序 ----------
+    private void VendorList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (VendorList.SelectedItem is not PlatformVendorItem vendor) return;
+        FillVendorPlatforms(vendor);
+    }
+
+    private void FillVendorPlatforms(PlatformVendorItem vendor)
+    {
+        _selectedVendor = vendor.Name;
+        _vendorPlatforms.Clear();
+        if (_platformsByVendor.TryGetValue(vendor.Name, out var items))
+            foreach (var platform in items) _vendorPlatforms.Add(platform);
+
+        var target = _vendorPlatforms.FirstOrDefault(platform =>
+                         string.Equals(platform.Name, _selectedPlatformName, StringComparison.OrdinalIgnoreCase))
+                     ?? _vendorPlatforms.FirstOrDefault();
+
+        PlatformList.SelectedItem = target;
+    }
+
+    // ---------- 主机列表拖放排序（同厂商内） ----------
 
     private void PlatformList_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
@@ -347,16 +393,32 @@ public partial class SettingsWindow : Window
     {
         if (e.Data.GetData(typeof(PlatformSetting)) is not PlatformSetting dragged) return;
 
-        var from = _platformItems.IndexOf(dragged);
+        var from = _vendorPlatforms.IndexOf(dragged);
         if (from < 0) return;
 
         var target = PlatformUnder(e.GetPosition(PlatformList));
-        var to = target == null ? _platformItems.Count - 1 : _platformItems.IndexOf(target);
+        var to = target == null ? _vendorPlatforms.Count - 1 : _vendorPlatforms.IndexOf(target);
         if (to < 0 || to == from) return;
 
-        _platformItems.Move(from, to);
+        _vendorPlatforms.Move(from, to);
         PlatformList.SelectedItem = dragged;
-        PlatformOrderStore.Save(AppServices.Settings, _platformItems.Select(item => item.Name));
+
+        // 拖的是「这个厂商内」的顺序，写回分组后再整体保存，别的厂商不受影响
+        if (_selectedVendor != null && _platformsByVendor.ContainsKey(_selectedVendor))
+            _platformsByVendor[_selectedVendor] = _vendorPlatforms.ToList();
+        SavePlatformOrder();
+    }
+
+    private void SavePlatformOrder()
+    {
+        var ordered = _vendorItems
+            .SelectMany(vendor => _platformsByVendor.TryGetValue(vendor.Name, out var items)
+                ? items
+                : Enumerable.Empty<PlatformSetting>())
+            .Select(platform => platform.Name)
+            .ToList();
+
+        PlatformOrderStore.Save(AppServices.Settings, ordered);
     }
 
     private PlatformSetting? PlatformUnder(Point point)
@@ -385,6 +447,7 @@ public partial class SettingsWindow : Window
             return;
         }
 
+        _selectedPlatformName = setting.Name;
         var displayName = PlatformDisplayNames.Of(setting.Name);
         PlatformNameText.Text = string.Equals(displayName, setting.Name, StringComparison.Ordinal)
             ? setting.Name
@@ -534,13 +597,13 @@ public partial class SettingsWindow : Window
                     + $"格式不匹配跳过 {scan.FormatSkippedCount} 个，清理失效记录 {removed} 条。\n\n"
                     + "若刚修改过格式，请先点「保存平台设置」再扫描。",
                     "扫描平台库", MessageBoxButton.OK, MessageBoxImage.Information);
-                (Owner as MainWindow)?.RefreshGames();
+                Host?.RefreshGames();
                 return;
             }
 
             foreach (var candidate in scan.Candidates) candidate.Platform = setting.Name;
 
-            var preview = new ImportPreviewWindow(scan.Candidates) { Owner = this };
+            var preview = new ImportPreviewWindow(scan.Candidates) { Owner = Window.GetWindow(this) };
             if (preview.ShowDialog() != true)
             {
                 MaintenanceStatus.Text = "";
@@ -576,7 +639,7 @@ public partial class SettingsWindow : Window
                           + $"，清理失效记录 {removed} 条。";
             MessageBox.Show(message, "扫描平台库", MessageBoxButton.OK, MessageBoxImage.Information);
 
-            (Owner as MainWindow)?.RefreshGames();
+            Host?.RefreshGames();
         }
         catch (OperationCanceledException)
         {
@@ -667,7 +730,7 @@ public partial class SettingsWindow : Window
                            + (result.FailedFiles.Count > 5 ? " 等" : "");
 
             MessageBox.Show(message, "整理平台库", MessageBoxButton.OK, MessageBoxImage.Information);
-            (Owner as MainWindow)?.RefreshGames();
+            Host?.RefreshGames();
         }
         catch (Exception ex)
         {
@@ -741,7 +804,7 @@ public partial class SettingsWindow : Window
         catch (OperationCanceledException)
         {
             MaintenanceStatus.Text = $"已取消补算：已补算 {computed} 条，跳过 {skipped} 条。";
-            (Owner as MainWindow)?.RefreshGames();
+            Host?.RefreshGames();
             return;
         }
         finally
@@ -754,7 +817,7 @@ public partial class SettingsWindow : Window
         }
 
         MaintenanceStatus.Text = $"指纹补算完成：{computed} 条，跳过 {skipped} 条。";
-        (Owner as MainWindow)?.RefreshGames();
+        Host?.RefreshGames();
         MessageBox.Show(MaintenanceStatus.Text, "补算指纹", MessageBoxButton.OK, MessageBoxImage.Information);
     }
 
@@ -832,8 +895,8 @@ public partial class SettingsWindow : Window
 
         // 命名习惯可能与打开设置时不同，平台页的展示名要重算一次
         LoadPlatforms();
-        (Owner as MainWindow)?.RefreshPlatformNames();
-        (Owner as MainWindow)?.RefreshGames();
+        Host?.RefreshPlatformNames();
+        Host?.RefreshGames();
 
         MessageBox.Show($"常规设置已保存。\n已重定位 {relocated} 条记录，已转换 {converted} 条游戏路径。",
             "设置", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -1204,5 +1267,18 @@ public sealed class LookupValueRow : System.ComponentModel.INotifyPropertyChange
     }
 
     public event System.ComponentModel.PropertyChangedEventHandler? PropertyChanged;
+}
+
+/// <summary>平台页左栏的厂商条目。</summary>
+public sealed class PlatformVendorItem
+{
+    public PlatformVendorItem(string name, int count)
+    {
+        Name = name;
+        Count = count;
+    }
+
+    public string Name { get; }
+    public int Count { get; }
 }
 }

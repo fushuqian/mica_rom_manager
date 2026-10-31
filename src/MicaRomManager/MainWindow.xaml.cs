@@ -43,9 +43,41 @@ public partial class MainWindow : Window
             EditModeToggle.IsChecked = false;
             _viewModel.RefreshFilterAfterEdit();
         };
+        _viewModel.SettingsRequested += (_, _) => ShowSettings();
         Loaded += OnLoaded;
         Closing += (_, _) => SaveViewState();
     }
+
+    /// <summary>把设置作为主窗口里的一页显示（不再开模态窗口）。</summary>
+    public void ShowSettings()
+    {
+        if (SettingsHost.Content == null)
+        {
+            var view = new SettingsView();
+            view.CloseRequested += (_, _) => HideSettings();
+            SettingsHost.Content = view;
+        }
+
+        SettingsHost.Visibility = Visibility.Visible;
+        CommandBar.Visibility = Visibility.Collapsed;
+        LibraryContent.Visibility = Visibility.Collapsed;
+        StatusBar.Visibility = Visibility.Collapsed;
+    }
+
+    private void HideSettings()
+    {
+        if (SettingsHost.Visibility != Visibility.Visible) return;
+
+        SettingsHost.Visibility = Visibility.Collapsed;
+        CommandBar.Visibility = Visibility.Visible;
+        LibraryContent.Visibility = Visibility.Visible;
+        StatusBar.Visibility = Visibility.Visible;
+
+        // 设置里可能改过库目录 / 模拟器 / 命名习惯，回到列表统一刷一次
+        _viewModel.LoadEmulators();
+        _viewModel.LoadGames();
+    }
+
 
     /// <summary>设置里改了主机命名习惯后，让左侧平台栏重新取显示名。</summary>
     public void RefreshPlatformNames() => _viewModel.RefreshPlatformDisplay();
@@ -60,7 +92,8 @@ public partial class MainWindow : Window
         Dispatcher.BeginInvoke(CheckPortableLibrary, DispatcherPriority.ApplicationIdle);
     }
 
-    private void AnimateIn()    {
+    private void AnimateIn()
+    {
         RootGrid.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(220))
         {
             EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut },
@@ -202,8 +235,7 @@ public partial class MainWindow : Window
                     MessageBoxButton.YesNoCancel, MessageBoxImage.Warning))
         {
             case MessageBoxResult.Yes:
-                new SettingsWindow { Owner = this }.ShowDialog();
-                RefreshGames();
+                ShowSettings();
                 break;
             case MessageBoxResult.No:
                 RebuildLibrary();
@@ -581,6 +613,13 @@ public partial class MainWindow : Window
     {
         if (e.Key == Key.Escape)
         {
+            if (SettingsHost.Visibility == Visibility.Visible)
+            {
+                HideSettings();
+                e.Handled = true;
+                return;
+            }
+
             if (FilterFlyout.Visibility == Visibility.Visible || ColumnFlyout.Visibility == Visibility.Visible)
             {
                 CloseOverlays();
