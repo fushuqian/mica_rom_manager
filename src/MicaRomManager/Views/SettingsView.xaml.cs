@@ -1,4 +1,4 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.IO;
 using System.Reflection;
 using System.Text;
@@ -41,11 +41,7 @@ public partial class SettingsView : UserControl
         InitializeComponent();
         PlatformList.ItemsSource = _vendorPlatforms;
         VendorList.ItemsSource = _vendorItems;
-        SettingsTabs.SelectionChanged += (_, _) =>
-        {
-            EnsureTabContent();
-            SelectNavForTab(SettingsTabs.SelectedIndex);
-        };
+        SettingsTabs.SelectionChanged += (_, _) => EnsureTabContent();
         BuildNav();
         EnsureTabContent();
         LoadGeneral();
@@ -60,79 +56,91 @@ public partial class SettingsView : UserControl
         VersionText.Text = $"版本 {version?.ToString(3) ?? "0.1.0"}";
     }
 
-    // ---------- 二级导航 ----------
+    // ---------- 两级导航（分类 → 页 → 内容） ----------
 
-    private readonly List<SettingsNavNode> _navNodes = new();
+    private readonly List<SettingsCategory> _categories = new();
 
     private void BuildNav()
     {
-        _navNodes.Clear();
-        SettingsNavNode? group = null;
+        _categories.Clear();
+        SettingsCategory? current = null;
 
         foreach (var tab in SettingsTabs.Items.OfType<TabItem>())
         {
             var title = tab.Header?.ToString() ?? "";
             var index = SettingsTabs.Items.IndexOf(tab);
-            var groupName = tab.Tag as string;
+            var category = tab.Tag as string;
+            if (string.IsNullOrEmpty(category)) category = title;
 
-            if (string.IsNullOrEmpty(groupName))
+            if (current == null || !string.Equals(current.Title, category, StringComparison.Ordinal))
             {
-                group = null;
-                _navNodes.Add(new SettingsNavNode(title, index));
-                continue;
+                current = new SettingsCategory(category, IconOf(category));
+                _categories.Add(current);
             }
 
-            if (group == null || !string.Equals(group.Title, groupName, StringComparison.Ordinal))
-            {
-                group = new SettingsNavNode(groupName, -1);
-                _navNodes.Add(group);
-            }
-
-            group.Children.Add(new SettingsNavNode(title, index));
+            current.Panes.Add(new SettingsPane(title, index));
         }
 
-        SettingsNav.ItemsSource = _navNodes;
-        SelectNavForTab(SettingsTabs.SelectedIndex);
+        CategoryList.ItemsSource = _categories;
+        if (_categories.Count > 0) CategoryList.SelectedIndex = 0;
     }
 
-    private void SettingsNav_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+    /// <summary>一级分类的小图标（Segoe MDL2）。</summary>
+    private static string IconOf(string category) => category switch
     {
-        if (e.NewValue is not SettingsNavNode node) return;
+        "常规" => "\uE713",
+        "模拟器" => "\uE768",
+        "字典库" => "\uE8F1",
+        "平台" => "\uE7FC",
+        "设备" => "\uE703",
+        "AI" => "\uE8BD",
+        "提示词" => "\uE70F",
+        "数据维护" => "\uE74E",
+        "关于" => "\uE946",
+        _ => "\uE713",
+    };
 
-        if (node.TabIndex >= 0)
+    private void CategoryList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        var category = CategoryList.SelectedItem as SettingsCategory;
+        if (category == null)
         {
-            if (SettingsTabs.SelectedIndex != node.TabIndex) SettingsTabs.SelectedIndex = node.TabIndex;
+            PaneColumnHost.Visibility = Visibility.Collapsed;
             return;
         }
 
-        // 点分组标题：展开并落到第一个子项，页面不会空着
-        if (node.Children.Count == 0) return;
-        SettingsTabs.SelectedIndex = node.Children[0].TabIndex;
-        SelectNavForTab(node.Children[0].TabIndex);
-    }
+        PaneList.ItemsSource = category.Panes;
 
-    /// <summary>让左侧导航跟着当前页走（点页签或代码切页时同步）。</summary>
-    private void SelectNavForTab(int index)
-    {
-        var target = _navNodes
-            .SelectMany(node => node.Children.Count == 0 ? new[] { node } : node.Children.ToArray())
-            .FirstOrDefault(node => node.TabIndex == index);
-        if (target == null) return;
-
-        var parent = _navNodes.FirstOrDefault(node => node.Children.Contains(target));
-        var container = SettingsNav.ItemContainerGenerator.ContainerFromItem((object?)parent ?? target) as TreeViewItem;
-        if (container == null) return;
-
-        if (parent == null)
+        // 只有一个页的分类：中间那列直接收起，右边就是设置项
+        if (category.Panes.Count == 1)
         {
-            container.IsSelected = true;
+            PaneColumnHost.Visibility = Visibility.Collapsed;
+            SettingsTabs.SelectedIndex = category.Panes[0].TabIndex;
             return;
         }
 
-        container.IsExpanded = true;
-        container.UpdateLayout();
-        if (container.ItemContainerGenerator.ContainerFromItem(target) is TreeViewItem child)
-            child.IsSelected = true;
+        PaneColumnHost.Visibility = Visibility.Visible;
+        if (PaneList.SelectedIndex < 0 || PaneList.SelectedItem is not SettingsPane pane ||
+            !category.Panes.Contains(pane))
+            PaneList.SelectedIndex = 0;
+    }
+
+    private void PaneList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (PaneList.SelectedItem is not SettingsPane pane) return;
+        if (SettingsTabs.SelectedIndex != pane.TabIndex) SettingsTabs.SelectedIndex = pane.TabIndex;
+    }
+
+    /// <summary>按页签下标切页，左右两级导航同步（截图工具与测试用）。</summary>
+    public void SelectPaneByTabIndex(int index)
+    {
+        var pane = _categories.SelectMany(category => category.Panes)
+            .FirstOrDefault(item => item.TabIndex == index);
+        if (pane == null) return;
+
+        var category = _categories.First(item => item.Panes.Contains(pane));
+        if (!ReferenceEquals(CategoryList.SelectedItem, category)) CategoryList.SelectedItem = category;
+        PaneList.SelectedItem = pane;
     }
 
     private void Back_Click(object sender, RoutedEventArgs e) => CloseRequested?.Invoke(this, EventArgs.Empty);
@@ -1327,10 +1335,24 @@ public sealed class LookupValueRow : System.ComponentModel.INotifyPropertyChange
     public event System.ComponentModel.PropertyChangedEventHandler? PropertyChanged;
 }
 
-/// <summary>左侧二级导航节点：分组（TabIndex = -1）或具体页面。</summary>
-public sealed class SettingsNavNode
+/// <summary>设置的一级分类（常规 / AI / 数据维护 …）。</summary>
+public sealed class SettingsCategory
 {
-    public SettingsNavNode(string title, int tabIndex)
+    public SettingsCategory(string title, string icon)
+    {
+        Title = title;
+        Icon = icon;
+    }
+
+    public string Title { get; }
+    public string Icon { get; }
+    public ObservableCollection<SettingsPane> Panes { get; } = new();
+}
+
+/// <summary>分类下的一个设置页。</summary>
+public sealed class SettingsPane
+{
+    public SettingsPane(string title, int tabIndex)
     {
         Title = title;
         TabIndex = tabIndex;
@@ -1338,11 +1360,6 @@ public sealed class SettingsNavNode
 
     public string Title { get; }
     public int TabIndex { get; }
-
-    /// <summary>分组标题（不能单独成页）。</summary>
-    public bool IsGroup => TabIndex < 0;
-
-    public ObservableCollection<SettingsNavNode> Children { get; } = new();
 }
 
 /// <summary>平台页左栏的厂商条目。</summary>

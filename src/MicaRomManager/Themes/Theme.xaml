@@ -608,13 +608,14 @@
         <Setter Property="TextWrapping" Value="Wrap" />
     </Style>
 
+    <!-- 扁平化：设置内容不再包白卡片，只在区块上方留一条发丝线 -->
     <Style x:Key="SettingsCardStyle" TargetType="Border">
-        <Setter Property="Background" Value="{DynamicResource SettingsCardBrush}" />
-        <Setter Property="BorderBrush" Value="{DynamicResource SettingsCardBorderBrush}" />
-        <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="CornerRadius" Value="10" />
-        <Setter Property="Padding" Value="20,18" />
-        <Setter Property="Margin" Value="0,16,0,0" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderBrush" Value="{DynamicResource HairlineBrush}" />
+        <Setter Property="BorderThickness" Value="0,1,0,0" />
+        <Setter Property="CornerRadius" Value="0" />
+        <Setter Property="Padding" Value="0,20,0,0" />
+        <Setter Property="Margin" Value="0,18,0,0" />
     </Style>
 
     <Style x:Key="SettingsGroupTitleStyle" TargetType="TextBlock">

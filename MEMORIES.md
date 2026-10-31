@@ -1,5 +1,12 @@
 # 经验记录（MEMORIES）
 
+## 2026-10-31（设置：macOS 三段式与扁平化）
+
+- 老板要的「苹果风」= 左分类 → 中二级 → 右内容三段式 + 扁平（不要白卡片）。树形折叠那种一层内嵌一层不是他要的，别自作聪明。
+- 单页分类把中间列收起很好实现：把「分隔线 + 二级列表 + 分隔线」装进一个 `Grid` 放在 `Width="Auto"` 的列里，整体 `Visibility=Collapsed` 就自动收成 0，不用改列宽。
+- 扁平化最省事的做法是重定义 `SettingsCardStyle`：背景透明、`BorderThickness="0,1,0,0"`、去掉圆角，十来个页面一处改完全体生效。
+- `ListBoxItem` 里的图标要用 `Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ListBoxItem}}"` 才能跟着选中态变色，否则永远是默认色。
+
 ## 2026-10-31（设置二级菜单 / 排序按钮）
 
 - WPF TreeView 做设置导航够用：`HierarchicalDataTemplate` + 自定义 `TreeViewItem` 模板（34 高、缩进 16、选中用 AccentSubtle）。图省事只设 `Background="Transparent"` 的 ToggleButton 会露出 Aero 的蓝色勾选块——折叠箭头必须自己写 `ToggleButton.Template`（只留 ContentPresenter）。
