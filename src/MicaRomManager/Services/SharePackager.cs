@@ -311,9 +311,10 @@ public sealed class SharePackager
 
     private static string? GetEmulatorSourceDirectory(Emulator emulator)
     {
-        if (!string.IsNullOrWhiteSpace(emulator.InstallDir) && Directory.Exists(emulator.InstallDir))
+        var installDir = EmulatorPaths.ResolveInstallDir(emulator);
+        if (installDir.Length > 0 && Directory.Exists(installDir))
         {
-            return emulator.InstallDir;
+            return installDir;
         }
 
         var exePath = EmulatorPaths.ResolveExe(emulator);

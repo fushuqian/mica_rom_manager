@@ -92,4 +92,42 @@ public class EmulatorPathsTests : IDisposable
     {
         Assert.Null(EmulatorPaths.ResolveExe(new Emulator()));
     }
+
+    // ---- 安装目录存在性：库里存的形式可能是相对路径 / %DATA%，必须先展开 ----
+
+    [Fact]
+    public void InstallDirExists_RelativePathIsExpandedFirst()
+    {
+        Directory.CreateDirectory(Path.Combine(_dir, "RetroArch"));
+        var relative = Path.GetRelativePath(AppContext.BaseDirectory, Path.Combine(_dir, "RetroArch"));
+        var emulator = new Emulator { Name = "RetroArch", InstallDir = relative };
+
+        Assert.True(EmulatorPaths.InstallDirExists(emulator));
+        Assert.Equal(Path.GetFullPath(Path.Combine(_dir, "RetroArch")), EmulatorPaths.ResolveInstallDir(emulator));
+    }
+
+    [Fact]
+    public void InstallDirExists_AbsolutePathStillWorks()
+    {
+        var emulator = new Emulator { InstallDir = _dir };
+
+        Assert.True(EmulatorPaths.InstallDirExists(emulator));
+    }
+
+    [Fact]
+    public void InstallDirExists_MissingDirectoryIsReported()
+    {
+        var emulator = new Emulator { InstallDir = Path.Combine(_dir, "nope") };
+
+        Assert.False(EmulatorPaths.InstallDirExists(emulator));
+    }
+
+    [Fact]
+    public void InstallDirExists_EmptyNeverThrows()
+    {
+        var emulator = new Emulator { InstallDir = "" };
+
+        Assert.Equal("", EmulatorPaths.ResolveInstallDir(emulator));
+        Assert.False(EmulatorPaths.InstallDirExists(emulator));
+    }
 }

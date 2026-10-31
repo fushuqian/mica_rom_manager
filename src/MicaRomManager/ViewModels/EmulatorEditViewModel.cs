@@ -98,7 +98,7 @@ public partial class EmulatorEditViewModel : ObservableObject
 
         try
         {
-            var installDir = LocalPath.Expand(Model.InstallDir);
+            var installDir = PortablePath.Expand(Model.InstallDir);
             var relative = Path.GetRelativePath(installDir, absolutePath);
             return relative.StartsWith("..", StringComparison.Ordinal) ? absolutePath : relative;
         }

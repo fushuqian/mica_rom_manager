@@ -136,13 +136,14 @@ public partial class EmulatorManagerViewModel : ObservableObject
         if (emulator == null) return;
 
         var exe = EmulatorPaths.ResolveExe(emulator);
-        var dirOk = !string.IsNullOrWhiteSpace(emulator.InstallDir) && Directory.Exists(emulator.InstallDir);
+        var installDir = EmulatorPaths.ResolveInstallDir(emulator);
+        var dirOk = installDir.Length > 0 && Directory.Exists(installDir);
         var exeOk = !string.IsNullOrWhiteSpace(exe) && File.Exists(exe);
 
-        var report = $"安装目录：{(dirOk ? "存在" : "缺失")}\n可执行文件：{(exeOk ? "存在" : "缺失")}";
+        var report = $"安装目录：{(dirOk ? "存在" : "缺失")}　{installDir}\n可执行文件：{(exeOk ? "存在" : "缺失")}　{exe ?? emulator.ExePath}";
         StatusMessage = $"「{emulator.Name}」校验完成：目录{(dirOk ? "正常" : "缺失")}，程序{(exeOk ? "正常" : "缺失")}";
-        MessageBox.Show(report + (exeOk ? "" : "\n\n可重新「导入（文件夹）」或「导入（压缩包）」修复。"),
-            "校验安装路径", MessageBoxButton.OK, exeOk ? MessageBoxImage.Information : MessageBoxImage.Warning);
+        MessageBox.Show(report + (exeOk && dirOk ? "" : "\n\n可重新「导入（文件夹）」或「导入（压缩包）」修复。"),
+            "校验安装路径", MessageBoxButton.OK, exeOk && dirOk ? MessageBoxImage.Information : MessageBoxImage.Warning);
     }
 
     /// <summary>从内置模板一键建档并接着选文件夹安装。</summary>
@@ -565,8 +566,15 @@ public partial class EmulatorManagerViewModel : ObservableObject
     [RelayCommand]
     private void OpenInstallDir()
     {
-        var directory = SelectedEmulator?.InstallDir;
-        if (string.IsNullOrWhiteSpace(directory) || !Directory.Exists(directory)) return;
+        if (SelectedEmulator is not { } emulator) return;
+
+        var directory = EmulatorPaths.ResolveInstallDir(emulator);
+        if (directory.Length == 0 || !Directory.Exists(directory))
+        {
+            StatusMessage = "安装目录不存在，先重新导入模拟器";
+            return;
+        }
+
         Process.Start(new ProcessStartInfo("explorer.exe", $"\"{directory}\"") { UseShellExecute = true });
     }
 
@@ -582,16 +590,17 @@ public partial class EmulatorManagerViewModel : ObservableObject
 
         AppServices.EmulatorRepo.Delete(emulator.Id);
 
-        if (!string.IsNullOrWhiteSpace(emulator.InstallDir) &&
-            Directory.Exists(emulator.InstallDir) &&
-            Path.GetFullPath(emulator.InstallDir).StartsWith(
+        var installDir = EmulatorPaths.ResolveInstallDir(emulator);
+        if (installDir.Length > 0 &&
+            Directory.Exists(installDir) &&
+            Path.GetFullPath(installDir).StartsWith(
                 Path.GetFullPath(AppServices.Paths.EmulatorsDir), StringComparison.OrdinalIgnoreCase))
         {
-            var recycle = MessageBox.Show($"是否把安装目录移到回收站？\n{emulator.InstallDir}",
+            var recycle = MessageBox.Show($"是否把安装目录移到回收站？\n{installDir}",
                 "删除模拟器", MessageBoxButton.YesNo, MessageBoxImage.Warning);
             if (recycle == MessageBoxResult.Yes)
             {
-                FileRecycleBin.MoveToRecycleBin(emulator.InstallDir);
+                FileRecycleBin.MoveToRecycleBin(installDir);
             }
         }
 

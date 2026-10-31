@@ -1,5 +1,11 @@
 # 经验记录（MEMORIES）
 
+## 2026-11-01（可存储路径）
+
+- 库里凡是存路径的字段（`install_dir` / `exe` / `core` / `config` / 库目录）都是「可存储形式」：带 `%DATA%` 前缀，便携模式还是相对路径。**判断存在性、打开、删除、打包前一定要先展开**（`PortablePath.Expand` + `GetFullPath`），直接 `Directory.Exists(存储值)` 必然判缺失。
+- 这类 bug 的症状很好认：同一对象「目录缺失、程序正常」——因为 exe 走了 `ResolveExe`（展开过），目录走了裸字符串。
+- 新增 `EmulatorPaths.ResolveInstallDir/InstallDirExists` 作为唯一入口，别再各写各的。
+
 ## 2026-10-31（设置：macOS 三段式与扁平化）
 
 - 老板要的「苹果风」= 左分类 → 中二级 → 右内容三段式 + 扁平（不要白卡片）。树形折叠那种一层内嵌一层不是他要的，别自作聪明。
