@@ -1,5 +1,21 @@
 # 变更记录（CHANGELOG）
 
+## 2026-10-31 v0.31.2
+
+### 主机按年代排序
+
+- 以前同厂商内按名字（字典序）排，于是 GameCube 会插在 Famicom 和 Super Famicom 之间。现在按**首发年份**排：
+  - Nintendo：Famicom 1983 → Game Boy 1989 → Super Famicom 1990 → Virtual Boy 1995 → Nintendo 64 1996 → Game Boy Color 1998 → Game Boy Advance 2001 → GameCube 2001 → Nintendo DS 2004 → Wii 2006 → Nintendo 3DS 2011 → Wii U 2012 → Switch 2017
+  - Sony：PlayStation → PlayStation 2 → PSP → PlayStation 3 → PS Vita → PlayStation 4 → PlayStation 5
+  - 其余厂商同理（MD 1988 → Game Gear 1990 → 32X/Saturn 1994 → Dreamcast 1998 等）；同年份的按展示名稳定排序，自建平台排最后
+- 这个顺序同时应用到：设置 → 平台、主界面左侧平台栏、筛选/编辑里的平台下拉（下拉换了排序规则也会立即生效，不用重启）。
+- 顺手修掉「自定义」标记误报：以前按老的内置清单判断，GB / NGC / N64 这类短名会被标成「（自定义）」，现在按预置清单里的主机判断。
+
+### 验证
+
+- 0 警告 0 错误、310 单测通过（新增 `PlatformOrderTests`：年代顺序、同年稳定、自建平台排最后）。
+- 设置平台页与主窗口 2× 渲染核对：Nintendo 组顺序为 Famicom / Game Boy / Super Famicom / Virtual Boy / Nintendo 64 / Game Boy Color / Game Boy Advance / GameCube，侧栏同序。
+
 ## 2026-10-31 v0.31.1
 
 ### 常规页、导入默认值、主机命名习惯与平台栏分组

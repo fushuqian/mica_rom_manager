@@ -281,13 +281,21 @@ public partial class SettingsWindow : Window
         var seeded = PlatformPresetStore.SeedMissing(AppServices.Platforms, AppServices.Paths);
         if (seeded > 0) PlatformScanHint.Text = $"已按预置清单补充 {seeded} 个主机条目。";
 
-        var presets = PlatformPresetStore.Load(AppServices.Paths);
         var platforms = AppServices.Platforms.ListAll();
         foreach (var platform in platforms)
         {
-            platform.Vendor = PlatformPresetStore.VendorOf(presets, platform.Name);
+            platform.Vendor = PlatformDisplayNames.VendorOf(platform.Name);
             platform.Display = PlatformDisplayNames.Of(platform.Name);
         }
+
+        // 厂商按预置清单顺序，同厂商内按机型年代（Famicom → Game Boy → Super Famicom…），
+        // 分组顺序 = 首次出现顺序，所以先排序再交给分组视图
+        platforms.Sort((left, right) =>
+        {
+            var byVendor = PlatformDisplayNames.VendorRank(left.Name)
+                .CompareTo(PlatformDisplayNames.VendorRank(right.Name));
+            return byVendor != 0 ? byVendor : PlatformOrder.CompareByEra(left.Name, right.Name);
+        });
 
         var view = new ListCollectionView(platforms);
         view.GroupDescriptions.Add(new PropertyGroupDescription(nameof(PlatformSetting.Vendor)));

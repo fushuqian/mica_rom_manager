@@ -1,4 +1,4 @@
-using Microsoft.Data.Sqlite;
+﻿using Microsoft.Data.Sqlite;
 using MicaRomManager.Helpers;
 using MicaRomManager.Models;
 using MicaRomManager.Services;
@@ -38,7 +38,7 @@ public sealed class PlatformRepository
                     Name = name,
                     Folder = name,
                     Formats = PlatformFormats.GetDefault(name),
-                    IsCustom = !PlatformCatalog.Common.Contains(name, StringComparer.OrdinalIgnoreCase),
+                    IsCustom = !PlatformDisplayNames.IsKnown(name),
                 };
             }
         }
@@ -70,7 +70,7 @@ public sealed class PlatformRepository
                 Formats = reader.IsDBNull(3) ? "" : reader.GetString(3),
                 CorePath = reader.IsDBNull(4) ? "" : reader.GetString(4),
                 ArgsTemplate = reader.IsDBNull(5) ? "" : reader.GetString(5),
-                IsCustom = !PlatformCatalog.Common.Contains(name, StringComparer.OrdinalIgnoreCase),
+                IsCustom = !PlatformDisplayNames.IsKnown(name),
             };
         }
 
@@ -124,7 +124,7 @@ public sealed class PlatformRepository
             Formats = reader.IsDBNull(3) ? "" : reader.GetString(3),
             CorePath = reader.IsDBNull(4) ? "" : reader.GetString(4),
             ArgsTemplate = reader.IsDBNull(5) ? "" : reader.GetString(5),
-            IsCustom = !PlatformCatalog.Common.Contains(reader.GetString(0), StringComparer.OrdinalIgnoreCase),
+            IsCustom = !PlatformDisplayNames.IsKnown(reader.GetString(0)),
         };
     }
 

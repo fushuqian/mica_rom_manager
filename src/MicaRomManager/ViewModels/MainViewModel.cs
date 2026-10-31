@@ -314,7 +314,8 @@ public partial class MainViewModel : ObservableObject, IAiAppHost
 
     private void RefreshLookups()
     {
-        Rebuild(Platforms, AllPlatforms, Games.Select(g => g.Platform), SelectedPlatform, value => SelectedPlatform = value);
+        Rebuild(Platforms, AllPlatforms, Games.Select(g => g.Platform), SelectedPlatform,
+            value => SelectedPlatform = value, PlatformOrder.ByVendorThenEra);
         Rebuild(Tags, AllTags, Games.SelectMany(g => SplitTags(g.Tags)), SelectedTag, value => SelectedTag = value);
         if (!Statuses.Contains(SelectedStatus)) SelectedStatus = AllStatuses;
 
@@ -356,10 +357,10 @@ public partial class MainViewModel : ObservableObject, IAiAppHost
         foreach (var name in gamePlatforms)
             if (!ordered.Contains(name, StringComparer.OrdinalIgnoreCase)) ordered.Add(name);
 
-        // 先按厂商（预置清单顺序，自定义最后）再按展示名排，分组表头才会按这个顺序出现
+        // 先按厂商（预置清单顺序，自定义最后）再按机型年代排，分组表头与组内顺序都按这个来
         ordered = ordered
             .OrderBy(PlatformDisplayNames.VendorRank)
-            .ThenBy(PlatformDisplayNames.Of, StringComparer.CurrentCultureIgnoreCase)
+            .ThenBy(name => name, PlatformOrder.ByEra)
             .ToList();
 
         // 增量同步而不是 Clear，避免 ListBox 选中项被清空、左侧平台状态被重置。
@@ -434,13 +435,15 @@ public partial class MainViewModel : ObservableObject, IAiAppHost
 
     /// <summary>增量同步下拉集合，避免 Clear 触发绑定把当前筛选值置空。</summary>
     private static void Rebuild(ObservableCollection<string> target, string allValue, IEnumerable<string> values,
-        string current, Action<string> setSelected)
+        string current, Action<string> setSelected, IComparer<string>? comparer = null)
     {
-        var desired = values
+        var filtered = values
             .Where(value => !string.IsNullOrWhiteSpace(value))
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .OrderBy(value => value)
-            .ToList();
+            .Distinct(StringComparer.OrdinalIgnoreCase);
+
+        var desired = comparer == null
+            ? filtered.OrderBy(value => value).ToList()
+            : filtered.OrderBy(value => value, comparer).ToList();
 
         if (target.Count == 0) target.Add(allValue);
         else if (!string.Equals(target[0], allValue, StringComparison.Ordinal)) target.Insert(0, allValue);
@@ -455,6 +458,21 @@ public partial class MainViewModel : ObservableObject, IAiAppHost
         {
             if (!target.Contains(value, StringComparer.OrdinalIgnoreCase))
                 target.Add(value);
+        }
+
+        // 只增删不排序的话，换了排序规则要等重启才生效，这里把顺序对齐
+        for (var index = 0; index < desired.Count; index++)
+        {
+            var wanted = index + 1;
+            var found = -1;
+            for (var scan = wanted; scan < target.Count; scan++)
+            {
+                if (!string.Equals(target[scan], desired[index], StringComparison.OrdinalIgnoreCase)) continue;
+                found = scan;
+                break;
+            }
+
+            if (found > wanted) target.Move(found, wanted);
         }
 
         if (!target.Contains(current)) setSelected(allValue);

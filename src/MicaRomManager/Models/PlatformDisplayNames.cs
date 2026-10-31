@@ -87,6 +87,10 @@ public static class PlatformDisplayNames
         return Vendors.TryGetValue(platform.Trim(), out var vendor) ? vendor : "自定义";
     }
 
+    /// <summary>是不是预置清单里的主机（界面用「自定义」标记的反面）。</summary>
+    public static bool IsKnown(string? platform) =>
+        !string.IsNullOrWhiteSpace(platform) && Vendors.ContainsKey(platform.Trim());
+
     /// <summary>厂商排序权重：预置清单顺序 → 自定义最后。</summary>
     public static int VendorRank(string? platform)
     {
