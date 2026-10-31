@@ -144,7 +144,8 @@ public partial class MainViewModel : ObservableObject, IAiAppHost
         GamesView.Filter = FilterGame;
 
         PlatformFiltersView = new ListCollectionView(PlatformFilters);
-        GroupPlatforms = AppServices.Settings.GetBool(GroupingKey);
+        // 侧栏默认按厂商分组；关掉过一次就按关着的来
+        GroupPlatforms = AppServices.Settings.GetBool(GroupingKey, true);
         ApplyPlatformGrouping();
 
         AppServices.Launcher.SessionEnded += OnSessionEnded;
